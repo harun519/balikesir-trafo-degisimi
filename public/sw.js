@@ -1,8 +1,9 @@
 /* BALIKESİR TRAFO DEĞİŞİMİ - PWA update worker */
-const CACHE_VERSION = "trafo-app-v2";
+const CACHE_VERSION = "trafo-app-v3";
 
 self.addEventListener("install", () => {
-  // Yeni worker bekleme durumunda kalır; uygulama kullanıcıya Güncelle butonu gösterir.
+  // Bilerek skipWaiting çağrılmıyor. Yeni sürüm waiting durumunda kalır
+  // ve uygulama kullanıcıya "Yeni sürüm hazır" bildirimi gösterir.
 });
 
 self.addEventListener("activate", event => {
@@ -25,11 +26,11 @@ self.addEventListener("message", event => {
   }
 });
 
+// Supabase/veri çağrılarını cache'lemiyoruz. Uygulama her zaman güncel veriyi ağdan alır.
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
