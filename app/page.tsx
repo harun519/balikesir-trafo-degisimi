@@ -252,6 +252,64 @@ export default function Home() {
 
   const gucToplam=Math.max(1,gucAnalizi.karsilastirilabilir);
 
+  const nedenGucAnalizi=useMemo(()=>{
+    const sayiDeger=(v:string|null)=>{
+      if(!v)return null;
+      const temiz=v.replace(",",".").replace(/[^0-9.]/g,"");
+      if(!temiz)return null;
+      const n=Number(temiz);
+      return Number.isFinite(n)?n:null;
+    };
+
+    return NEDENLER.map(neden=>{
+      const kayitlarNeden=dashboardKayitlari.filter(k=>k.degisim_nedeni===neden.ad);
+
+      let artan=0;
+      let azalan=0;
+      let ayni=0;
+      let karsilastirilabilir=0;
+      const gecisler:Record<string,number>={};
+
+      kayitlarNeden.forEach(k=>{
+        const s=sayiDeger(k.sokulen_gucu);
+        const t=sayiDeger(k.takilan_gucu);
+
+        if(s!==null&&t!==null){
+          karsilastirilabilir++;
+
+          if(t>s)artan++;
+          else if(t<s)azalan++;
+          else ayni++;
+
+          const gecis=`${k.sokulen_gucu?.trim()} → ${k.takilan_gucu?.trim()}`;
+          gecisler[gecis]=(gecisler[gecis]||0)+1;
+        }
+      });
+
+      const enSikGecis=Object.entries(gecisler).sort((a,b)=>b[1]-a[1])[0]||["-",0];
+
+      return{
+        neden:neden.ad,
+        renk:neden.renk,
+        toplam:kayitlarNeden.length,
+        karsilastirilabilir,
+        artan,
+        azalan,
+        ayni,
+        artisOrani:karsilastirilabilir ? (artan/karsilastirilabilir)*100 : 0,
+        ayniOrani:karsilastirilabilir ? (ayni/karsilastirilabilir)*100 : 0,
+        azalisOrani:karsilastirilabilir ? (azalan/karsilastirilabilir)*100 : 0,
+        enSikGecis:String(enSikGecis[0]),
+        enSikGecisSayisi:Number(enSikGecis[1]),
+      };
+    }).filter(x=>x.toplam>0);
+  },[dashboardKayitlari]);
+
+  const enYuksekArtisNedeni=[...nedenGucAnalizi].sort((a,b)=>b.artisOrani-a.artisOrani)[0]||null;
+  const enDusukArtisNedeni=[...nedenGucAnalizi].sort((a,b)=>a.artisOrani-b.artisOrani)[0]||null;
+  const gucDegisimiNedeni=nedenGucAnalizi.find(x=>x.neden==="GÜÇ DEĞİŞİMİ")||null;
+  const arizaNedeni=nedenGucAnalizi.find(x=>x.neden==="ARIZA")||null;
+
   const filtrelenmisKayitlar=useMemo(()=>{
     const q=arama.trim().toLocaleUpperCase("tr-TR");
     return kayitlar.filter(k=>{
@@ -340,6 +398,126 @@ export default function Home() {
             </div>
 
             <div className="mt-5"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
+
+            <div className="mt-5">
+              <Panel
+                baslik="Değişim Nedeni × Güç Analizi"
+                altBaslik="Değişim nedenlerine göre güç artışı / aynı / azalış dağılımı ve öne çıkan geçişler"
+              >
+                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <GucKpi baslik="GÜÇ ARTIRILAN" sayi={gucAnalizi.artan} alt={`%${((gucAnalizi.artan/gucToplam)*100).toFixed(1)}`} ikon="↗" ton="emerald"/>
+                  <GucKpi baslik="GÜÇ AZALTILAN" sayi={gucAnalizi.azalan} alt={`%${((gucAnalizi.azalan/gucToplam)*100).toFixed(1)}`} ikon="↘" ton="red"/>
+                  <GucKpi baslik="AYNI GÜÇ" sayi={gucAnalizi.ayni} alt={`%${((gucAnalizi.ayni/gucToplam)*100).toFixed(1)}`} ikon="→" ton="blue"/>
+                  <GucKpi baslik="KARŞILAŞTIRILABİLEN" sayi={gucAnalizi.karsilastirilabilir} alt={`${dashboardKayitlari.length} toplam kayıttan`} ikon="⚡" ton="orange"/>
+                </div>
+
+                <div className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_.9fr]">
+                  <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-4 sm:p-5">
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-black">Değişim Nedenine Göre Güç Dağılımı</div>
+                        <div className="mt-1 text-xs text-slate-500">Her neden için karşılaştırılabilir güç kayıtları</div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[760px]">
+                        <div className="grid grid-cols-[1.35fr_.55fr_1fr_1fr_1fr_.7fr] gap-3 border-b border-slate-800 px-3 pb-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <div>Değişim Nedeni</div>
+                          <div>Kayıt</div>
+                          <div className="text-emerald-400">↗ Artan</div>
+                          <div className="text-blue-400">→ Aynı</div>
+                          <div className="text-red-400">↘ Azalan</div>
+                          <div>Artış Oranı</div>
+                        </div>
+
+                        <div className="mt-2 space-y-2">
+                          {nedenGucAnalizi.map(item=>(
+                            <div
+                              key={item.neden}
+                              className="grid grid-cols-[1.35fr_.55fr_1fr_1fr_1fr_.7fr] items-center gap-3 rounded-xl border border-slate-800 bg-[#101d30] px-3 py-3"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <span className="h-3 w-3 shrink-0 rounded-full" style={{backgroundColor:item.renk}}/>
+                                <span className="truncate text-xs font-black">{item.neden}</span>
+                              </div>
+
+                              <div className="text-sm font-black">{item.karsilastirilabilir}</div>
+
+                              <NedenGucHucre sayi={item.artan} oran={item.artisOrani} ton="emerald"/>
+                              <NedenGucHucre sayi={item.ayni} oran={item.ayniOrani} ton="blue"/>
+                              <NedenGucHucre sayi={item.azalan} oran={item.azalisOrani} ton="red"/>
+
+                              <div className="text-sm font-black text-emerald-400">
+                                %{item.artisOrani.toFixed(1)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-4 sm:p-5">
+                    <div>
+                      <div className="text-sm font-black">Nedene Göre En Sık Güç Geçişleri</div>
+                      <div className="mt-1 text-xs text-slate-500">Sökülen → takılan güç</div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {nedenGucAnalizi.map(item=>(
+                        <div key={item.neden} className="rounded-xl border border-slate-800 bg-[#101d30] p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:item.renk}}/>
+                              <span className="truncate text-xs font-black">{item.neden}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500">En sık geçiş</span>
+                          </div>
+
+                          <div className="mt-2 flex items-center justify-between gap-3">
+                            <div className="truncate text-sm font-black">{item.enSikGecis} kVA</div>
+                            <span className="shrink-0 rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-black text-orange-300">
+                              {item.enSikGecisSayisi} kayıt
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <div className="mb-3 text-sm font-black">Öne Çıkan Özetler</div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <OzelOzet
+                      baslik="GÜÇ DEĞİŞİMİ KAYITLARINDA GERÇEK ARTIŞ ORANI"
+                      deger={gucDegisimiNedeni ? `%${gucDegisimiNedeni.artisOrani.toFixed(1)}` : "-"}
+                      alt={gucDegisimiNedeni ? `${gucDegisimiNedeni.artan} / ${gucDegisimiNedeni.karsilastirilabilir} kayıt` : "Veri yok"}
+                      ton="emerald"
+                    />
+                    <OzelOzet
+                      baslik="ARIZA KAYITLARINDA GERÇEK ARTIŞ ORANI"
+                      deger={arizaNedeni ? `%${arizaNedeni.artisOrani.toFixed(1)}` : "-"}
+                      alt={arizaNedeni ? `${arizaNedeni.artan} / ${arizaNedeni.karsilastirilabilir} kayıt` : "Veri yok"}
+                      ton="red"
+                    />
+                    <OzelOzet
+                      baslik="EN YÜKSEK ARTIŞ ORANI"
+                      deger={enYuksekArtisNedeni ? `%${enYuksekArtisNedeni.artisOrani.toFixed(1)}` : "-"}
+                      alt={enYuksekArtisNedeni ? enYuksekArtisNedeni.neden : "Veri yok"}
+                      ton="purple"
+                    />
+                    <OzelOzet
+                      baslik="EN DÜŞÜK ARTIŞ ORANI"
+                      deger={enDusukArtisNedeni ? `%${enDusukArtisNedeni.artisOrani.toFixed(1)}` : "-"}
+                      alt={enDusukArtisNedeni ? enDusukArtisNedeni.neden : "Veri yok"}
+                      ton="blue"
+                    />
+                  </div>
+                </div>
+              </Panel>
+            </div>
 
             <div className="mt-5">
               <Panel
@@ -527,6 +705,45 @@ function OzetKart({ikon,baslik,deger,alt}:{ikon:string;baslik:string;deger:strin
 function Panel({baslik,altBaslik,children,className="",sagIcerik}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode}){return <section className={`rounded-2xl border border-slate-800 bg-[#101d30] p-4 shadow-lg sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs text-slate-500 sm:text-sm">{altBaslik}</p>}</div>{sagIcerik}</div>{children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-800 bg-[#07111f] px-2.5 py-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
 function BarChart({items,max,aylik=false}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean}){return <div className="mt-5 overflow-x-auto"><div className={aylik?"min-w-[900px]":"min-w-[760px]"}><div className={aylik?"relative h-[270px]":"relative h-[350px]"}><div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">{[1,2,3,4,5].map(i=><div key={i} className="border-t border-dashed border-slate-800"/>)}</div><div className="absolute inset-0 flex items-end gap-3 px-2">{items.map(it=><div key={it.label} className="flex min-w-[62px] flex-1 flex-col items-center justify-end"><div className="mb-2 rounded-full bg-[#07111f] px-2 py-1 text-[9px] font-black">{it.total}</div><div className={`flex items-end gap-[2px] ${aylik?"h-[180px]":"h-[255px]"}`}>{NEDENLER.map(n=>{const v=it.values[n.ad]||0,h=v?Math.max(6,(v/max)*(aylik?160:225)):0;return <div key={n.ad} title={`${it.label} - ${n.ad}: ${v}`} className={aylik?"w-[5px] rounded-t":"w-[7px] rounded-t-md"} style={{height:`${h}px`,backgroundColor:n.renk}}/>})}</div><div className="mt-3 w-full border-t border-slate-700 pt-2 text-center text-[10px] font-black text-slate-500">{it.label}</div></div>)}</div></div></div></div>}
+function NedenGucHucre({sayi,oran,ton}:{sayi:number;oran:number;ton:"emerald"|"blue"|"red"}){
+  const bar={
+    emerald:"bg-emerald-500",
+    blue:"bg-blue-500",
+    red:"bg-red-500",
+  }[ton];
+
+  const text={
+    emerald:"text-emerald-400",
+    blue:"text-blue-400",
+    red:"text-red-400",
+  }[ton];
+
+  return <div>
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-xs font-black">{sayi}</span>
+      <span className={`text-[10px] font-bold ${text}`}>%{oran.toFixed(1)}</span>
+    </div>
+    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
+      <div className={`h-full rounded-full ${bar}`} style={{width:`${Math.max(oran>0?3:0,oran)}%`}}/>
+    </div>
+  </div>
+}
+
+function OzelOzet({baslik,deger,alt,ton}:{baslik:string;deger:string;alt:string;ton:"emerald"|"red"|"purple"|"blue"}){
+  const cls={
+    emerald:"border-emerald-900/60 bg-emerald-950/15 text-emerald-400",
+    red:"border-red-900/60 bg-red-950/15 text-red-400",
+    purple:"border-violet-900/60 bg-violet-950/15 text-violet-400",
+    blue:"border-blue-900/60 bg-blue-950/15 text-blue-400",
+  }[ton];
+
+  return <div className={`rounded-2xl border p-4 ${cls}`}>
+    <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div>
+    <div className="mt-3 text-2xl font-black text-white">{deger}</div>
+    <div className="mt-1 text-[10px] font-bold">{alt}</div>
+  </div>
+}
+
 function GucKpi({baslik,sayi,alt,ikon,ton}:{baslik:string;sayi:number;alt:string;ikon:string;ton:"emerald"|"red"|"blue"|"orange"}){
   const tonlar={
     emerald:"border-emerald-900/60 bg-emerald-950/20 text-emerald-400",
