@@ -13,6 +13,8 @@ import {
   Session,
 } from "@supabase/supabase-js";
 
+import ExcelJS from "exceljs";
+
 
 // ============================================================
 // KAYNAK LİSTELERİ
@@ -378,7 +380,7 @@ export default function Home() {
     useState("");
 
 
-  // DASHBOARD FİLTRELERİ
+  // DASHBOARD
 
   const [dashboardYil, setDashboardYil] =
     useState("");
@@ -388,7 +390,7 @@ export default function Home() {
 
 
   // ============================================================
-  // DETAY ESC
+  // ESC
   // ============================================================
 
   useEffect(() => {
@@ -401,11 +403,16 @@ export default function Home() {
 
     }
 
-    window.addEventListener("keydown", escKapat);
+    window.addEventListener(
+      "keydown",
+      escKapat
+    );
 
-    return () => {
-      window.removeEventListener("keydown", escKapat);
-    };
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        escKapat
+      );
 
   }, []);
 
@@ -418,7 +425,10 @@ export default function Home() {
 
     if (!supabase) {
 
-      setAuthHata("Supabase bağlantısı kurulamadı.");
+      setAuthHata(
+        "Supabase bağlantısı kurulamadı."
+      );
+
       setAuthKontrol(false);
 
       return;
@@ -713,7 +723,10 @@ export default function Home() {
         await supabase
           .from("trafo_degisim")
           .update(veri)
-          .eq("id", duzenlenenId);
+          .eq(
+            "id",
+            duzenlenenId
+          );
 
       error = sonuc.error;
 
@@ -730,7 +743,10 @@ export default function Home() {
 
     if (error) {
 
-      setGenelHata(error.message);
+      setGenelHata(
+        error.message
+      );
+
       setKaydediliyor(false);
 
       return;
@@ -755,7 +771,8 @@ export default function Home() {
     });
 
     setTimeout(
-      () => setBasariMesaji(""),
+      () =>
+        setBasariMesaji(""),
       3000
     );
 
@@ -855,7 +872,10 @@ export default function Home() {
         kayit.aciklama || "",
     });
 
-    setDuzenlenenId(kayit.id);
+    setDuzenlenenId(
+      kayit.id
+    );
+
     setSayfa("yeni");
 
     window.scrollTo({
@@ -893,13 +913,18 @@ export default function Home() {
       await supabase
         .from("trafo_degisim")
         .delete()
-        .eq("id", kayit.id);
+        .eq(
+          "id",
+          kayit.id
+        );
 
     if (error) {
 
-      setGenelHata(error.message);
-      return;
+      setGenelHata(
+        error.message
+      );
 
+      return;
     }
 
     setDetayKayit(null);
@@ -920,12 +945,17 @@ export default function Home() {
           .from(
             new Set(
               kayitlar
-                .map((k) => k.yil)
-                .filter(Boolean) as number[]
+                .map(
+                  (k) => k.yil
+                )
+                .filter(
+                  Boolean
+                ) as number[]
             )
           )
           .sort(
-            (a, b) => b - a
+            (a, b) =>
+              b - a
           ),
       [kayitlar]
     );
@@ -942,9 +972,12 @@ export default function Home() {
         const kayitIlceleri =
           kayitlar
             .map(
-              (x) => x.ilce?.trim()
+              (x) =>
+                x.ilce?.trim()
             )
-            .filter(Boolean) as string[];
+            .filter(
+              Boolean
+            ) as string[];
 
         return Array
           .from(
@@ -981,7 +1014,8 @@ export default function Home() {
               dashboardYil &&
               String(
                 kayit.yil || ""
-              ) !== dashboardYil
+              ) !==
+              dashboardYil
             ) {
               return false;
             }
@@ -1103,7 +1137,9 @@ export default function Home() {
 
         NEDENLER.forEach(
           (neden) => {
+
             sonuc[neden.ad] = 0;
+
           }
         );
 
@@ -1135,7 +1171,7 @@ export default function Home() {
 
 
   // ============================================================
-  // YILLIK NEDENLER
+  // YILLIK
   // ============================================================
 
   const yillikNedenler =
@@ -1160,7 +1196,8 @@ export default function Home() {
                 kullanilacak
                   .filter(
                     (x) =>
-                      x.yil === yil
+                      x.yil ===
+                      yil
                   );
 
               const nedenler:
@@ -1199,7 +1236,7 @@ export default function Home() {
 
 
   // ============================================================
-  // AYLIK NEDENLER
+  // AYLIK
   // ============================================================
 
   const aylikNedenler =
@@ -1276,10 +1313,6 @@ export default function Home() {
     );
 
 
-  // ============================================================
-  // ÖZETLER
-  // ============================================================
-
   const enCokIlce =
     useMemo(
       () => {
@@ -1310,7 +1343,10 @@ export default function Home() {
             .sort(
               (a, b) =>
                 b[1] - a[1]
-            )[0] || ["-", 0]
+            )[0] || [
+              "-",
+              0,
+            ]
         );
 
       },
@@ -1330,7 +1366,10 @@ export default function Home() {
             .sort(
               (a, b) =>
                 b[1] - a[1]
-            )[0] || ["-", 0]
+            )[0] || [
+              "-",
+              0,
+            ]
         );
 
       },
@@ -1457,7 +1496,8 @@ export default function Home() {
               filtreYil &&
               String(
                 kayit.yil || ""
-              ) !== filtreYil
+              ) !==
+              filtreYil
             ) {
               return false;
             }
@@ -1519,10 +1559,10 @@ export default function Home() {
 
 
   // ============================================================
-  // EXCEL
+  // PROFESYONEL XLSX
   // ============================================================
 
-  function excelAktar() {
+  async function excelAktar() {
 
     if (
       filtrelenmisKayitlar.length === 0
@@ -1535,246 +1575,697 @@ export default function Home() {
       return;
     }
 
-    const basliklar = [
-      "SIRA NO",
-      "YIL",
-      "AY",
-      "İLÇE",
-      "MAHALLE",
-      "TR",
-      "LOKASYON ID",
-      "TRAFO ID",
-      "TRAFO TİPİ",
-      "SÖKÜLEN GÜCÜ",
-      "SÖKÜLEN GERİLİM",
-      "SÖKÜLEN MARKASI",
-      "SÖKÜLEN SERİ NO",
-      "SÖKÜLEN İMAL YILI",
-      "SÖKÜLEN TRAFO TİPİ",
-      "SÖKÜLEN TAMİR YILI",
-      "SÖKÜLEN TAMİR FİRMASI",
-      "SÖKÜLEN YÜKLENİCİ",
-      "TAKILAN GÜCÜ",
-      "TAKILAN GERİLİM",
-      "TAKILAN MARKASI",
-      "TAKILAN SERİ NO",
-      "TAKILAN İMAL YILI",
-      "TAKILAN TRAFO TİPİ",
-      "TAKILAN TAMİR YILI",
-      "TAKILAN TAMİR FİRMASI",
-      "TARİH",
-      "DEĞİŞİM NEDENİ",
-      "AÇIKLAMA",
-    ];
+    try {
 
-    const satirlar =
-      filtrelenmisKayitlar.map(
-        (kayit, index) => [
+      const workbook =
+        new ExcelJS.Workbook();
 
-          kayit.sira_no ??
-            index + 1,
+      workbook.creator =
+        "Balıkesir Trafo Değişim Yönetim Sistemi";
 
-          kayit.yil ?? "",
-          kayit.ay ?? "",
-          kayit.ilce ?? "",
-          kayit.mahalle ?? "",
-          kayit.tr ?? "",
-          kayit.lokasyon_id ?? "",
-          kayit.trafo_id ?? "",
-          kayit.trafo_tipi ?? "",
+      workbook.created =
+        new Date();
 
-          kayit.sokulen_gucu ?? "",
-          kayit.sokulen_gerilim ?? "",
-          kayit.sokulen_markasi ?? "",
-          kayit.sokulen_seri_no ?? "",
-          kayit.sokulen_imal_yili ?? "",
-          kayit.sokulen_trafo_tipi ?? "",
-          kayit.sokulen_tamir_yili ?? "",
-          kayit.sokulen_tamir_firmasi ?? "",
-          kayit.sokulen_yuklenici ?? "",
+      workbook.modified =
+        new Date();
 
-          kayit.takilan_gucu ?? "",
-          kayit.takilan_gerilim ?? "",
-          kayit.takilan_markasi ?? "",
-          kayit.takilan_seri_no ?? "",
-          kayit.takilan_imal_yili ?? "",
-          kayit.takilan_trafo_tipi ?? "",
-          kayit.takilan_tamir_yili ?? "",
-          kayit.takilan_tamir_firmasi ?? "",
 
-          tarihGoster(kayit.tarih),
-          kayit.degisim_nedeni ?? "",
-          kayit.aciklama ?? "",
+      const worksheet =
+        workbook.addWorksheet(
+          "Trafo Değişim"
+        );
 
-        ]
+
+      worksheet.views = [
+        {
+          state: "frozen",
+          ySplit: 4,
+        },
+      ];
+
+
+      // ========================================================
+      // ANA BAŞLIK
+      // ========================================================
+
+      worksheet.mergeCells(
+        "A1:AC1"
       );
 
-    const tabloBasliklari =
-      basliklar
-        .map(
-          (baslik) =>
-            `<th>${htmlTemizle(
-              baslik
-            )}</th>`
-        )
-        .join("");
+      const anaBaslik =
+        worksheet.getCell("A1");
 
-    const tabloSatirlari =
-      satirlar
-        .map(
-          (satir) => {
+      anaBaslik.value =
+        "BALIKESİR TRAFO DEĞİŞİM RAPORU";
 
-            const hucreler =
-              satir
-                .map(
-                  (hucre) =>
-                    `<td>${htmlTemizle(
-                      hucre
-                    )}</td>`
-                )
-                .join("");
+      anaBaslik.font = {
+        name: "Arial",
+        size: 18,
+        bold: true,
+        color: {
+          argb: "FFFFFFFF",
+        },
+      };
 
-            return `<tr>${hucreler}</tr>`;
+      anaBaslik.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: {
+          argb: "FFF97316",
+        },
+      };
 
-          }
-        )
-        .join("");
+      anaBaslik.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
 
-    const excelIcerik = `
-      <html
-        xmlns:o="urn:schemas-microsoft-com:office:office"
-        xmlns:x="urn:schemas-microsoft-com:office:excel"
-        xmlns="http://www.w3.org/TR/REC-html40"
-      >
-        <head>
-          <meta charset="UTF-8" />
-          <style>
-            table {
-              border-collapse: collapse;
-              font-family: Arial, sans-serif;
-              font-size: 11pt;
-            }
+      worksheet.getRow(1).height =
+        32;
 
-            th {
-              background: #f97316;
-              color: #ffffff;
-              font-weight: bold;
-              border: 1px solid #777777;
-              padding: 8px;
-              text-align: center;
-              white-space: nowrap;
-            }
 
-            td {
-              border: 1px solid #aaaaaa;
-              padding: 6px;
-              white-space: nowrap;
-              mso-number-format: "\\@";
-            }
-          </style>
-        </head>
+      // ========================================================
+      // RAPOR BİLGİLERİ
+      // ========================================================
 
-        <body>
-          <table>
-            <thead>
-              <tr>
-                ${tabloBasliklari}
-              </tr>
-            </thead>
-            <tbody>
-              ${tabloSatirlari}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
+      worksheet.mergeCells(
+        "A2:H2"
+      );
 
-    const blob =
-      new Blob(
-        [
-          "\uFEFF",
-          excelIcerik,
-        ],
-        {
-          type:
-            "application/vnd.ms-excel;charset=utf-8;",
+      worksheet.getCell("A2").value =
+        `Toplam Kayıt: ${filtrelenmisKayitlar.length}`;
+
+      worksheet.getCell("A2").font = {
+        bold: true,
+      };
+
+
+      const aktifFiltreler:
+        string[] = [];
+
+      if (filtreYil) {
+        aktifFiltreler.push(
+          `Yıl: ${filtreYil}`
+        );
+      }
+
+      if (filtreAy) {
+        aktifFiltreler.push(
+          `Ay: ${filtreAy}`
+        );
+      }
+
+      if (filtreNeden) {
+        aktifFiltreler.push(
+          `Neden: ${filtreNeden}`
+        );
+      }
+
+      if (arama.trim()) {
+        aktifFiltreler.push(
+          `Arama: ${arama.trim()}`
+        );
+      }
+
+
+      worksheet.mergeCells(
+        "I2:P2"
+      );
+
+      worksheet.getCell("I2").value =
+        aktifFiltreler.length
+          ? `Filtreler: ${aktifFiltreler.join(
+              " • "
+            )}`
+          : "Filtreler: Tüm Kayıtlar";
+
+
+      worksheet.mergeCells(
+        "Q2:AC2"
+      );
+
+      worksheet.getCell("Q2").value =
+        `Rapor Tarihi: ${new Date().toLocaleDateString(
+          "tr-TR"
+        )}`;
+
+      worksheet.getCell("Q2").alignment = {
+        horizontal: "right",
+      };
+
+
+      worksheet.getRow(3).height =
+        8;
+
+
+      // ========================================================
+      // SÜTUNLAR
+      // ========================================================
+
+      const sutunlar = [
+        ["SIRA NO", 10],
+        ["YIL", 9],
+        ["AY", 13],
+        ["İLÇE", 16],
+        ["MAHALLE", 22],
+        ["TR", 30],
+        ["LOKASYON ID", 16],
+        ["TRAFO ID", 16],
+        ["TRAFO TİPİ", 16],
+
+        ["SÖKÜLEN GÜCÜ", 16],
+        ["SÖKÜLEN GERİLİM", 18],
+        ["SÖKÜLEN MARKASI", 21],
+        ["SÖKÜLEN SERİ NO", 18],
+        ["SÖKÜLEN İMAL YILI", 18],
+        ["SÖKÜLEN TRAFO TİPİ", 22],
+        ["SÖKÜLEN TAMİR YILI", 19],
+        ["SÖKÜLEN TAMİR FİRMASI", 25],
+        ["SÖKÜLEN YÜKLENİCİ", 23],
+
+        ["TAKILAN GÜCÜ", 16],
+        ["TAKILAN GERİLİM", 18],
+        ["TAKILAN MARKASI", 21],
+        ["TAKILAN SERİ NO", 18],
+        ["TAKILAN İMAL YILI", 18],
+        ["TAKILAN TRAFO TİPİ", 22],
+        ["TAKILAN TAMİR YILI", 19],
+        ["TAKILAN TAMİR FİRMASI", 25],
+
+        ["TARİH", 15],
+        ["DEĞİŞİM NEDENİ", 22],
+        ["AÇIKLAMA", 40],
+      ] as const;
+
+
+      const baslikSatiri =
+        worksheet.getRow(4);
+
+      sutunlar.forEach(
+        ([baslik, genislik], index) => {
+
+          const cell =
+            baslikSatiri.getCell(
+              index + 1
+            );
+
+          cell.value =
+            baslik;
+
+          worksheet.getColumn(
+            index + 1
+          ).width =
+            genislik;
+
         }
       );
 
-    const url =
-      URL.createObjectURL(blob);
 
-    const link =
-      document.createElement("a");
+      baslikSatiri.height =
+        32;
 
-    const bugun =
-      new Date();
+      baslikSatiri.eachCell(
+        {
+          includeEmpty: true,
+        },
+        (cell) => {
 
-    const gun =
-      String(
-        bugun.getDate()
-      ).padStart(2, "0");
+          cell.font = {
+            name: "Arial",
+            size: 10,
+            bold: true,
+            color: {
+              argb: "FFFFFFFF",
+            },
+          };
 
-    const ay =
-      String(
-        bugun.getMonth() + 1
-      ).padStart(2, "0");
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+              argb: "FF0F172A",
+            },
+          };
 
-    const yil =
-      bugun.getFullYear();
+          cell.alignment = {
+            horizontal: "center",
+            vertical: "middle",
+            wrapText: true,
+          };
 
-    const isimParcalari = [
-      "BALIKESIR_TRAFO_DEGISIMI",
-    ];
+          cell.border = {
+            top: {
+              style: "thin",
+              color: {
+                argb: "FF475569",
+              },
+            },
+            bottom: {
+              style: "thin",
+              color: {
+                argb: "FF475569",
+              },
+            },
+            left: {
+              style: "thin",
+              color: {
+                argb: "FF475569",
+              },
+            },
+            right: {
+              style: "thin",
+              color: {
+                argb: "FF475569",
+              },
+            },
+          };
 
-    if (filtreYil) {
-      isimParcalari.push(
-        filtreYil
+        }
       );
-    }
 
-    if (filtreAy) {
-      isimParcalari.push(
-        filtreAy
+
+      // ========================================================
+      // VERİ
+      // ========================================================
+
+      filtrelenmisKayitlar.forEach(
+        (kayit, index) => {
+
+          let excelTarih:
+            Date | string = "";
+
+          if (kayit.tarih) {
+
+            const p =
+              kayit.tarih.split("-");
+
+            if (
+              p.length === 3
+            ) {
+
+              excelTarih =
+                new Date(
+                  Number(p[0]),
+                  Number(p[1]) - 1,
+                  Number(p[2])
+                );
+
+            } else {
+
+              excelTarih =
+                kayit.tarih;
+
+            }
+
+          }
+
+
+          const satir =
+            worksheet.addRow([
+
+              kayit.sira_no ??
+                index + 1,
+
+              kayit.yil ?? "",
+              kayit.ay ?? "",
+              kayit.ilce ?? "",
+              kayit.mahalle ?? "",
+              kayit.tr ?? "",
+              kayit.lokasyon_id ?? "",
+              kayit.trafo_id ?? "",
+              kayit.trafo_tipi ?? "",
+
+              kayit.sokulen_gucu ?? "",
+              kayit.sokulen_gerilim ?? "",
+              kayit.sokulen_markasi ?? "",
+              kayit.sokulen_seri_no ?? "",
+              kayit.sokulen_imal_yili ?? "",
+              kayit.sokulen_trafo_tipi ?? "",
+              kayit.sokulen_tamir_yili ?? "",
+              kayit.sokulen_tamir_firmasi ?? "",
+              kayit.sokulen_yuklenici ?? "",
+
+              kayit.takilan_gucu ?? "",
+              kayit.takilan_gerilim ?? "",
+              kayit.takilan_markasi ?? "",
+              kayit.takilan_seri_no ?? "",
+              kayit.takilan_imal_yili ?? "",
+              kayit.takilan_trafo_tipi ?? "",
+              kayit.takilan_tamir_yili ?? "",
+              kayit.takilan_tamir_firmasi ?? "",
+
+              excelTarih,
+
+              kayit.degisim_nedeni ?? "",
+
+              kayit.aciklama ?? "",
+            ]);
+
+
+          satir.height =
+            24;
+
+
+          satir.eachCell(
+            {
+              includeEmpty: true,
+            },
+            (cell) => {
+
+              cell.font = {
+                name: "Arial",
+                size: 10,
+                color: {
+                  argb: "FF1F2937",
+                },
+              };
+
+              cell.alignment = {
+                vertical: "middle",
+                wrapText: true,
+              };
+
+              cell.border = {
+                top: {
+                  style: "thin",
+                  color: {
+                    argb: "FFE2E8F0",
+                  },
+                },
+                bottom: {
+                  style: "thin",
+                  color: {
+                    argb: "FFE2E8F0",
+                  },
+                },
+                left: {
+                  style: "thin",
+                  color: {
+                    argb: "FFE2E8F0",
+                  },
+                },
+                right: {
+                  style: "thin",
+                  color: {
+                    argb: "FFE2E8F0",
+                  },
+                },
+              };
+
+
+              if (
+                index % 2 === 1
+              ) {
+
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: {
+                    argb: "FFF8FAFC",
+                  },
+                };
+
+              }
+
+            }
+          );
+
+
+          // TARİH
+          satir.getCell(27).numFmt =
+            "dd.mm.yyyy";
+
+          satir.getCell(27).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+
+          // SIRA
+          satir.getCell(1).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+
+          // YIL
+          satir.getCell(2).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+
+          // AY
+          satir.getCell(3).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+
+          // ====================================================
+          // DEĞİŞİM NEDENİ RENGİ
+          // ====================================================
+
+          const nedenCell =
+            satir.getCell(28);
+
+          const bulunan =
+            NEDENLER.find(
+              (x) =>
+                x.ad ===
+                kayit.degisim_nedeni
+            );
+
+          if (bulunan) {
+
+            const renk =
+              bulunan.renk
+                .replace(
+                  "#",
+                  ""
+                )
+                .toUpperCase();
+
+            nedenCell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: {
+                argb:
+                  `FF${renk}`,
+              },
+            };
+
+            nedenCell.font = {
+              name: "Arial",
+              size: 10,
+              bold: true,
+              color: {
+                argb: "FFFFFFFF",
+              },
+            };
+
+            nedenCell.alignment = {
+              horizontal: "center",
+              vertical: "middle",
+              wrapText: true,
+            };
+
+          }
+
+        }
       );
-    }
 
-    if (filtreNeden) {
+
+      // ========================================================
+      // FİLTRE
+      // ========================================================
+
+      worksheet.autoFilter = {
+        from: {
+          row: 4,
+          column: 1,
+        },
+        to: {
+          row: 4,
+          column: 29,
+        },
+      };
+
+
+      // ========================================================
+      // YAZDIRMA
+      // ========================================================
+
+      worksheet.pageSetup = {
+
+        orientation:
+          "landscape",
+
+        fitToPage:
+          true,
+
+        fitToWidth:
+          1,
+
+        fitToHeight:
+          0,
+
+        margins: {
+          left: 0.25,
+          right: 0.25,
+          top: 0.5,
+          bottom: 0.5,
+          header: 0.2,
+          footer: 0.2,
+        },
+
+      };
+
+
+      worksheet.headerFooter = {
+
+        oddFooter:
+          "&LBALIKESİR TRAFO DEĞİŞİM&C&P / &N",
+
+      };
+
+
+      // ========================================================
+      // DOSYAYI İNDİR
+      // ========================================================
+
+      const buffer =
+        await workbook.xlsx
+          .writeBuffer();
+
+
+      const blob =
+        new Blob(
+          [buffer],
+          {
+            type:
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          }
+        );
+
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+
+      const bugun =
+        new Date();
+
+      const gun =
+        String(
+          bugun.getDate()
+        ).padStart(
+          2,
+          "0"
+        );
+
+      const ay =
+        String(
+          bugun.getMonth() + 1
+        ).padStart(
+          2,
+          "0"
+        );
+
+      const yil =
+        bugun.getFullYear();
+
+
+      const isimParcalari = [
+        "BALIKESIR_TRAFO_DEGISIMI",
+      ];
+
+
+      if (filtreYil) {
+
+        isimParcalari.push(
+          filtreYil
+        );
+
+      }
+
+
+      if (filtreAy) {
+
+        isimParcalari.push(
+          turkceDosyaAdi(
+            filtreAy
+          )
+        );
+
+      }
+
+
+      if (filtreNeden) {
+
+        isimParcalari.push(
+          turkceDosyaAdi(
+            filtreNeden
+          )
+        );
+
+      }
+
 
       isimParcalari.push(
-        turkceDosyaAdi(
-          filtreNeden
-        )
+        `${gun}-${ay}-${yil}`
+      );
+
+
+      link.href =
+        url;
+
+      link.download =
+        `${isimParcalari.join(
+          "_"
+        )}.xlsx`;
+
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      document.body.removeChild(
+        link
+      );
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Excel oluşturma hatası:",
+        error
+      );
+
+      window.alert(
+        "Excel dosyası oluşturulurken hata oluştu."
       );
 
     }
-
-    isimParcalari.push(
-      `${gun}-${ay}-${yil}`
-    );
-
-    link.href = url;
-
-    link.download =
-      `${isimParcalari.join("_")}.xls`;
-
-    document.body.appendChild(
-      link
-    );
-
-    link.click();
-
-    document.body.removeChild(
-      link
-    );
-
-    URL.revokeObjectURL(url);
 
   }
 
 
   // ============================================================
-  // PDF / YAZDIR
+  // PDF RAPOR
   // ============================================================
 
   function raporuYazdir() {
@@ -1790,431 +2281,205 @@ export default function Home() {
       return;
     }
 
-    const filtreler: string[] = [];
-
-    if (arama.trim()) {
-      filtreler.push(
-        `Arama: ${arama.trim()}`
-      );
-    }
-
-    if (filtreYil) {
-      filtreler.push(
-        `Yıl: ${filtreYil}`
-      );
-    }
-
-    if (filtreAy) {
-      filtreler.push(
-        `Ay: ${filtreAy}`
-      );
-    }
-
-    if (filtreNeden) {
-      filtreler.push(
-        `Neden: ${filtreNeden}`
-      );
-    }
-
     const satirlar =
       filtrelenmisKayitlar
         .map(
-          (kayit, index) => {
-
-            return `
-              <tr>
-                <td>${htmlTemizle(
-                  kayit.sira_no ??
-                  index + 1
-                )}</td>
-
-                <td>${htmlTemizle(
-                  tarihGoster(
-                    kayit.tarih
-                  )
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.yil ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.ay ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.ilce ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.mahalle ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.tr ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.lokasyon_id ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.trafo_id ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.trafo_tipi ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.sokulen_gucu ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.sokulen_markasi ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.sokulen_seri_no ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.takilan_gucu ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.takilan_markasi ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.takilan_seri_no ?? ""
-                )}</td>
-
-                <td>${htmlTemizle(
-                  kayit.degisim_nedeni ?? ""
-                )}</td>
-              </tr>
-            `;
-
-          }
+          (kayit, index) => `
+            <tr>
+              <td>${htmlTemizle(
+                kayit.sira_no ??
+                index + 1
+              )}</td>
+              <td>${htmlTemizle(
+                tarihGoster(
+                  kayit.tarih
+                )
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.yil ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.ay ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.ilce ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.mahalle ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.tr ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.lokasyon_id ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.trafo_id ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.sokulen_gucu ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.sokulen_markasi ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.takilan_gucu ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.takilan_markasi ?? ""
+              )}</td>
+              <td>${htmlTemizle(
+                kayit.degisim_nedeni ?? ""
+              )}</td>
+            </tr>
+          `
         )
         .join("");
 
-    const bugun =
-      new Date();
 
-    const raporTarihi =
-      `${String(
-        bugun.getDate()
-      ).padStart(2, "0")}.${
-        String(
-          bugun.getMonth() + 1
-        ).padStart(2, "0")
-      }.${bugun.getFullYear()}`;
-
-    const yazdirmaPenceresi =
+    const pencere =
       window.open(
         "",
         "_blank",
         "width=1400,height=900"
       );
 
-    if (!yazdirmaPenceresi) {
+
+    if (!pencere) {
 
       window.alert(
-        "Yazdırma penceresi açılamadı. Chrome'da açılır pencere iznini kontrol edin."
+        "Yazdırma penceresi açılamadı."
       );
 
       return;
     }
 
-    yazdirmaPenceresi.document.write(`
+
+    pencere.document.write(`
       <!DOCTYPE html>
-
       <html lang="tr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Balıkesir Trafo Değişim Raporu</title>
 
-        <head>
+        <style>
 
-          <meta charset="UTF-8" />
-
-          <title>
-            Balıkesir Trafo Değişim Raporu
-          </title>
-
-          <style>
-
-            @page {
-              size: A4 landscape;
-              margin: 8mm;
-            }
-
-            * {
-              box-sizing: border-box;
-            }
-
-            body {
-              margin: 0;
-              padding: 0;
-              color: #111827;
-              font-family: Arial, Helvetica, sans-serif;
-              background: white;
-            }
-
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              border-bottom: 3px solid #f97316;
-              padding-bottom: 10px;
-              margin-bottom: 10px;
-            }
-
-            .brand {
-              font-size: 19px;
-              font-weight: 800;
-            }
-
-            .subtitle {
-              color: #f97316;
-              font-size: 12px;
-              font-weight: 700;
-              margin-top: 3px;
-            }
-
-            .date {
-              font-size: 10px;
-              text-align: right;
-              line-height: 1.5;
-            }
-
-            .summary {
-              display: flex;
-              gap: 10px;
-              margin: 10px 0;
-            }
-
-            .summary-box {
-              border: 1px solid #d1d5db;
-              border-radius: 6px;
-              padding: 7px 10px;
-              font-size: 10px;
-            }
-
-            .summary-box strong {
-              font-size: 13px;
-            }
-
-            .filters {
-              margin-bottom: 10px;
-              font-size: 9px;
-              color: #4b5563;
-            }
-
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              table-layout: auto;
-              font-size: 7px;
-            }
-
-            thead {
-              display: table-header-group;
-            }
-
-            th {
-              background: #111827;
-              color: white;
-              border: 1px solid #374151;
-              padding: 5px 3px;
-              text-align: center;
-              white-space: nowrap;
-            }
-
-            td {
-              border: 1px solid #d1d5db;
-              padding: 4px 3px;
-              vertical-align: top;
-              word-break: break-word;
-            }
-
-            tbody tr:nth-child(even) {
-              background: #f9fafb;
-            }
-
-            .footer {
-              margin-top: 10px;
-              padding-top: 7px;
-              border-top: 1px solid #d1d5db;
-              font-size: 8px;
-              color: #6b7280;
-              text-align: center;
-            }
-
-            @media print {
-
-              body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-
-            }
-
-          </style>
-
-        </head>
-
-        <body>
-
-          <div class="header">
-
-            <div>
-
-              <div class="brand">
-                ⚡ BALIKESİR TRAFO DEĞİŞİM RAPORU
-              </div>
-
-              <div class="subtitle">
-                Trafo Değişim Yönetim Sistemi
-              </div>
-
-            </div>
-
-            <div class="date">
-
-              <strong>
-                Rapor Tarihi
-              </strong>
-
-              <br />
-
-              ${raporTarihi}
-
-            </div>
-
-          </div>
-
-          <div class="summary">
-
-            <div class="summary-box">
-              Toplam Kayıt<br />
-              <strong>
-                ${filtrelenmisKayitlar.length}
-              </strong>
-            </div>
-
-            ${
-              filtreYil
-                ? `
-                  <div class="summary-box">
-                    Yıl<br />
-                    <strong>${htmlTemizle(
-                      filtreYil
-                    )}</strong>
-                  </div>
-                `
-                : ""
-            }
-
-            ${
-              filtreAy
-                ? `
-                  <div class="summary-box">
-                    Ay<br />
-                    <strong>${htmlTemizle(
-                      filtreAy
-                    )}</strong>
-                  </div>
-                `
-                : ""
-            }
-
-            ${
-              filtreNeden
-                ? `
-                  <div class="summary-box">
-                    Değişim Nedeni<br />
-                    <strong>${htmlTemizle(
-                      filtreNeden
-                    )}</strong>
-                  </div>
-                `
-                : ""
-            }
-
-          </div>
-
-          ${
-            filtreler.length
-              ? `
-                <div class="filters">
-                  <strong>Uygulanan Filtreler:</strong>
-                  ${htmlTemizle(
-                    filtreler.join(" • ")
-                  )}
-                </div>
-              `
-              : ""
+          @page {
+            size: A4 landscape;
+            margin: 8mm;
           }
 
-          <table>
+          body {
+            font-family: Arial, sans-serif;
+            color: #111827;
+          }
 
-            <thead>
+          h1 {
+            border-bottom: 4px solid #f97316;
+            padding-bottom: 8px;
+          }
 
-              <tr>
+          .toplam {
+            margin-bottom: 15px;
+            font-weight: bold;
+          }
 
-                <th>No</th>
-                <th>Tarih</th>
-                <th>Yıl</th>
-                <th>Ay</th>
-                <th>İlçe</th>
-                <th>Mahalle</th>
-                <th>TR</th>
-                <th>Lokasyon ID</th>
-                <th>Trafo ID</th>
-                <th>Konum Tipi</th>
-                <th>Sökülen Güç</th>
-                <th>Sökülen Marka</th>
-                <th>Sökülen Seri</th>
-                <th>Takılan Güç</th>
-                <th>Takılan Marka</th>
-                <th>Takılan Seri</th>
-                <th>Değişim Nedeni</th>
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+          }
 
-              </tr>
+          th {
+            background: #111827;
+            color: white;
+            padding: 5px;
+            border: 1px solid #475569;
+          }
 
-            </thead>
+          td {
+            padding: 4px;
+            border: 1px solid #d1d5db;
+          }
 
-            <tbody>
-              ${satirlar}
-            </tbody>
+          tbody tr:nth-child(even) {
+            background: #f8fafc;
+          }
 
-          </table>
+          @media print {
 
-          <div class="footer">
-            BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-          </div>
+            body {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
 
-          <script>
+          }
 
-            window.onload = function () {
+        </style>
 
-              setTimeout(
-                function () {
-                  window.print();
-                },
-                300
-              );
+      </head>
 
-            };
+      <body>
 
-          </script>
+        <h1>
+          BALIKESİR TRAFO DEĞİŞİM RAPORU
+        </h1>
 
-        </body>
+        <div class="toplam">
+          Toplam Kayıt:
+          ${filtrelenmisKayitlar.length}
+        </div>
 
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>No</th>
+              <th>Tarih</th>
+              <th>Yıl</th>
+              <th>Ay</th>
+              <th>İlçe</th>
+              <th>Mahalle</th>
+              <th>TR</th>
+              <th>Lokasyon ID</th>
+              <th>Trafo ID</th>
+              <th>Sökülen Güç</th>
+              <th>Sökülen Marka</th>
+              <th>Takılan Güç</th>
+              <th>Takılan Marka</th>
+              <th>Değişim Nedeni</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${satirlar}
+          </tbody>
+
+        </table>
+
+        <script>
+
+          window.onload = function () {
+
+            setTimeout(
+              function () {
+                window.print();
+              },
+              300
+            );
+
+          };
+
+        </script>
+
+      </body>
       </html>
     `);
 
-    yazdirmaPenceresi.document.close();
+
+    pencere.document.close();
 
   }
 
@@ -2277,42 +2542,17 @@ export default function Home() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
+
                 Trafo değişim kayıtlarını yönetin,
                 yıllık ve aylık istatistikleri takip edin,
                 arıza ve değişim nedenlerini tek ekrandan analiz edin.
+
               </p>
 
             </div>
 
-            <div className="grid max-w-xl grid-cols-2 gap-4">
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-
-                <div className="text-2xl">
-                  📊
-                </div>
-
-                <div className="mt-3 font-bold">
-                  Canlı Dashboard
-                </div>
-
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-
-                <div className="text-2xl">
-                  🔐
-                </div>
-
-                <div className="mt-3 font-bold">
-                  Güvenli Erişim
-                </div>
-
-              </div>
-
-            </div>
-
           </section>
+
 
           <section className="flex w-full items-center justify-center p-6 lg:w-1/2">
 
@@ -2332,10 +2572,11 @@ export default function Home() {
 
                 </div>
 
+
                 <form
                   onSubmit={girisYap}
-                  className="space-y-5"
                   autoComplete="on"
+                  className="space-y-5"
                 >
 
                   <Alan baslik="E-posta">
@@ -2358,6 +2599,7 @@ export default function Home() {
 
                   </Alan>
 
+
                   <Alan baslik="Şifre">
 
                     <input
@@ -2378,6 +2620,7 @@ export default function Home() {
 
                   </Alan>
 
+
                   {authHata && (
 
                     <HataKutusu>
@@ -2386,16 +2629,21 @@ export default function Home() {
 
                   )}
 
+
                   <button
                     type="submit"
-                    disabled={girisYukleniyor}
+                    disabled={
+                      girisYukleniyor
+                    }
                     className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400 disabled:opacity-50"
                   >
+
                     {
                       girisYukleniyor
                         ? "Giriş Yapılıyor..."
                         : "Sisteme Giriş Yap"
                     }
+
                   </button>
 
                 </form>
@@ -2416,7 +2664,7 @@ export default function Home() {
 
 
   // ============================================================
-  // ANA UYGULAMA
+  // ANA EKRAN
   // ============================================================
 
   return (
@@ -2443,38 +2691,60 @@ export default function Home() {
 
           </div>
 
+
           <nav className="flex-1 space-y-2 p-3">
 
             <MenuButonu
-              aktif={sayfa === "dashboard"}
-              onClick={() => setSayfa("dashboard")}
+              aktif={
+                sayfa ===
+                "dashboard"
+              }
+              onClick={
+                () =>
+                  setSayfa(
+                    "dashboard"
+                  )
+              }
             >
               📊 Kontrol Paneli
             </MenuButonu>
+
 
             <MenuButonu
               aktif={
                 sayfa === "yeni" &&
                 !duzenlenenId
               }
-              onClick={() => {
+              onClick={
+                () => {
 
-                formTemizle();
-                setSayfa("yeni");
+                  formTemizle();
+                  setSayfa("yeni");
 
-              }}
+                }
+              }
             >
               ➕ Yeni Kayıt
             </MenuButonu>
 
+
             <MenuButonu
-              aktif={sayfa === "kayitlar"}
-              onClick={() => setSayfa("kayitlar")}
+              aktif={
+                sayfa ===
+                "kayitlar"
+              }
+              onClick={
+                () =>
+                  setSayfa(
+                    "kayitlar"
+                  )
+              }
             >
               📋 Trafo Kayıtları
             </MenuButonu>
 
           </nav>
+
 
           <div className="border-t border-slate-800 p-3">
 
@@ -2496,48 +2766,54 @@ export default function Home() {
 
         <section className="min-w-0 flex-1">
 
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#0b1628]/95 px-5 py-4 backdrop-blur lg:px-7">
+          <header className="sticky top-0 z-20 border-b border-slate-800 bg-[#0b1628]/95 px-5 py-4 backdrop-blur lg:px-7">
 
-            <div>
+            <h1 className="text-xl font-black lg:text-2xl">
 
-              <h1 className="text-xl font-black lg:text-2xl">
+              {
+                sayfa === "dashboard"
+                  ? "Trafo Değişim Kontrol Paneli"
+                  : sayfa === "yeni"
+                  ? duzenlenenId
+                    ? "Trafo Kaydını Düzenle"
+                    : "Yeni Trafo Değişim Kaydı"
+                  : "Trafo Değişim Kayıtları"
+              }
 
-                {
-                  sayfa === "dashboard"
-                    ? "Trafo Değişim Kontrol Paneli"
-                    : sayfa === "yeni"
-                    ? duzenlenenId
-                      ? "Trafo Kaydını Düzenle"
-                      : "Yeni Trafo Değişim Kaydı"
-                    : "Trafo Değişim Kayıtları"
-                }
+            </h1>
 
-              </h1>
-
-              <p className="mt-1 text-xs text-slate-500">
-                BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-              </p>
-
-            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
+            </p>
 
           </header>
+
 
           <div className="p-4 sm:p-6 lg:p-7">
 
             {genelHata && (
+
               <HataKutusu>
                 {genelHata}
               </HataKutusu>
+
             )}
+
 
             {basariMesaji && (
+
               <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
+
                 {basariMesaji}
+
               </div>
+
             )}
 
 
-            {/* DASHBOARD */}
+            {/* ==================================================
+                DASHBOARD
+            ================================================== */}
 
             {sayfa === "dashboard" && (
 
@@ -2552,29 +2828,39 @@ export default function Home() {
                     </div>
 
                     <select
-                      value={dashboardYil}
-                      onChange={(e) =>
-                        setDashboardYil(
-                          e.target.value
-                        )
+                      value={
+                        dashboardYil
+                      }
+                      onChange={
+                        (e) =>
+                          setDashboardYil(
+                            e.target.value
+                          )
                       }
                       className={inputSinif}
                     >
+
                       <option value="">
                         Tüm Yıllar
                       </option>
 
-                      {yillar.map((yil) => (
-                        <option
-                          key={yil}
-                          value={yil}
-                        >
-                          {yil}
-                        </option>
-                      ))}
+                      {yillar.map(
+                        (yil) => (
+
+                          <option
+                            key={yil}
+                            value={yil}
+                          >
+                            {yil}
+                          </option>
+
+                        )
+                      )}
+
                     </select>
 
                   </div>
+
 
                   <div className="flex-1">
 
@@ -2583,49 +2869,64 @@ export default function Home() {
                     </div>
 
                     <select
-                      value={dashboardIlce}
-                      onChange={(e) =>
-                        setDashboardIlce(
-                          e.target.value
-                        )
+                      value={
+                        dashboardIlce
+                      }
+                      onChange={
+                        (e) =>
+                          setDashboardIlce(
+                            e.target.value
+                          )
                       }
                       className={inputSinif}
                     >
+
                       <option value="">
                         Tüm İlçeler
                       </option>
 
-                      {ilceler.map((ilce) => (
-                        <option
-                          key={ilce}
-                          value={ilce}
-                        >
-                          {ilce}
-                        </option>
-                      ))}
+                      {ilceler.map(
+                        (ilce) => (
+
+                          <option
+                            key={ilce}
+                            value={ilce}
+                          >
+                            {ilce}
+                          </option>
+
+                        )
+                      )}
+
                     </select>
 
                   </div>
 
+
                   <button
-                    onClick={() => {
+                    onClick={
+                      () => {
 
-                      setDashboardYil("");
-                      setDashboardIlce("");
+                        setDashboardYil("");
+                        setDashboardIlce("");
 
-                    }}
+                      }
+                    }
                     className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800"
                   >
                     Filtreyi Temizle
                   </button>
 
+
                   <button
-                    onClick={() => {
+                    onClick={
+                      () => {
 
-                      formTemizle();
-                      setSayfa("yeni");
+                        formTemizle();
+                        setSayfa("yeni");
 
-                    }}
+                      }
+                    }
                     className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-black hover:bg-orange-400"
                   >
                     + Yeni Trafo Kaydı
@@ -2638,24 +2939,33 @@ export default function Home() {
 
                   <KpiKart
                     baslik="TOPLAM KAYIT"
-                    sayi={dashboardKayitlari.length}
+                    sayi={
+                      dashboardKayitlari.length
+                    }
                     renk="#f97316"
                   />
 
-                  {NEDENLER.map((neden) => (
 
-                    <KpiKart
-                      key={neden.ad}
-                      baslik={neden.ad}
-                      sayi={
-                        nedenSayilari[
+                  {NEDENLER.map(
+                    (neden) => (
+
+                      <KpiKart
+                        key={neden.ad}
+                        baslik={
                           neden.ad
-                        ] || 0
-                      }
-                      renk={neden.renk}
-                    />
+                        }
+                        sayi={
+                          nedenSayilari[
+                            neden.ad
+                          ] || 0
+                        }
+                        renk={
+                          neden.renk
+                        }
+                      />
 
-                  ))}
+                    )
+                  )}
 
                 </div>
 
@@ -2665,22 +2975,36 @@ export default function Home() {
                   <OzetKart
                     ikon="📅"
                     baslik="SON 30 GÜN"
-                    deger={son30Gun.toString()}
+                    deger={
+                      son30Gun.toString()
+                    }
                     alt="Trafo değişim kaydı"
                   />
 
                   <OzetKart
                     ikon="📍"
                     baslik="EN ÇOK DEĞİŞİM YAPILAN İLÇE"
-                    deger={String(enCokIlce[0])}
-                    alt={`${enCokIlce[1]} kayıt`}
+                    deger={
+                      String(
+                        enCokIlce[0]
+                      )
+                    }
+                    alt={
+                      `${enCokIlce[1]} kayıt`
+                    }
                   />
 
                   <OzetKart
                     ikon="⚡"
                     baslik="EN ÇOK DEĞİŞİM NEDENİ"
-                    deger={String(enCokNeden[0])}
-                    alt={`${enCokNeden[1]} kayıt`}
+                    deger={
+                      String(
+                        enCokNeden[0]
+                      )
+                    }
+                    alt={
+                      `${enCokNeden[1]} kayıt`
+                    }
                   />
 
                 </div>
@@ -2706,7 +3030,9 @@ export default function Home() {
                         <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-[#101d30]">
 
                           <div className="text-3xl font-black">
-                            {dashboardKayitlari.length}
+                            {
+                              dashboardKayitlari.length
+                            }
                           </div>
 
                           <div className="text-xs text-slate-500">
@@ -2717,42 +3043,52 @@ export default function Home() {
 
                       </div>
 
+
                       <div className="mt-7 grid w-full gap-2">
 
-                        {NEDENLER.map((neden) => (
+                        {NEDENLER.map(
+                          (neden) => (
 
-                          <div
-                            key={neden.ad}
-                            className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
-                          >
+                            <div
+                              key={
+                                neden.ad
+                              }
+                              className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
+                            >
 
-                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2">
 
-                              <span
-                                className="h-3 w-3 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    neden.renk,
-                                }}
-                              />
+                                <span
+                                  className="h-3 w-3 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      neden.renk,
+                                  }}
+                                />
 
-                              <span className="text-xs font-bold">
-                                {neden.ad}
+                                <span className="text-xs font-bold">
+                                  {
+                                    neden.ad
+                                  }
+                                </span>
+
+                              </div>
+
+
+                              <span className="text-sm font-black">
+
+                                {
+                                  nedenSayilari[
+                                    neden.ad
+                                  ] || 0
+                                }
+
                               </span>
 
                             </div>
 
-                            <span className="text-sm font-black">
-                              {
-                                nedenSayilari[
-                                  neden.ad
-                                ] || 0
-                              }
-                            </span>
-
-                          </div>
-
-                        ))}
+                          )
+                        )}
 
                       </div>
 
@@ -2768,66 +3104,84 @@ export default function Home() {
 
                     <GrafikLegend />
 
+
                     <div className="mt-6 flex h-72 items-end gap-5 overflow-x-auto border-b border-slate-700 pb-1">
 
-                      {yillikNedenler.map((item) => (
+                      {yillikNedenler.map(
+                        (item) => (
 
-                        <div
-                          key={item.yil}
-                          className="flex min-w-24 flex-col items-center justify-end"
-                        >
+                          <div
+                            key={
+                              item.yil
+                            }
+                            className="flex min-w-24 flex-col items-center justify-end"
+                          >
 
-                          <div className="mb-2 text-xs font-black text-slate-300">
-                            {item.toplam}
+                            <div className="mb-2 text-xs font-black text-slate-300">
+
+                              {
+                                item.toplam
+                              }
+
+                            </div>
+
+
+                            <div className="flex h-52 items-end gap-1">
+
+                              {NEDENLER.map(
+                                (neden) => {
+
+                                  const sayi =
+                                    item.nedenler[
+                                      neden.ad
+                                    ] || 0;
+
+                                  const yukseklik =
+                                    sayi
+                                      ? Math.max(
+                                          7,
+                                          (
+                                            sayi /
+                                            maxYillik
+                                          ) *
+                                            185
+                                        )
+                                      : 0;
+
+                                  return (
+
+                                    <div
+                                      key={
+                                        neden.ad
+                                      }
+                                      title={`${neden.ad}: ${sayi}`}
+                                      className="w-2 rounded-t"
+                                      style={{
+                                        height:
+                                          `${yukseklik}px`,
+                                        backgroundColor:
+                                          neden.renk,
+                                      }}
+                                    />
+
+                                  );
+
+                                }
+                              )}
+
+                            </div>
+
+
+                            <div className="mt-2 text-xs text-slate-400">
+                              {
+                                item.yil
+                              }
+                            </div>
+
                           </div>
 
-                          <div className="flex h-52 items-end gap-1">
-
-                            {NEDENLER.map((neden) => {
-
-                              const sayi =
-                                item.nedenler[
-                                  neden.ad
-                                ] || 0;
-
-                              const yukseklik =
-                                sayi
-                                  ? Math.max(
-                                      7,
-                                      (
-                                        sayi /
-                                        maxYillik
-                                      ) * 185
-                                    )
-                                  : 0;
-
-                              return (
-
-                                <div
-                                  key={neden.ad}
-                                  title={`${neden.ad}: ${sayi}`}
-                                  className="w-2 rounded-t"
-                                  style={{
-                                    height:
-                                      `${yukseklik}px`,
-                                    backgroundColor:
-                                      neden.renk,
-                                  }}
-                                />
-
-                              );
-
-                            })}
-
-                          </div>
-
-                          <div className="mt-2 text-xs text-slate-400">
-                            {item.yil}
-                          </div>
-
-                        </div>
-
-                      ))}
+                        )
+                      )}
 
                     </div>
 
@@ -2849,6 +3203,7 @@ export default function Home() {
 
                     <GrafikLegend />
 
+
                     {!dashboardYil ? (
 
                       <BosAlan>
@@ -2859,64 +3214,84 @@ export default function Home() {
 
                       <div className="mt-6 flex h-72 items-end gap-3 overflow-x-auto border-b border-slate-700">
 
-                        {aylikNedenler.map((item) => (
+                        {aylikNedenler.map(
+                          (item) => (
 
-                          <div
-                            key={item.ay}
-                            className="flex min-w-20 flex-col items-center justify-end"
-                          >
+                            <div
+                              key={
+                                item.ay
+                              }
+                              className="flex min-w-20 flex-col items-center justify-end"
+                            >
 
-                            <div className="mb-2 text-xs font-black">
-                              {item.toplam}
+                              <div className="mb-2 text-xs font-black">
+                                {
+                                  item.toplam
+                                }
+                              </div>
+
+
+                              <div className="flex h-52 items-end gap-[2px]">
+
+                                {NEDENLER.map(
+                                  (neden) => {
+
+                                    const sayi =
+                                      item.nedenler[
+                                        neden.ad
+                                      ] || 0;
+
+                                    const yukseklik =
+                                      sayi
+                                        ? Math.max(
+                                            6,
+                                            (
+                                              sayi /
+                                              maxAylik
+                                            ) *
+                                              180
+                                          )
+                                        : 0;
+
+                                    return (
+
+                                      <div
+                                        key={
+                                          neden.ad
+                                        }
+                                        title={`${item.ay} - ${neden.ad}: ${sayi}`}
+                                        className="w-[6px] rounded-t"
+                                        style={{
+                                          height:
+                                            `${yukseklik}px`,
+                                          backgroundColor:
+                                            neden.renk,
+                                        }}
+                                      />
+
+                                    );
+
+                                  }
+                                )}
+
+                              </div>
+
+
+                              <div className="mt-2 text-[10px] text-slate-400">
+
+                                {
+                                  item.ay.substring(
+                                    0,
+                                    3
+                                  )
+                                }
+
+                              </div>
+
                             </div>
 
-                            <div className="flex h-52 items-end gap-[2px]">
-
-                              {NEDENLER.map((neden) => {
-
-                                const sayi =
-                                  item.nedenler[
-                                    neden.ad
-                                  ] || 0;
-
-                                const yukseklik =
-                                  sayi
-                                    ? Math.max(
-                                        6,
-                                        (
-                                          sayi /
-                                          maxAylik
-                                        ) * 180
-                                      )
-                                    : 0;
-
-                                return (
-
-                                  <div
-                                    key={neden.ad}
-                                    title={`${item.ay} - ${neden.ad}: ${sayi}`}
-                                    className="w-[6px] rounded-t"
-                                    style={{
-                                      height:
-                                        `${yukseklik}px`,
-                                      backgroundColor:
-                                        neden.renk,
-                                    }}
-                                  />
-
-                                );
-
-                              })}
-
-                            </div>
-
-                            <div className="mt-2 text-[10px] text-slate-400">
-                              {item.ay.substring(0, 3)}
-                            </div>
-
-                          </div>
-
-                        ))}
+                          )
+                        )}
 
                       </div>
 
@@ -2935,10 +3310,21 @@ export default function Home() {
                   >
 
                     <KayitTablosu
-                      kayitlar={kayitlar.slice(0, 8)}
-                      detay={setDetayKayit}
-                      duzenle={kaydiDuzenle}
-                      sil={kaydiSil}
+                      kayitlar={
+                        kayitlar.slice(
+                          0,
+                          8
+                        )
+                      }
+                      detay={
+                        setDetayKayit
+                      }
+                      duzenle={
+                        kaydiDuzenle
+                      }
+                      sil={
+                        kaydiSil
+                      }
                     />
 
                   </Panel>
@@ -2950,7 +3336,9 @@ export default function Home() {
             )}
 
 
-            {/* YENİ / DÜZENLE */}
+            {/* ==================================================
+                FORM
+            ================================================== */}
 
             {sayfa === "yeni" && (
 
@@ -2959,127 +3347,166 @@ export default function Home() {
                 className="space-y-6"
               >
 
-                <FormBolumu
-                  baslik="📍 KONUM BİLGİLERİ"
-                >
+                <FormBolumu baslik="📍 KONUM BİLGİLERİ">
 
                   <FormGrid>
 
                     <ComboAlani
                       baslik="Yıl *"
-                      deger={form.yil}
-                      degistir={(v) =>
-                        formDegistir(
-                          "yil",
-                          v
-                        )
+                      deger={
+                        form.yil
                       }
-                      secenekler={YIL_SECENEKLERI}
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "yil",
+                            v
+                          )
+                      }
+                      secenekler={
+                        YIL_SECENEKLERI
+                      }
                       listeId="yil-listesi"
                       gerekli
                     />
+
 
                     <Alan baslik="Ay *">
 
                       <select
                         required
-                        value={form.ay}
-                        onChange={(e) =>
-                          formDegistir(
-                            "ay",
-                            e.target.value
-                          )
+                        value={
+                          form.ay
                         }
-                        className={inputSinif}
+                        onChange={
+                          (e) =>
+                            formDegistir(
+                              "ay",
+                              e.target.value
+                            )
+                        }
+                        className={
+                          inputSinif
+                        }
                       >
 
                         <option value="">
                           Seçiniz
                         </option>
 
-                        {AYLAR.map((ay) => (
-                          <option
-                            key={ay}
-                            value={ay}
-                          >
-                            {ay}
-                          </option>
-                        ))}
+                        {AYLAR.map(
+                          (ay) => (
+
+                            <option
+                              key={ay}
+                              value={ay}
+                            >
+                              {ay}
+                            </option>
+
+                          )
+                        )}
 
                       </select>
 
                     </Alan>
 
+
                     <ComboAlani
                       baslik="İlçe"
-                      deger={form.ilce}
-                      degistir={(v) =>
-                        formDegistir(
-                          "ilce",
-                          v
-                        )
+                      deger={
+                        form.ilce
                       }
-                      secenekler={ILCE_SECENEKLERI}
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "ilce",
+                            v
+                          )
+                      }
+                      secenekler={
+                        ILCE_SECENEKLERI
+                      }
                       listeId="ilce-listesi"
                     />
 
+
                     <MetinAlani
                       baslik="Mahalle"
-                      deger={form.mahalle}
-                      degistir={(v) =>
-                        formDegistir(
-                          "mahalle",
-                          v
-                        )
+                      deger={
+                        form.mahalle
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "mahalle",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="TR"
-                      deger={form.tr}
-                      degistir={(v) =>
-                        formDegistir(
-                          "tr",
-                          v
-                        )
+                      deger={
+                        form.tr
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "tr",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="Lokasyon ID"
-                      deger={form.lokasyon_id}
-                      degistir={(v) =>
-                        formDegistir(
-                          "lokasyon_id",
-                          v
-                        )
+                      deger={
+                        form.lokasyon_id
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "lokasyon_id",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="Trafo ID"
-                      deger={form.trafo_id}
-                      degistir={(v) =>
-                        formDegistir(
-                          "trafo_id",
-                          v
-                        )
+                      deger={
+                        form.trafo_id
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "trafo_id",
+                            v
+                          )
                       }
                     />
 
+
                     <ComboAlani
                       baslik="Trafo Tipi"
-                      deger={form.trafo_tipi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "trafo_tipi",
-                          v
-                        )
+                      deger={
+                        form.trafo_tipi
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "trafo_tipi",
+                            v
+                          )
                       }
                       secenekler={
                         KONUM_TRAFO_TIPLERI
                       }
-                      listeId="konum-trafo-tipi-listesi"
+                      listeId="konum-trafo-tipi"
                     />
 
                   </FormGrid>
@@ -3087,116 +3514,157 @@ export default function Home() {
                 </FormBolumu>
 
 
-                <FormBolumu
-                  baslik="🔴 SÖKÜLEN TRAFO"
-                >
+                <FormBolumu baslik="🔴 SÖKÜLEN TRAFO">
 
                   <FormGrid>
 
                     <ComboAlani
                       baslik="Gücü"
-                      deger={form.sokulen_gucu}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_gucu",
-                          v
-                        )
+                      deger={
+                        form.sokulen_gucu
                       }
-                      secenekler={GUC_SECENEKLERI}
-                      listeId="sokulen-guc-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_gucu",
+                            v
+                          )
+                      }
+                      secenekler={
+                        GUC_SECENEKLERI
+                      }
+                      listeId="sokulen-guc"
                     />
+
 
                     <ComboAlani
                       baslik="Gerilim"
-                      deger={form.sokulen_gerilim}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_gerilim",
-                          v
-                        )
+                      deger={
+                        form.sokulen_gerilim
                       }
-                      secenekler={GERILIM_SECENEKLERI}
-                      listeId="sokulen-gerilim-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_gerilim",
+                            v
+                          )
+                      }
+                      secenekler={
+                        GERILIM_SECENEKLERI
+                      }
+                      listeId="sokulen-gerilim"
                     />
+
 
                     <ComboAlani
                       baslik="Markası"
-                      deger={form.sokulen_markasi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_markasi",
-                          v
-                        )
+                      deger={
+                        form.sokulen_markasi
                       }
-                      secenekler={MARKA_SECENEKLERI}
-                      listeId="sokulen-marka-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_markasi",
+                            v
+                          )
+                      }
+                      secenekler={
+                        MARKA_SECENEKLERI
+                      }
+                      listeId="sokulen-marka"
                     />
+
 
                     <MetinAlani
                       baslik="Seri No"
-                      deger={form.sokulen_seri_no}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_seri_no",
-                          v
-                        )
+                      deger={
+                        form.sokulen_seri_no
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_seri_no",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="İmal Yılı"
-                      deger={form.sokulen_imal_yili}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_imal_yili",
-                          v
-                        )
+                      deger={
+                        form.sokulen_imal_yili
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_imal_yili",
+                            v
+                          )
                       }
                     />
+
 
                     <ComboAlani
                       baslik="Trafo Tipi"
-                      deger={form.sokulen_trafo_tipi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_trafo_tipi",
-                          v
-                        )
+                      deger={
+                        form.sokulen_trafo_tipi
                       }
-                      secenekler={TRAFO_TIP_SECENEKLERI}
-                      listeId="sokulen-trafo-tipi-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_trafo_tipi",
+                            v
+                          )
+                      }
+                      secenekler={
+                        TRAFO_TIP_SECENEKLERI
+                      }
+                      listeId="sokulen-trafo-tipi"
                     />
+
 
                     <MetinAlani
                       baslik="Tamir Yılı"
-                      deger={form.sokulen_tamir_yili}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_tamir_yili",
-                          v
-                        )
+                      deger={
+                        form.sokulen_tamir_yili
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_tamir_yili",
+                            v
+                          )
                       }
                     />
 
+
                     <MetinAlani
                       baslik="Tamir Firması"
-                      deger={form.sokulen_tamir_firmasi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_tamir_firmasi",
-                          v
-                        )
+                      deger={
+                        form.sokulen_tamir_firmasi
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_tamir_firmasi",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="Yüklenici"
-                      deger={form.sokulen_yuklenici}
-                      degistir={(v) =>
-                        formDegistir(
-                          "sokulen_yuklenici",
-                          v
-                        )
+                      deger={
+                        form.sokulen_yuklenici
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "sokulen_yuklenici",
+                            v
+                          )
                       }
                     />
 
@@ -3205,105 +3673,142 @@ export default function Home() {
                 </FormBolumu>
 
 
-                <FormBolumu
-                  baslik="🟢 TAKILAN TRAFO"
-                >
+                <FormBolumu baslik="🟢 TAKILAN TRAFO">
 
                   <FormGrid>
 
                     <ComboAlani
                       baslik="Gücü"
-                      deger={form.takilan_gucu}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_gucu",
-                          v
-                        )
+                      deger={
+                        form.takilan_gucu
                       }
-                      secenekler={GUC_SECENEKLERI}
-                      listeId="takilan-guc-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_gucu",
+                            v
+                          )
+                      }
+                      secenekler={
+                        GUC_SECENEKLERI
+                      }
+                      listeId="takilan-guc"
                     />
+
 
                     <ComboAlani
                       baslik="Gerilim"
-                      deger={form.takilan_gerilim}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_gerilim",
-                          v
-                        )
+                      deger={
+                        form.takilan_gerilim
                       }
-                      secenekler={GERILIM_SECENEKLERI}
-                      listeId="takilan-gerilim-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_gerilim",
+                            v
+                          )
+                      }
+                      secenekler={
+                        GERILIM_SECENEKLERI
+                      }
+                      listeId="takilan-gerilim"
                     />
+
 
                     <ComboAlani
                       baslik="Markası"
-                      deger={form.takilan_markasi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_markasi",
-                          v
-                        )
+                      deger={
+                        form.takilan_markasi
                       }
-                      secenekler={MARKA_SECENEKLERI}
-                      listeId="takilan-marka-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_markasi",
+                            v
+                          )
+                      }
+                      secenekler={
+                        MARKA_SECENEKLERI
+                      }
+                      listeId="takilan-marka"
                     />
+
 
                     <MetinAlani
                       baslik="Seri No"
-                      deger={form.takilan_seri_no}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_seri_no",
-                          v
-                        )
+                      deger={
+                        form.takilan_seri_no
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_seri_no",
+                            v
+                          )
                       }
                     />
+
 
                     <MetinAlani
                       baslik="İmal Yılı"
-                      deger={form.takilan_imal_yili}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_imal_yili",
-                          v
-                        )
+                      deger={
+                        form.takilan_imal_yili
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_imal_yili",
+                            v
+                          )
                       }
                     />
+
 
                     <ComboAlani
                       baslik="Trafo Tipi"
-                      deger={form.takilan_trafo_tipi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_trafo_tipi",
-                          v
-                        )
+                      deger={
+                        form.takilan_trafo_tipi
                       }
-                      secenekler={TRAFO_TIP_SECENEKLERI}
-                      listeId="takilan-trafo-tipi-listesi"
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_trafo_tipi",
+                            v
+                          )
+                      }
+                      secenekler={
+                        TRAFO_TIP_SECENEKLERI
+                      }
+                      listeId="takilan-trafo-tipi"
                     />
+
 
                     <MetinAlani
                       baslik="Tamir Yılı"
-                      deger={form.takilan_tamir_yili}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_tamir_yili",
-                          v
-                        )
+                      deger={
+                        form.takilan_tamir_yili
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_tamir_yili",
+                            v
+                          )
                       }
                     />
 
+
                     <MetinAlani
                       baslik="Tamir Firması"
-                      deger={form.takilan_tamir_firmasi}
-                      degistir={(v) =>
-                        formDegistir(
-                          "takilan_tamir_firmasi",
-                          v
-                        )
+                      deger={
+                        form.takilan_tamir_firmasi
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "takilan_tamir_firmasi",
+                            v
+                          )
                       }
                     />
 
@@ -3312,9 +3817,7 @@ export default function Home() {
                 </FormBolumu>
 
 
-                <FormBolumu
-                  baslik="📅 İŞLEM BİLGİLERİ"
-                >
+                <FormBolumu baslik="📅 İŞLEM BİLGİLERİ">
 
                   <FormGrid>
 
@@ -3323,44 +3826,65 @@ export default function Home() {
                       <input
                         type="date"
                         required
-                        value={form.tarih}
-                        onChange={(e) =>
-                          formDegistir(
-                            "tarih",
-                            e.target.value
-                          )
+                        value={
+                          form.tarih
                         }
-                        className={inputSinif}
+                        onChange={
+                          (e) =>
+                            formDegistir(
+                              "tarih",
+                              e.target.value
+                            )
+                        }
+                        className={
+                          inputSinif
+                        }
                       />
 
                     </Alan>
+
 
                     <Alan baslik="Değişim Nedeni *">
 
                       <select
                         required
-                        value={form.degisim_nedeni}
-                        onChange={(e) =>
-                          formDegistir(
-                            "degisim_nedeni",
-                            e.target.value
-                          )
+                        value={
+                          form.degisim_nedeni
                         }
-                        className={inputSinif}
+                        onChange={
+                          (e) =>
+                            formDegistir(
+                              "degisim_nedeni",
+                              e.target.value
+                            )
+                        }
+                        className={
+                          inputSinif
+                        }
                       >
 
                         <option value="">
                           Seçiniz
                         </option>
 
-                        {NEDENLER.map((neden) => (
-                          <option
-                            key={neden.ad}
-                            value={neden.ad}
-                          >
-                            {neden.ad}
-                          </option>
-                        ))}
+                        {NEDENLER.map(
+                          (neden) => (
+
+                            <option
+                              key={
+                                neden.ad
+                              }
+                              value={
+                                neden.ad
+                              }
+                            >
+                              {
+                                neden.ad
+                              }
+                            </option>
+
+                          )
+                        )}
 
                       </select>
 
@@ -3368,20 +3892,26 @@ export default function Home() {
 
                   </FormGrid>
 
+
                   <div className="mt-4">
 
                     <Alan baslik="Açıklama">
 
                       <textarea
                         rows={4}
-                        value={form.aciklama}
-                        onChange={(e) =>
-                          formDegistir(
-                            "aciklama",
-                            e.target.value
-                          )
+                        value={
+                          form.aciklama
                         }
-                        className={inputSinif}
+                        onChange={
+                          (e) =>
+                            formDegistir(
+                              "aciklama",
+                              e.target.value
+                            )
+                        }
+                        className={
+                          inputSinif
+                        }
                       />
 
                     </Alan>
@@ -3391,28 +3921,35 @@ export default function Home() {
                 </FormBolumu>
 
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <div className="flex justify-end gap-3">
 
                   {duzenlenenId && (
 
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={
+                        () => {
 
-                        formTemizle();
-                        setSayfa("kayitlar");
+                          formTemizle();
+                          setSayfa(
+                            "kayitlar"
+                          );
 
-                      }}
-                      className="rounded-xl border border-slate-700 px-6 py-3 font-bold text-slate-300 hover:bg-slate-800"
+                        }
+                      }
+                      className="rounded-xl border border-slate-700 px-6 py-3 font-bold"
                     >
                       Vazgeç
                     </button>
 
                   )}
 
+
                   <button
                     type="submit"
-                    disabled={kaydediliyor}
+                    disabled={
+                      kaydediliyor
+                    }
                     className="rounded-xl bg-orange-500 px-8 py-3 font-black hover:bg-orange-400 disabled:opacity-50"
                   >
 
@@ -3433,7 +3970,9 @@ export default function Home() {
             )}
 
 
-            {/* KAYITLAR */}
+            {/* ==================================================
+                KAYITLAR
+            ================================================== */}
 
             {sayfa === "kayitlar" && (
 
@@ -3445,82 +3984,127 @@ export default function Home() {
 
                     <input
                       value={arama}
-                      onChange={(e) =>
-                        setArama(
-                          e.target.value
-                        )
+                      onChange={
+                        (e) =>
+                          setArama(
+                            e.target.value
+                          )
                       }
                       placeholder="Ara..."
-                      className={inputSinif}
+                      className={
+                        inputSinif
+                      }
                     />
 
+
                     <select
-                      value={filtreYil}
-                      onChange={(e) =>
-                        setFiltreYil(
-                          e.target.value
-                        )
+                      value={
+                        filtreYil
                       }
-                      className={inputSinif}
+                      onChange={
+                        (e) =>
+                          setFiltreYil(
+                            e.target.value
+                          )
+                      }
+                      className={
+                        inputSinif
+                      }
                     >
+
                       <option value="">
                         Tüm Yıllar
                       </option>
 
-                      {yillar.map((yil) => (
-                        <option
-                          key={yil}
-                          value={yil}
-                        >
-                          {yil}
-                        </option>
-                      ))}
+                      {yillar.map(
+                        (yil) => (
+
+                          <option
+                            key={yil}
+                            value={yil}
+                          >
+                            {yil}
+                          </option>
+
+                        )
+                      )}
+
                     </select>
 
+
                     <select
-                      value={filtreAy}
-                      onChange={(e) =>
-                        setFiltreAy(
-                          e.target.value
-                        )
+                      value={
+                        filtreAy
                       }
-                      className={inputSinif}
+                      onChange={
+                        (e) =>
+                          setFiltreAy(
+                            e.target.value
+                          )
+                      }
+                      className={
+                        inputSinif
+                      }
                     >
+
                       <option value="">
                         Tüm Aylar
                       </option>
 
-                      {AYLAR.map((ay) => (
-                        <option
-                          key={ay}
-                          value={ay}
-                        >
-                          {ay}
-                        </option>
-                      ))}
+                      {AYLAR.map(
+                        (ay) => (
+
+                          <option
+                            key={ay}
+                            value={ay}
+                          >
+                            {ay}
+                          </option>
+
+                        )
+                      )}
+
                     </select>
 
+
                     <select
-                      value={filtreNeden}
-                      onChange={(e) =>
-                        setFiltreNeden(
-                          e.target.value
-                        )
+                      value={
+                        filtreNeden
                       }
-                      className={inputSinif}
+                      onChange={
+                        (e) =>
+                          setFiltreNeden(
+                            e.target.value
+                          )
+                      }
+                      className={
+                        inputSinif
+                      }
                     >
+
                       <option value="">
                         Tüm Nedenler
                       </option>
 
-                      {NEDENLER.map((neden) => (
-                        <option
-                          key={neden.ad}
-                          value={neden.ad}
-                        >
-                          {neden.ad}
-                        </option>
-                      ))}
+                      {NEDENLER.map(
+                        (neden) => (
+
+                          <option
+                            key={
+                              neden.ad
+                            }
+                            value={
+                              neden.ad
+                            }
+                          >
+                            {
+                              neden.ad
+                            }
+                          </option>
+
+                        )
+                      )}
+
                     </select>
 
                   </div>
@@ -3531,32 +4115,34 @@ export default function Home() {
                     <div className="text-sm text-slate-400">
 
                       <span className="font-black text-white">
-                        {filtrelenmisKayitlar.length}
+                        {
+                          filtrelenmisKayitlar.length
+                        }
                       </span>{" "}
                       kayıt görüntüleniyor.
 
                     </div>
 
+
                     <div className="flex flex-col gap-2 sm:flex-row">
 
                       <button
                         type="button"
-                        onClick={raporuYazdir}
-                        disabled={
-                          filtrelenmisKayitlar.length === 0
+                        onClick={
+                          raporuYazdir
                         }
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-xl bg-slate-700 px-5 py-3 text-sm font-black hover:bg-slate-600"
                       >
                         🖨️ PDF / Yazdır
                       </button>
 
+
                       <button
                         type="button"
-                        onClick={excelAktar}
-                        disabled={
-                          filtrelenmisKayitlar.length === 0
+                        onClick={
+                          excelAktar
                         }
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black hover:bg-emerald-500"
                       >
                         📥 Excel&apos;e Aktar
                       </button>
@@ -3570,17 +4156,20 @@ export default function Home() {
 
                 <Panel
                   baslik="Trafo Değişim Kayıtları"
-                  altBaslik="Detayları görüntüleyebilir, kayıtları düzenleyebilir veya silebilirsiniz"
+                  altBaslik="Detayları görüntüleyebilir, düzenleyebilir veya silebilirsiniz"
                 >
 
                   {
                     veriYukleniyor
                       ? (
+
                         <BosAlan>
                           Kayıtlar yükleniyor...
                         </BosAlan>
+
                       )
                       : (
+
                         <KayitTablosu
                           kayitlar={
                             filtrelenmisKayitlar
@@ -3595,6 +4184,7 @@ export default function Home() {
                             kaydiSil
                           }
                         />
+
                       )
                   }
 
@@ -3614,9 +4204,14 @@ export default function Home() {
       {detayKayit && (
 
         <DetayModal
-          kayit={detayKayit}
-          kapat={() =>
-            setDetayKayit(null)
+          kayit={
+            detayKayit
+          }
+          kapat={
+            () =>
+              setDetayKayit(
+                null
+              )
           }
           duzenle={
             kaydiDuzenle
@@ -3636,7 +4231,7 @@ export default function Home() {
 
 
 // ============================================================
-// STİL
+// ORTAK STİL
 // ============================================================
 
 const inputSinif =
@@ -3644,7 +4239,7 @@ const inputSinif =
 
 
 // ============================================================
-// HTML TEMİZLE
+// YARDIMCI
 // ============================================================
 
 function htmlTemizle(
@@ -3707,11 +4302,12 @@ function tekKayitYazdir(
   if (!pencere) {
 
     window.alert(
-      "Yazdırma penceresi açılamadı. Chrome'da açılır pencere iznini kontrol edin."
+      "Yazdırma penceresi açılamadı."
     );
 
     return;
   }
+
 
   function alan(
     baslik: string,
@@ -3722,319 +4318,312 @@ function tekKayitYazdir(
       | undefined
   ) {
 
-    const veri =
-      deger === null ||
-      deger === undefined ||
-      String(deger).trim() === ""
-        ? "-"
-        : String(deger);
-
     return `
       <div class="field">
-        <div class="field-title">
-          ${htmlTemizle(baslik)}
+        <div class="title">
+          ${htmlTemizle(
+            baslik
+          )}
         </div>
-        <div class="field-value">
-          ${htmlTemizle(veri)}
+        <div class="value">
+          ${htmlTemizle(
+            deger || "-"
+          )}
         </div>
       </div>
     `;
 
   }
 
+
   pencere.document.write(`
     <!DOCTYPE html>
 
     <html lang="tr">
 
-      <head>
+    <head>
 
-        <meta charset="UTF-8" />
+      <meta charset="UTF-8">
 
-        <title>
-          Trafo Değişim Kaydı
-        </title>
+      <title>
+        Trafo Değişim Kaydı
+      </title>
 
-        <style>
+      <style>
 
-          @page {
-            size: A4 portrait;
-            margin: 12mm;
-          }
+        @page {
+          size: A4 portrait;
+          margin: 12mm;
+        }
 
-          * {
-            box-sizing: border-box;
-          }
+        body {
+          font-family: Arial, sans-serif;
+          color: #111827;
+        }
+
+        h1 {
+          border-bottom: 4px solid #f97316;
+          padding-bottom: 10px;
+        }
+
+        .section {
+          border: 1px solid #d1d5db;
+          margin-top: 14px;
+        }
+
+        .section-title {
+          background: #111827;
+          color: white;
+          padding: 8px;
+          font-weight: bold;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns:
+            repeat(
+              4,
+              1fr
+            );
+        }
+
+        .field {
+          padding: 8px;
+          border-right: 1px solid #e5e7eb;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .title {
+          font-size: 8px;
+          color: #6b7280;
+          font-weight: bold;
+        }
+
+        .value {
+          font-size: 11px;
+          font-weight: bold;
+          margin-top: 4px;
+        }
+
+        @media print {
 
           body {
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 0;
-            color: #111827;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
 
-          .header {
-            border-bottom: 4px solid #f97316;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-          }
+        }
 
-          .brand {
-            color: #f97316;
-            font-weight: 800;
-            font-size: 12px;
-            letter-spacing: 1px;
-          }
+      </style>
 
-          h1 {
-            margin: 4px 0 0 0;
-            font-size: 23px;
-          }
+    </head>
 
-          .meta {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #4b5563;
-          }
+    <body>
 
-          .section {
-            margin-top: 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            overflow: hidden;
-            page-break-inside: avoid;
-          }
+      <h1>
+        BALIKESİR TRAFO DEĞİŞİM KAYDI
+      </h1>
 
-          .section-title {
-            background: #111827;
-            color: white;
-            padding: 8px 10px;
-            font-size: 11px;
-            font-weight: 800;
-          }
 
-          .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-          }
+      <div class="section">
 
-          .field {
-            padding: 8px;
-            border-right: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-            min-height: 48px;
-          }
+        <div class="section-title">
+          KONUM BİLGİLERİ
+        </div>
 
-          .field-title {
-            font-size: 8px;
-            font-weight: 700;
-            color: #6b7280;
-            text-transform: uppercase;
-          }
+        <div class="grid">
 
-          .field-value {
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 3px;
-            word-break: break-word;
-          }
+          ${alan(
+            "Yıl",
+            kayit.yil
+          )}
 
-          .description {
-            padding: 10px;
-            min-height: 50px;
-            white-space: pre-wrap;
-            font-size: 11px;
-            line-height: 1.5;
-          }
+          ${alan(
+            "Ay",
+            kayit.ay
+          )}
 
-          .footer {
-            margin-top: 20px;
-            border-top: 1px solid #d1d5db;
-            padding-top: 8px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 8px;
-          }
+          ${alan(
+            "İlçe",
+            kayit.ilce
+          )}
 
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-          }
+          ${alan(
+            "Mahalle",
+            kayit.mahalle
+          )}
 
-        </style>
+          ${alan(
+            "TR",
+            kayit.tr
+          )}
 
-      </head>
+          ${alan(
+            "Lokasyon ID",
+            kayit.lokasyon_id
+          )}
 
-      <body>
+          ${alan(
+            "Trafo ID",
+            kayit.trafo_id
+          )}
 
-        <div class="header">
-
-          <div class="brand">
-            ⚡ BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-          </div>
-
-          <h1>
-            Trafo Değişim Kaydı
-          </h1>
-
-          <div class="meta">
-            ${htmlTemizle(
-              kayit.ilce || "-"
-            )}
-            /
-            ${htmlTemizle(
-              kayit.mahalle || "-"
-            )}
-            &nbsp;&nbsp; • &nbsp;&nbsp;
-            ${htmlTemizle(
-              tarihGoster(
-                kayit.tarih
-              )
-            )}
-            &nbsp;&nbsp; • &nbsp;&nbsp;
-            ${htmlTemizle(
-              kayit.degisim_nedeni ||
-              "-"
-            )}
-          </div>
+          ${alan(
+            "Trafo Tipi",
+            kayit.trafo_tipi
+          )}
 
         </div>
 
+      </div>
 
-        <div class="section">
 
-          <div class="section-title">
-            KONUM BİLGİLERİ
-          </div>
+      <div class="section">
 
-          <div class="grid">
+        <div class="section-title">
+          SÖKÜLEN TRAFO
+        </div>
 
-            ${alan("Yıl", kayit.yil)}
-            ${alan("Ay", kayit.ay)}
-            ${alan("İlçe", kayit.ilce)}
-            ${alan("Mahalle", kayit.mahalle)}
-            ${alan("TR", kayit.tr)}
-            ${alan("Lokasyon ID", kayit.lokasyon_id)}
-            ${alan("Trafo ID", kayit.trafo_id)}
-            ${alan("Trafo Tipi", kayit.trafo_tipi)}
+        <div class="grid">
 
-          </div>
+          ${alan(
+            "Gücü",
+            kayit.sokulen_gucu
+          )}
+
+          ${alan(
+            "Gerilim",
+            kayit.sokulen_gerilim
+          )}
+
+          ${alan(
+            "Markası",
+            kayit.sokulen_markasi
+          )}
+
+          ${alan(
+            "Seri No",
+            kayit.sokulen_seri_no
+          )}
+
+          ${alan(
+            "İmal Yılı",
+            kayit.sokulen_imal_yili
+          )}
+
+          ${alan(
+            "Trafo Tipi",
+            kayit.sokulen_trafo_tipi
+          )}
+
+          ${alan(
+            "Tamir Yılı",
+            kayit.sokulen_tamir_yili
+          )}
+
+          ${alan(
+            "Tamir Firması",
+            kayit.sokulen_tamir_firmasi
+          )}
+
+          ${alan(
+            "Yüklenici",
+            kayit.sokulen_yuklenici
+          )}
 
         </div>
 
+      </div>
 
-        <div class="section">
 
-          <div class="section-title">
-            SÖKÜLEN TRAFO
-          </div>
+      <div class="section">
 
-          <div class="grid">
+        <div class="section-title">
+          TAKILAN TRAFO
+        </div>
 
-            ${alan(
-              "Gücü",
-              kayit.sokulen_gucu
-                ? `${kayit.sokulen_gucu} kVA`
-                : null
-            )}
+        <div class="grid">
 
-            ${alan("Gerilim", kayit.sokulen_gerilim)}
-            ${alan("Markası", kayit.sokulen_markasi)}
-            ${alan("Seri No", kayit.sokulen_seri_no)}
-            ${alan("İmal Yılı", kayit.sokulen_imal_yili)}
-            ${alan("Trafo Tipi", kayit.sokulen_trafo_tipi)}
-            ${alan("Tamir Yılı", kayit.sokulen_tamir_yili)}
-            ${alan("Tamir Firması", kayit.sokulen_tamir_firmasi)}
-            ${alan("Yüklenici", kayit.sokulen_yuklenici)}
+          ${alan(
+            "Gücü",
+            kayit.takilan_gucu
+          )}
 
-          </div>
+          ${alan(
+            "Gerilim",
+            kayit.takilan_gerilim
+          )}
+
+          ${alan(
+            "Markası",
+            kayit.takilan_markasi
+          )}
+
+          ${alan(
+            "Seri No",
+            kayit.takilan_seri_no
+          )}
+
+          ${alan(
+            "İmal Yılı",
+            kayit.takilan_imal_yili
+          )}
+
+          ${alan(
+            "Trafo Tipi",
+            kayit.takilan_trafo_tipi
+          )}
+
+          ${alan(
+            "Tamir Yılı",
+            kayit.takilan_tamir_yili
+          )}
+
+          ${alan(
+            "Tamir Firması",
+            kayit.takilan_tamir_firmasi
+          )}
 
         </div>
 
+      </div>
 
-        <div class="section">
 
-          <div class="section-title">
-            TAKILAN TRAFO
-          </div>
+      <div class="section">
 
-          <div class="grid">
+        <div class="section-title">
+          İŞLEM BİLGİLERİ
+        </div>
 
-            ${alan(
-              "Gücü",
-              kayit.takilan_gucu
-                ? `${kayit.takilan_gucu} kVA`
-                : null
-            )}
+        <div class="grid">
 
-            ${alan("Gerilim", kayit.takilan_gerilim)}
-            ${alan("Markası", kayit.takilan_markasi)}
-            ${alan("Seri No", kayit.takilan_seri_no)}
-            ${alan("İmal Yılı", kayit.takilan_imal_yili)}
-            ${alan("Trafo Tipi", kayit.takilan_trafo_tipi)}
-            ${alan("Tamir Yılı", kayit.takilan_tamir_yili)}
-            ${alan("Tamir Firması", kayit.takilan_tamir_firmasi)}
+          ${alan(
+            "Tarih",
+            tarihGoster(
+              kayit.tarih
+            )
+          )}
 
-          </div>
+          ${alan(
+            "Değişim Nedeni",
+            kayit.degisim_nedeni
+          )}
+
+          ${alan(
+            "Kayıt No",
+            kayit.sira_no ||
+            kayit.id
+          )}
 
         </div>
 
-
-        <div class="section">
-
-          <div class="section-title">
-            İŞLEM BİLGİLERİ
-          </div>
-
-          <div class="grid">
-
-            ${alan(
-              "Tarih",
-              tarihGoster(
-                kayit.tarih
-              )
-            )}
-
-            ${alan(
-              "Değişim Nedeni",
-              kayit.degisim_nedeni
-            )}
-
-            ${alan(
-              "Kayıt No",
-              kayit.sira_no ||
-              kayit.id
-            )}
-
-          </div>
-
-          <div class="description">
-
-            <strong>
-              Açıklama:
-            </strong>
-
-            <br />
-
-            ${htmlTemizle(
-              kayit.aciklama ||
-              "Açıklama girilmemiş."
-            )}
-
-          </div>
-
-        </div>
+      </div>
 
 
-        <div class="footer">
-          BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-        </div>
+      <script>
 
-
-        <script>
-
-          window.onload = function () {
+        window.onload =
+          function () {
 
             setTimeout(
               function () {
@@ -4045,9 +4634,9 @@ function tekKayitYazdir(
 
           };
 
-        </script>
+      </script>
 
-      </body>
+    </body>
 
     </html>
   `);
@@ -4058,7 +4647,7 @@ function tekKayitYazdir(
 
 
 // ============================================================
-// FORM BİLEŞENLERİ
+// BİLEŞENLER
 // ============================================================
 
 function Alan({
@@ -4093,7 +4682,9 @@ function MetinAlani({
 }: {
   baslik: string;
   deger: string;
-  degistir: (deger: string) => void;
+  degistir:
+    (deger: string) =>
+      void;
 }) {
 
   return (
@@ -4102,12 +4693,15 @@ function MetinAlani({
 
       <input
         value={deger}
-        onChange={(e) =>
-          degistir(
-            e.target.value
-          )
+        onChange={
+          (e) =>
+            degistir(
+              e.target.value
+            )
         }
-        className={inputSinif}
+        className={
+          inputSinif
+        }
       />
 
     </Alan>
@@ -4127,10 +4721,15 @@ function ComboAlani({
 }: {
   baslik: string;
   deger: string;
-  degistir: (deger: string) => void;
-  secenekler: string[];
-  listeId: string;
-  gerekli?: boolean;
+  degistir:
+    (deger: string) =>
+      void;
+  secenekler:
+    string[];
+  listeId:
+    string;
+  gerekli?:
+    boolean;
 }) {
 
   return (
@@ -4145,10 +4744,11 @@ function ComboAlani({
           required={gerekli}
           autoComplete="off"
           value={deger}
-          onChange={(e) =>
-            degistir(
-              e.target.value
-            )
+          onChange={
+            (e) =>
+              degistir(
+                e.target.value
+              )
           }
           placeholder="Seçiniz veya yazınız"
           className={`${inputSinif} pr-10`}
@@ -4158,16 +4758,25 @@ function ComboAlani({
           ▼
         </div>
 
-        <datalist id={listeId}>
 
-          {secenekler.map((secenek) => (
+        <datalist
+          id={listeId}
+        >
 
-            <option
-              key={secenek}
-              value={secenek}
-            />
+          {secenekler.map(
+            (secenek) => (
 
-          ))}
+              <option
+                key={
+                  secenek
+                }
+                value={
+                  secenek
+                }
+              />
+
+            )
+          )}
 
         </datalist>
 
@@ -4229,15 +4838,20 @@ function MenuButonu({
   onClick,
   children,
 }: {
-  aktif: boolean;
-  onClick: () => void;
-  children: ReactNode;
+  aktif:
+    boolean;
+  onClick:
+    () => void;
+  children:
+    ReactNode;
 }) {
 
   return (
 
     <button
-      onClick={onClick}
+      onClick={
+        onClick
+      }
       className={`w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
         aktif
           ? "bg-orange-500 text-white"
@@ -4257,9 +4871,12 @@ function KpiKart({
   sayi,
   renk,
 }: {
-  baslik: string;
-  sayi: number;
-  renk: string;
+  baslik:
+    string;
+  sayi:
+    number;
+  renk:
+    string;
 }) {
 
   return (
@@ -4269,7 +4886,8 @@ function KpiKart({
       <div
         className="h-1.5"
         style={{
-          backgroundColor: renk,
+          backgroundColor:
+            renk,
         }}
       />
 
@@ -4298,10 +4916,14 @@ function OzetKart({
   deger,
   alt,
 }: {
-  ikon: string;
-  baslik: string;
-  deger: string;
-  alt: string;
+  ikon:
+    string;
+  baslik:
+    string;
+  deger:
+    string;
+  alt:
+    string;
 }) {
 
   return (
@@ -4344,9 +4966,12 @@ function Panel({
   altBaslik,
   children,
 }: {
-  baslik: string;
-  altBaslik?: string;
-  children: ReactNode;
+  baslik:
+    string;
+  altBaslik?:
+    string;
+  children:
+    ReactNode;
 }) {
 
   return (
@@ -4380,28 +5005,30 @@ function GrafikLegend() {
 
     <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
 
-      {NEDENLER.map((neden) => (
+      {NEDENLER.map(
+        (neden) => (
 
-        <div
-          key={neden.ad}
-          className="flex items-center gap-2"
-        >
+          <div
+            key={neden.ad}
+            className="flex items-center gap-2"
+          >
 
-          <span
-            className="h-3 w-3 rounded-sm"
-            style={{
-              backgroundColor:
-                neden.renk,
-            }}
-          />
+            <span
+              className="h-3 w-3 rounded-sm"
+              style={{
+                backgroundColor:
+                  neden.renk,
+              }}
+            />
 
-          <span className="text-[10px] font-bold text-slate-400">
-            {neden.ad}
-          </span>
+            <span className="text-[10px] font-bold text-slate-400">
+              {neden.ad}
+            </span>
 
-        </div>
+          </div>
 
-      ))}
+        )
+      )}
 
     </div>
 
@@ -4413,7 +5040,8 @@ function GrafikLegend() {
 function HataKutusu({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
 
   return (
@@ -4430,7 +5058,8 @@ function HataKutusu({
 function BosAlan({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
 
   return (
@@ -4447,23 +5076,23 @@ function BosAlan({
 function NedenEtiketi({
   neden,
 }: {
-  neden: string | null;
+  neden:
+    string | null;
 }) {
 
   const bulunan =
     NEDENLER.find(
       (x) =>
-        x.ad === neden
+        x.ad ===
+        neden
     );
 
   if (!neden) {
 
     return (
-
       <span className="text-slate-600">
         -
       </span>
-
     );
 
   }
@@ -4496,10 +5125,17 @@ function KayitTablosu({
   duzenle,
   sil,
 }: {
-  kayitlar: TrafoKaydi[];
-  detay: (kayit: TrafoKaydi) => void;
-  duzenle: (kayit: TrafoKaydi) => void;
-  sil: (kayit: TrafoKaydi) => void;
+  kayitlar:
+    TrafoKaydi[];
+  detay:
+    (kayit: TrafoKaydi) =>
+      void;
+  duzenle:
+    (kayit: TrafoKaydi) =>
+      void;
+  sil:
+    (kayit: TrafoKaydi) =>
+      void;
 }) {
 
   if (
@@ -4566,87 +5202,110 @@ function KayitTablosu({
 
         </thead>
 
+
         <tbody>
 
-          {kayitlar.map((kayit) => (
+          {kayitlar.map(
+            (kayit) => (
 
-            <tr
-              key={kayit.id}
-              className="border-b border-slate-800/80 hover:bg-slate-800/30"
-            >
+              <tr
+                key={
+                  kayit.id
+                }
+                className="border-b border-slate-800/80 hover:bg-slate-800/30"
+              >
 
-              <td className="whitespace-nowrap px-3 py-4 font-semibold">
-                {tarihGoster(kayit.tarih)}
-              </td>
+                <td className="whitespace-nowrap px-3 py-4 font-semibold">
 
-              <td className="px-3 py-4">
-                {kayit.yil || "-"}
-              </td>
-
-              <td className="whitespace-nowrap px-3 py-4">
-                {kayit.ay || "-"}
-              </td>
-
-              <td className="whitespace-nowrap px-3 py-4">
-                {kayit.ilce || "-"}
-              </td>
-
-              <td className="whitespace-nowrap px-3 py-4">
-                {kayit.mahalle || "-"}
-              </td>
-
-              <td className="whitespace-nowrap px-3 py-4">
-                {kayit.lokasyon_id || "-"}
-              </td>
-
-              <td className="whitespace-nowrap px-3 py-4">
-                {kayit.trafo_id || "-"}
-              </td>
-
-              <td className="px-3 py-4">
-
-                <NedenEtiketi
-                  neden={
-                    kayit.degisim_nedeni
+                  {
+                    tarihGoster(
+                      kayit.tarih
+                    )
                   }
-                />
 
-              </td>
+                </td>
 
-              <td className="whitespace-nowrap px-3 py-4 text-right">
+                <td className="px-3 py-4">
+                  {kayit.yil || "-"}
+                </td>
 
-                <button
-                  onClick={() =>
-                    detay(kayit)
-                  }
-                  className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300 hover:bg-orange-950"
-                >
-                  Detay
-                </button>
+                <td className="px-3 py-4">
+                  {kayit.ay || "-"}
+                </td>
 
-                <button
-                  onClick={() =>
-                    duzenle(kayit)
-                  }
-                  className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300 hover:bg-blue-950"
-                >
-                  Düzenle
-                </button>
+                <td className="px-3 py-4">
+                  {kayit.ilce || "-"}
+                </td>
 
-                <button
-                  onClick={() =>
-                    sil(kayit)
-                  }
-                  className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-950"
-                >
-                  Sil
-                </button>
+                <td className="px-3 py-4">
+                  {kayit.mahalle || "-"}
+                </td>
 
-              </td>
+                <td className="px-3 py-4">
+                  {kayit.lokasyon_id || "-"}
+                </td>
 
-            </tr>
+                <td className="px-3 py-4">
+                  {kayit.trafo_id || "-"}
+                </td>
 
-          ))}
+                <td className="px-3 py-4">
+
+                  <NedenEtiketi
+                    neden={
+                      kayit.degisim_nedeni
+                    }
+                  />
+
+                </td>
+
+
+                <td className="whitespace-nowrap px-3 py-4 text-right">
+
+                  <button
+                    onClick={
+                      () =>
+                        detay(
+                          kayit
+                        )
+                    }
+                    className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300"
+                  >
+                    Detay
+                  </button>
+
+
+                  <button
+                    onClick={
+                      () =>
+                        duzenle(
+                          kayit
+                        )
+                    }
+                    className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300"
+                  >
+                    Düzenle
+                  </button>
+
+
+                  <button
+                    onClick={
+                      () =>
+                        sil(
+                          kayit
+                        )
+                    }
+                    className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300"
+                  >
+                    Sil
+                  </button>
+
+                </td>
+
+              </tr>
+
+            )
+          )}
 
         </tbody>
 
@@ -4669,22 +5328,31 @@ function DetayModal({
   duzenle,
   yazdir,
 }: {
-  kayit: TrafoKaydi;
-  kapat: () => void;
-  duzenle: (kayit: TrafoKaydi) => void;
-  yazdir: (kayit: TrafoKaydi) => void;
+  kayit:
+    TrafoKaydi;
+  kapat:
+    () => void;
+  duzenle:
+    (kayit: TrafoKaydi) =>
+      void;
+  yazdir:
+    (kayit: TrafoKaydi) =>
+      void;
 }) {
 
   return (
 
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
-      onMouseDown={kapat}
+      onMouseDown={
+        kapat
+      }
     >
 
       <div
-        onMouseDown={(e) =>
-          e.stopPropagation()
+        onMouseDown={
+          (e) =>
+            e.stopPropagation()
         }
         className="flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-[#0b1628] shadow-2xl"
       >
@@ -4699,22 +5367,37 @@ function DetayModal({
 
             <h2 className="mt-1 text-xl font-black sm:text-2xl">
 
-              {kayit.ilce || "İlçe Belirtilmemiş"}
+              {
+                kayit.ilce ||
+                "İlçe Belirtilmemiş"
+              }
 
               {kayit.mahalle && (
+
                 <span className="text-slate-400">
                   {" "}
-                  / {kayit.mahalle}
+                  / {
+                    kayit.mahalle
+                  }
                 </span>
+
               )}
 
             </h2>
 
+
             <div className="mt-3 flex flex-wrap items-center gap-3">
 
               <span className="rounded-lg bg-[#07111f] px-3 py-1.5 text-xs font-bold text-slate-300">
-                📅 {tarihGoster(kayit.tarih)}
+
+                📅 {
+                  tarihGoster(
+                    kayit.tarih
+                  )
+                }
+
               </span>
+
 
               <NedenEtiketi
                 neden={
@@ -4726,9 +5409,12 @@ function DetayModal({
 
           </div>
 
+
           <button
-            onClick={kapat}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 text-xl text-slate-400 transition hover:border-red-600 hover:bg-red-950 hover:text-red-300"
+            onClick={
+              kapat
+            }
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 text-xl text-slate-400"
           >
             ×
           </button>
@@ -4738,50 +5424,64 @@ function DetayModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
 
-          <DetayBolumu
-            baslik="📍 KONUM BİLGİLERİ"
-          >
+          <DetayBolumu baslik="📍 KONUM BİLGİLERİ">
 
             <DetayGrid>
 
               <DetayAlan
                 baslik="Yıl"
-                deger={kayit.yil}
+                deger={
+                  kayit.yil
+                }
               />
 
               <DetayAlan
                 baslik="Ay"
-                deger={kayit.ay}
+                deger={
+                  kayit.ay
+                }
               />
 
               <DetayAlan
                 baslik="İlçe"
-                deger={kayit.ilce}
+                deger={
+                  kayit.ilce
+                }
               />
 
               <DetayAlan
                 baslik="Mahalle"
-                deger={kayit.mahalle}
+                deger={
+                  kayit.mahalle
+                }
               />
 
               <DetayAlan
                 baslik="TR"
-                deger={kayit.tr}
+                deger={
+                  kayit.tr
+                }
               />
 
               <DetayAlan
                 baslik="Lokasyon ID"
-                deger={kayit.lokasyon_id}
+                deger={
+                  kayit.lokasyon_id
+                }
               />
 
               <DetayAlan
                 baslik="Trafo ID"
-                deger={kayit.trafo_id}
+                deger={
+                  kayit.trafo_id
+                }
               />
 
               <DetayAlan
                 baslik="Trafo Tipi"
-                deger={kayit.trafo_tipi}
+                deger={
+                  kayit.trafo_tipi
+                }
               />
 
             </DetayGrid>
@@ -4809,42 +5509,58 @@ function DetayModal({
 
                 <DetayAlan
                   baslik="Gerilim"
-                  deger={kayit.sokulen_gerilim}
+                  deger={
+                    kayit.sokulen_gerilim
+                  }
                 />
 
                 <DetayAlan
                   baslik="Markası"
-                  deger={kayit.sokulen_markasi}
+                  deger={
+                    kayit.sokulen_markasi
+                  }
                 />
 
                 <DetayAlan
                   baslik="Seri No"
-                  deger={kayit.sokulen_seri_no}
+                  deger={
+                    kayit.sokulen_seri_no
+                  }
                 />
 
                 <DetayAlan
                   baslik="İmal Yılı"
-                  deger={kayit.sokulen_imal_yili}
+                  deger={
+                    kayit.sokulen_imal_yili
+                  }
                 />
 
                 <DetayAlan
                   baslik="Trafo Tipi"
-                  deger={kayit.sokulen_trafo_tipi}
+                  deger={
+                    kayit.sokulen_trafo_tipi
+                  }
                 />
 
                 <DetayAlan
                   baslik="Tamir Yılı"
-                  deger={kayit.sokulen_tamir_yili}
+                  deger={
+                    kayit.sokulen_tamir_yili
+                  }
                 />
 
                 <DetayAlan
                   baslik="Tamir Firması"
-                  deger={kayit.sokulen_tamir_firmasi}
+                  deger={
+                    kayit.sokulen_tamir_firmasi
+                  }
                 />
 
                 <DetayAlan
                   baslik="Yüklenici"
-                  deger={kayit.sokulen_yuklenici}
+                  deger={
+                    kayit.sokulen_yuklenici
+                  }
                 />
 
               </DetayGrid>
@@ -4870,37 +5586,51 @@ function DetayModal({
 
                 <DetayAlan
                   baslik="Gerilim"
-                  deger={kayit.takilan_gerilim}
+                  deger={
+                    kayit.takilan_gerilim
+                  }
                 />
 
                 <DetayAlan
                   baslik="Markası"
-                  deger={kayit.takilan_markasi}
+                  deger={
+                    kayit.takilan_markasi
+                  }
                 />
 
                 <DetayAlan
                   baslik="Seri No"
-                  deger={kayit.takilan_seri_no}
+                  deger={
+                    kayit.takilan_seri_no
+                  }
                 />
 
                 <DetayAlan
                   baslik="İmal Yılı"
-                  deger={kayit.takilan_imal_yili}
+                  deger={
+                    kayit.takilan_imal_yili
+                  }
                 />
 
                 <DetayAlan
                   baslik="Trafo Tipi"
-                  deger={kayit.takilan_trafo_tipi}
+                  deger={
+                    kayit.takilan_trafo_tipi
+                  }
                 />
 
                 <DetayAlan
                   baslik="Tamir Yılı"
-                  deger={kayit.takilan_tamir_yili}
+                  deger={
+                    kayit.takilan_tamir_yili
+                  }
                 />
 
                 <DetayAlan
                   baslik="Tamir Firması"
-                  deger={kayit.takilan_tamir_firmasi}
+                  deger={
+                    kayit.takilan_tamir_firmasi
+                  }
                 />
 
               </DetayGrid>
@@ -4912,9 +5642,7 @@ function DetayModal({
 
           <div className="mt-5">
 
-            <DetayBolumu
-              baslik="📅 İŞLEM BİLGİLERİ"
-            >
+            <DetayBolumu baslik="📅 İŞLEM BİLGİLERİ">
 
               <div className="grid gap-4 md:grid-cols-3">
 
@@ -4944,17 +5672,20 @@ function DetayModal({
 
               </div>
 
+
               <div className="mt-4 rounded-xl border border-slate-800 bg-[#07111f] p-4">
 
-                <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <div className="mb-2 text-[10px] font-black uppercase text-slate-500">
                   AÇIKLAMA
                 </div>
 
-                <div className="whitespace-pre-wrap text-sm leading-6 text-slate-200">
+                <div className="whitespace-pre-wrap text-sm text-slate-200">
+
                   {
                     kayit.aciklama ||
                     "Açıklama girilmemiş."
                   }
+
                 </div>
 
               </div>
@@ -4969,26 +5700,36 @@ function DetayModal({
         <div className="shrink-0 flex flex-wrap items-center justify-end gap-3 border-t border-slate-800 bg-[#101d30] px-5 py-4 sm:px-7">
 
           <button
-            onClick={() =>
-              yazdir(kayit)
+            onClick={
+              () =>
+                yazdir(
+                  kayit
+                )
             }
-            className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-black text-white transition hover:bg-slate-600"
+            className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-black hover:bg-slate-600"
           >
             🖨️ Yazdır / PDF
           </button>
 
+
           <button
-            onClick={kapat}
-            className="rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-bold text-slate-300 transition hover:bg-slate-800"
+            onClick={
+              kapat
+            }
+            className="rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-bold"
           >
             Kapat
           </button>
 
+
           <button
-            onClick={() =>
-              duzenle(kayit)
+            onClick={
+              () =>
+                duzenle(
+                  kayit
+                )
             }
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-500"
+            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-black hover:bg-blue-500"
           >
             ✏️ Kaydı Düzenle
           </button>
@@ -5006,12 +5747,16 @@ function DetayModal({
 
 function DetayBolumu({
   baslik,
-  renkSinif = "border-slate-800",
+  renkSinif =
+    "border-slate-800",
   children,
 }: {
-  baslik: string;
-  renkSinif?: string;
-  children: ReactNode;
+  baslik:
+    string;
+  renkSinif?:
+    string;
+  children:
+    ReactNode;
 }) {
 
   return (
@@ -5039,8 +5784,10 @@ function DetayGrid({
   children,
   iki = false,
 }: {
-  children: ReactNode;
-  iki?: boolean;
+  children:
+    ReactNode;
+  iki?:
+    boolean;
 }) {
 
   return (
@@ -5064,7 +5811,8 @@ function DetayAlan({
   baslik,
   deger,
 }: {
-  baslik: string;
+  baslik:
+    string;
   deger:
     | string
     | number
@@ -5075,15 +5823,19 @@ function DetayAlan({
   const gosterilecek =
     deger === null ||
     deger === undefined ||
-    String(deger).trim() === ""
+    String(
+      deger
+    ).trim() === ""
       ? "-"
-      : String(deger);
+      : String(
+          deger
+        );
 
   return (
 
     <div className="rounded-xl border border-slate-800 bg-[#07111f] px-4 py-3">
 
-      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+      <div className="text-[10px] font-black uppercase text-slate-500">
         {baslik}
       </div>
 
@@ -5103,7 +5855,8 @@ function DetayAlan({
 // ============================================================
 
 function tarihGoster(
-  tarih: string | null
+  tarih:
+    string | null
 ) {
 
   if (!tarih) {
