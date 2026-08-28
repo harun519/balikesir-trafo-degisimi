@@ -321,7 +321,9 @@ export default function Home() {
         .replace(/[^a-zA-Z0-9._-]+/g,"_")
         .replace(/_+/g,"_")
         .replace(/^_+|_+$/g,"");
-      const yol=`${arsivYil}/${arsivAy}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${temizAd}`;
+      const yilKlasor=String(arsivYil).replace(/[^0-9]/g,"");
+      const ayKlasor=arsivAy.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ı/g,"i").replace(/İ/g,"I").replace(/ş/g,"s").replace(/Ş/g,"S").replace(/ğ/g,"g").replace(/Ğ/g,"G").replace(/ü/g,"u").replace(/Ü/g,"U").replace(/ö/g,"o").replace(/Ö/g,"O").replace(/ç/g,"c").replace(/Ç/g,"C").replace(/[^a-zA-Z0-9_-]+/g,"_");
+      const yol=`${yilKlasor}/${ayKlasor}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${temizAd}`;
       const {error:storageError}=await supabase.storage
         .from("trafo-form-arsivi")
         .upload(yol,arsivDosya,{contentType:arsivDosya.type,upsert:false});
