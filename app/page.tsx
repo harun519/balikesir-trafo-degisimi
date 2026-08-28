@@ -1774,7 +1774,7 @@ export default function Home() {
 
 
   // ============================================================
-  // PDF / YAZDIR - FİLTRELİ RAPOR
+  // PDF / YAZDIR
   // ============================================================
 
   function raporuYazdir() {
@@ -2220,21 +2220,6 @@ export default function Home() {
 
 
   // ============================================================
-  // TEK KAYIT PDF / YAZDIR
-  // ============================================================
-
-  function tekKaydiYazdir(
-    kayit: TrafoKaydi
-  ) {
-
-    tekKayitYazdir(
-      kayit
-    );
-
-  }
-
-
-  // ============================================================
   // LOADING
   // ============================================================
 
@@ -2356,10 +2341,11 @@ export default function Home() {
                   <Alan baslik="E-posta">
 
                     <input
+                      id="email"
                       type="email"
-                      name="username"
+                      name="email"
                       required
-                      autoComplete="username"
+                      autoComplete="email"
                       value={email}
                       onChange={
                         (e) =>
@@ -2375,6 +2361,7 @@ export default function Home() {
                   <Alan baslik="Şifre">
 
                     <input
+                      id="password"
                       type="password"
                       name="password"
                       required
@@ -2460,12 +2447,7 @@ export default function Home() {
 
             <MenuButonu
               aktif={sayfa === "dashboard"}
-              onClick={
-                () =>
-                  setSayfa(
-                    "dashboard"
-                  )
-              }
+              onClick={() => setSayfa("dashboard")}
             >
               📊 Kontrol Paneli
             </MenuButonu>
@@ -2475,26 +2457,19 @@ export default function Home() {
                 sayfa === "yeni" &&
                 !duzenlenenId
               }
-              onClick={
-                () => {
+              onClick={() => {
 
-                  formTemizle();
-                  setSayfa("yeni");
+                formTemizle();
+                setSayfa("yeni");
 
-                }
-              }
+              }}
             >
               ➕ Yeni Kayıt
             </MenuButonu>
 
             <MenuButonu
               aktif={sayfa === "kayitlar"}
-              onClick={
-                () =>
-                  setSayfa(
-                    "kayitlar"
-                  )
-              }
+              onClick={() => setSayfa("kayitlar")}
             >
               📋 Trafo Kayıtları
             </MenuButonu>
@@ -2550,25 +2525,19 @@ export default function Home() {
           <div className="p-4 sm:p-6 lg:p-7">
 
             {genelHata && (
-
               <HataKutusu>
                 {genelHata}
               </HataKutusu>
-
             )}
 
             {basariMesaji && (
-
               <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
                 {basariMesaji}
               </div>
-
             )}
 
 
-            {/* ==================================================
-                DASHBOARD
-            ================================================== */}
+            {/* DASHBOARD */}
 
             {sayfa === "dashboard" && (
 
@@ -2584,32 +2553,25 @@ export default function Home() {
 
                     <select
                       value={dashboardYil}
-                      onChange={
-                        (e) =>
-                          setDashboardYil(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setDashboardYil(
+                          e.target.value
+                        )
                       }
                       className={inputSinif}
                     >
-
                       <option value="">
                         Tüm Yıllar
                       </option>
 
-                      {yillar.map(
-                        (yil) => (
-
-                          <option
-                            key={yil}
-                            value={yil}
-                          >
-                            {yil}
-                          </option>
-
-                        )
-                      )}
-
+                      {yillar.map((yil) => (
+                        <option
+                          key={yil}
+                          value={yil}
+                        >
+                          {yil}
+                        </option>
+                      ))}
                     </select>
 
                   </div>
@@ -2622,59 +2584,48 @@ export default function Home() {
 
                     <select
                       value={dashboardIlce}
-                      onChange={
-                        (e) =>
-                          setDashboardIlce(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setDashboardIlce(
+                          e.target.value
+                        )
                       }
                       className={inputSinif}
                     >
-
                       <option value="">
                         Tüm İlçeler
                       </option>
 
-                      {ilceler.map(
-                        (ilce) => (
-
-                          <option
-                            key={ilce}
-                            value={ilce}
-                          >
-                            {ilce}
-                          </option>
-
-                        )
-                      )}
-
+                      {ilceler.map((ilce) => (
+                        <option
+                          key={ilce}
+                          value={ilce}
+                        >
+                          {ilce}
+                        </option>
+                      ))}
                     </select>
 
                   </div>
 
                   <button
-                    onClick={
-                      () => {
+                    onClick={() => {
 
-                        setDashboardYil("");
-                        setDashboardIlce("");
+                      setDashboardYil("");
+                      setDashboardIlce("");
 
-                      }
-                    }
+                    }}
                     className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800"
                   >
                     Filtreyi Temizle
                   </button>
 
                   <button
-                    onClick={
-                      () => {
+                    onClick={() => {
 
-                        formTemizle();
-                        setSayfa("yeni");
+                      formTemizle();
+                      setSayfa("yeni");
 
-                      }
-                    }
+                    }}
                     className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-black hover:bg-orange-400"
                   >
                     + Yeni Trafo Kaydı
@@ -2691,22 +2642,20 @@ export default function Home() {
                     renk="#f97316"
                   />
 
-                  {NEDENLER.map(
-                    (neden) => (
+                  {NEDENLER.map((neden) => (
 
-                      <KpiKart
-                        key={neden.ad}
-                        baslik={neden.ad}
-                        sayi={
-                          nedenSayilari[
-                            neden.ad
-                          ] || 0
-                        }
-                        renk={neden.renk}
-                      />
+                    <KpiKart
+                      key={neden.ad}
+                      baslik={neden.ad}
+                      sayi={
+                        nedenSayilari[
+                          neden.ad
+                        ] || 0
+                      }
+                      renk={neden.renk}
+                    />
 
-                    )
-                  )}
+                  ))}
 
                 </div>
 
@@ -2723,22 +2672,14 @@ export default function Home() {
                   <OzetKart
                     ikon="📍"
                     baslik="EN ÇOK DEĞİŞİM YAPILAN İLÇE"
-                    deger={
-                      String(
-                        enCokIlce[0]
-                      )
-                    }
+                    deger={String(enCokIlce[0])}
                     alt={`${enCokIlce[1]} kayıt`}
                   />
 
                   <OzetKart
                     ikon="⚡"
                     baslik="EN ÇOK DEĞİŞİM NEDENİ"
-                    deger={
-                      String(
-                        enCokNeden[0]
-                      )
-                    }
+                    deger={String(enCokNeden[0])}
                     alt={`${enCokNeden[1]} kayıt`}
                   />
 
@@ -2778,42 +2719,40 @@ export default function Home() {
 
                       <div className="mt-7 grid w-full gap-2">
 
-                        {NEDENLER.map(
-                          (neden) => (
+                        {NEDENLER.map((neden) => (
 
-                            <div
-                              key={neden.ad}
-                              className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
-                            >
+                          <div
+                            key={neden.ad}
+                            className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
+                          >
 
-                              <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
 
-                                <span
-                                  className="h-3 w-3 rounded-full"
-                                  style={{
-                                    backgroundColor:
-                                      neden.renk,
-                                  }}
-                                />
+                              <span
+                                className="h-3 w-3 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    neden.renk,
+                                }}
+                              />
 
-                                <span className="text-xs font-bold">
-                                  {neden.ad}
-                                </span>
-
-                              </div>
-
-                              <span className="text-sm font-black">
-                                {
-                                  nedenSayilari[
-                                    neden.ad
-                                  ] || 0
-                                }
+                              <span className="text-xs font-bold">
+                                {neden.ad}
                               </span>
 
                             </div>
 
-                          )
-                        )}
+                            <span className="text-sm font-black">
+                              {
+                                nedenSayilari[
+                                  neden.ad
+                                ] || 0
+                              }
+                            </span>
+
+                          </div>
+
+                        ))}
 
                       </div>
 
@@ -2831,68 +2770,64 @@ export default function Home() {
 
                     <div className="mt-6 flex h-72 items-end gap-5 overflow-x-auto border-b border-slate-700 pb-1">
 
-                      {yillikNedenler.map(
-                        (item) => (
+                      {yillikNedenler.map((item) => (
 
-                          <div
-                            key={item.yil}
-                            className="flex min-w-24 flex-col items-center justify-end"
-                          >
+                        <div
+                          key={item.yil}
+                          className="flex min-w-24 flex-col items-center justify-end"
+                        >
 
-                            <div className="mb-2 text-xs font-black text-slate-300">
-                              {item.toplam}
-                            </div>
+                          <div className="mb-2 text-xs font-black text-slate-300">
+                            {item.toplam}
+                          </div>
 
-                            <div className="flex h-52 items-end gap-1">
+                          <div className="flex h-52 items-end gap-1">
 
-                              {NEDENLER.map(
-                                (neden) => {
+                            {NEDENLER.map((neden) => {
 
-                                  const sayi =
-                                    item.nedenler[
-                                      neden.ad
-                                    ] || 0;
+                              const sayi =
+                                item.nedenler[
+                                  neden.ad
+                                ] || 0;
 
-                                  const yukseklik =
-                                    sayi
-                                      ? Math.max(
-                                          7,
-                                          (
-                                            sayi /
-                                            maxYillik
-                                          ) * 185
-                                        )
-                                      : 0;
+                              const yukseklik =
+                                sayi
+                                  ? Math.max(
+                                      7,
+                                      (
+                                        sayi /
+                                        maxYillik
+                                      ) * 185
+                                    )
+                                  : 0;
 
-                                  return (
+                              return (
 
-                                    <div
-                                      key={neden.ad}
-                                      title={`${neden.ad}: ${sayi}`}
-                                      className="w-2 rounded-t"
-                                      style={{
-                                        height:
-                                          `${yukseklik}px`,
-                                        backgroundColor:
-                                          neden.renk,
-                                      }}
-                                    />
+                                <div
+                                  key={neden.ad}
+                                  title={`${neden.ad}: ${sayi}`}
+                                  className="w-2 rounded-t"
+                                  style={{
+                                    height:
+                                      `${yukseklik}px`,
+                                    backgroundColor:
+                                      neden.renk,
+                                  }}
+                                />
 
-                                  );
+                              );
 
-                                }
-                              )}
-
-                            </div>
-
-                            <div className="mt-2 text-xs text-slate-400">
-                              {item.yil}
-                            </div>
+                            })}
 
                           </div>
 
-                        )
-                      )}
+                          <div className="mt-2 text-xs text-slate-400">
+                            {item.yil}
+                          </div>
+
+                        </div>
+
+                      ))}
 
                     </div>
 
@@ -2924,73 +2859,64 @@ export default function Home() {
 
                       <div className="mt-6 flex h-72 items-end gap-3 overflow-x-auto border-b border-slate-700">
 
-                        {aylikNedenler.map(
-                          (item) => (
+                        {aylikNedenler.map((item) => (
 
-                            <div
-                              key={item.ay}
-                              className="flex min-w-20 flex-col items-center justify-end"
-                            >
+                          <div
+                            key={item.ay}
+                            className="flex min-w-20 flex-col items-center justify-end"
+                          >
 
-                              <div className="mb-2 text-xs font-black">
-                                {item.toplam}
-                              </div>
+                            <div className="mb-2 text-xs font-black">
+                              {item.toplam}
+                            </div>
 
-                              <div className="flex h-52 items-end gap-[2px]">
+                            <div className="flex h-52 items-end gap-[2px]">
 
-                                {NEDENLER.map(
-                                  (neden) => {
+                              {NEDENLER.map((neden) => {
 
-                                    const sayi =
-                                      item.nedenler[
-                                        neden.ad
-                                      ] || 0;
+                                const sayi =
+                                  item.nedenler[
+                                    neden.ad
+                                  ] || 0;
 
-                                    const yukseklik =
-                                      sayi
-                                        ? Math.max(
-                                            6,
-                                            (
-                                              sayi /
-                                              maxAylik
-                                            ) * 180
-                                          )
-                                        : 0;
+                                const yukseklik =
+                                  sayi
+                                    ? Math.max(
+                                        6,
+                                        (
+                                          sayi /
+                                          maxAylik
+                                        ) * 180
+                                      )
+                                    : 0;
 
-                                    return (
+                                return (
 
-                                      <div
-                                        key={neden.ad}
-                                        title={`${item.ay} - ${neden.ad}: ${sayi}`}
-                                        className="w-[6px] rounded-t"
-                                        style={{
-                                          height:
-                                            `${yukseklik}px`,
-                                          backgroundColor:
-                                            neden.renk,
-                                        }}
-                                      />
+                                  <div
+                                    key={neden.ad}
+                                    title={`${item.ay} - ${neden.ad}: ${sayi}`}
+                                    className="w-[6px] rounded-t"
+                                    style={{
+                                      height:
+                                        `${yukseklik}px`,
+                                      backgroundColor:
+                                        neden.renk,
+                                    }}
+                                  />
 
-                                    );
+                                );
 
-                                  }
-                                )}
-
-                              </div>
-
-                              <div className="mt-2 text-[10px] text-slate-400">
-                                {
-                                  item.ay.substring(
-                                    0,
-                                    3
-                                  )
-                                }
-                              </div>
+                              })}
 
                             </div>
 
-                          )
-                        )}
+                            <div className="mt-2 text-[10px] text-slate-400">
+                              {item.ay.substring(0, 3)}
+                            </div>
+
+                          </div>
+
+                        ))}
 
                       </div>
 
@@ -3009,21 +2935,10 @@ export default function Home() {
                   >
 
                     <KayitTablosu
-                      kayitlar={
-                        kayitlar.slice(
-                          0,
-                          8
-                        )
-                      }
-                      detay={
-                        setDetayKayit
-                      }
-                      duzenle={
-                        kaydiDuzenle
-                      }
-                      sil={
-                        kaydiSil
-                      }
+                      kayitlar={kayitlar.slice(0, 8)}
+                      detay={setDetayKayit}
+                      duzenle={kaydiDuzenle}
+                      sil={kaydiSil}
                     />
 
                   </Panel>
@@ -3035,9 +2950,7 @@ export default function Home() {
             )}
 
 
-            {/* ==================================================
-                YENİ / DÜZENLE
-            ================================================== */}
+            {/* YENİ / DÜZENLE */}
 
             {sayfa === "yeni" && (
 
@@ -3055,12 +2968,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Yıl *"
                       deger={form.yil}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "yil",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "yil",
+                          v
+                        )
                       }
                       secenekler={YIL_SECENEKLERI}
                       listeId="yil-listesi"
@@ -3072,12 +2984,11 @@ export default function Home() {
                       <select
                         required
                         value={form.ay}
-                        onChange={
-                          (e) =>
-                            formDegistir(
-                              "ay",
-                              e.target.value
-                            )
+                        onChange={(e) =>
+                          formDegistir(
+                            "ay",
+                            e.target.value
+                          )
                         }
                         className={inputSinif}
                       >
@@ -3086,18 +2997,14 @@ export default function Home() {
                           Seçiniz
                         </option>
 
-                        {AYLAR.map(
-                          (ay) => (
-
-                            <option
-                              key={ay}
-                              value={ay}
-                            >
-                              {ay}
-                            </option>
-
-                          )
-                        )}
+                        {AYLAR.map((ay) => (
+                          <option
+                            key={ay}
+                            value={ay}
+                          >
+                            {ay}
+                          </option>
+                        ))}
 
                       </select>
 
@@ -3106,12 +3013,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="İlçe"
                       deger={form.ilce}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "ilce",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "ilce",
+                          v
+                        )
                       }
                       secenekler={ILCE_SECENEKLERI}
                       listeId="ilce-listesi"
@@ -3120,60 +3026,55 @@ export default function Home() {
                     <MetinAlani
                       baslik="Mahalle"
                       deger={form.mahalle}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "mahalle",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "mahalle",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="TR"
                       deger={form.tr}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "tr",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "tr",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="Lokasyon ID"
                       deger={form.lokasyon_id}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "lokasyon_id",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "lokasyon_id",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="Trafo ID"
                       deger={form.trafo_id}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "trafo_id",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "trafo_id",
+                          v
+                        )
                       }
                     />
 
                     <ComboAlani
                       baslik="Trafo Tipi"
                       deger={form.trafo_tipi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "trafo_tipi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "trafo_tipi",
+                          v
+                        )
                       }
                       secenekler={
                         KONUM_TRAFO_TIPLERI
@@ -3195,12 +3096,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Gücü"
                       deger={form.sokulen_gucu}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_gucu",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_gucu",
+                          v
+                        )
                       }
                       secenekler={GUC_SECENEKLERI}
                       listeId="sokulen-guc-listesi"
@@ -3209,12 +3109,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Gerilim"
                       deger={form.sokulen_gerilim}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_gerilim",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_gerilim",
+                          v
+                        )
                       }
                       secenekler={GERILIM_SECENEKLERI}
                       listeId="sokulen-gerilim-listesi"
@@ -3223,12 +3122,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Markası"
                       deger={form.sokulen_markasi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_markasi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_markasi",
+                          v
+                        )
                       }
                       secenekler={MARKA_SECENEKLERI}
                       listeId="sokulen-marka-listesi"
@@ -3237,36 +3135,33 @@ export default function Home() {
                     <MetinAlani
                       baslik="Seri No"
                       deger={form.sokulen_seri_no}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_seri_no",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_seri_no",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="İmal Yılı"
                       deger={form.sokulen_imal_yili}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_imal_yili",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_imal_yili",
+                          v
+                        )
                       }
                     />
 
                     <ComboAlani
                       baslik="Trafo Tipi"
                       deger={form.sokulen_trafo_tipi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_trafo_tipi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_trafo_tipi",
+                          v
+                        )
                       }
                       secenekler={TRAFO_TIP_SECENEKLERI}
                       listeId="sokulen-trafo-tipi-listesi"
@@ -3275,36 +3170,33 @@ export default function Home() {
                     <MetinAlani
                       baslik="Tamir Yılı"
                       deger={form.sokulen_tamir_yili}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_tamir_yili",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_tamir_yili",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="Tamir Firması"
                       deger={form.sokulen_tamir_firmasi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_tamir_firmasi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_tamir_firmasi",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="Yüklenici"
                       deger={form.sokulen_yuklenici}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "sokulen_yuklenici",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "sokulen_yuklenici",
+                          v
+                        )
                       }
                     />
 
@@ -3322,12 +3214,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Gücü"
                       deger={form.takilan_gucu}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_gucu",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_gucu",
+                          v
+                        )
                       }
                       secenekler={GUC_SECENEKLERI}
                       listeId="takilan-guc-listesi"
@@ -3336,12 +3227,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Gerilim"
                       deger={form.takilan_gerilim}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_gerilim",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_gerilim",
+                          v
+                        )
                       }
                       secenekler={GERILIM_SECENEKLERI}
                       listeId="takilan-gerilim-listesi"
@@ -3350,12 +3240,11 @@ export default function Home() {
                     <ComboAlani
                       baslik="Markası"
                       deger={form.takilan_markasi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_markasi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_markasi",
+                          v
+                        )
                       }
                       secenekler={MARKA_SECENEKLERI}
                       listeId="takilan-marka-listesi"
@@ -3364,36 +3253,33 @@ export default function Home() {
                     <MetinAlani
                       baslik="Seri No"
                       deger={form.takilan_seri_no}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_seri_no",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_seri_no",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="İmal Yılı"
                       deger={form.takilan_imal_yili}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_imal_yili",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_imal_yili",
+                          v
+                        )
                       }
                     />
 
                     <ComboAlani
                       baslik="Trafo Tipi"
                       deger={form.takilan_trafo_tipi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_trafo_tipi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_trafo_tipi",
+                          v
+                        )
                       }
                       secenekler={TRAFO_TIP_SECENEKLERI}
                       listeId="takilan-trafo-tipi-listesi"
@@ -3402,24 +3288,22 @@ export default function Home() {
                     <MetinAlani
                       baslik="Tamir Yılı"
                       deger={form.takilan_tamir_yili}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_tamir_yili",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_tamir_yili",
+                          v
+                        )
                       }
                     />
 
                     <MetinAlani
                       baslik="Tamir Firması"
                       deger={form.takilan_tamir_firmasi}
-                      degistir={
-                        (v) =>
-                          formDegistir(
-                            "takilan_tamir_firmasi",
-                            v
-                          )
+                      degistir={(v) =>
+                        formDegistir(
+                          "takilan_tamir_firmasi",
+                          v
+                        )
                       }
                     />
 
@@ -3440,12 +3324,11 @@ export default function Home() {
                         type="date"
                         required
                         value={form.tarih}
-                        onChange={
-                          (e) =>
-                            formDegistir(
-                              "tarih",
-                              e.target.value
-                            )
+                        onChange={(e) =>
+                          formDegistir(
+                            "tarih",
+                            e.target.value
+                          )
                         }
                         className={inputSinif}
                       />
@@ -3457,12 +3340,11 @@ export default function Home() {
                       <select
                         required
                         value={form.degisim_nedeni}
-                        onChange={
-                          (e) =>
-                            formDegistir(
-                              "degisim_nedeni",
-                              e.target.value
-                            )
+                        onChange={(e) =>
+                          formDegistir(
+                            "degisim_nedeni",
+                            e.target.value
+                          )
                         }
                         className={inputSinif}
                       >
@@ -3471,18 +3353,14 @@ export default function Home() {
                           Seçiniz
                         </option>
 
-                        {NEDENLER.map(
-                          (neden) => (
-
-                            <option
-                              key={neden.ad}
-                              value={neden.ad}
-                            >
-                              {neden.ad}
-                            </option>
-
-                          )
-                        )}
+                        {NEDENLER.map((neden) => (
+                          <option
+                            key={neden.ad}
+                            value={neden.ad}
+                          >
+                            {neden.ad}
+                          </option>
+                        ))}
 
                       </select>
 
@@ -3497,12 +3375,11 @@ export default function Home() {
                       <textarea
                         rows={4}
                         value={form.aciklama}
-                        onChange={
-                          (e) =>
-                            formDegistir(
-                              "aciklama",
-                              e.target.value
-                            )
+                        onChange={(e) =>
+                          formDegistir(
+                            "aciklama",
+                            e.target.value
+                          )
                         }
                         className={inputSinif}
                       />
@@ -3520,14 +3397,12 @@ export default function Home() {
 
                     <button
                       type="button"
-                      onClick={
-                        () => {
+                      onClick={() => {
 
-                          formTemizle();
-                          setSayfa("kayitlar");
+                        formTemizle();
+                        setSayfa("kayitlar");
 
-                        }
-                      }
+                      }}
                       className="rounded-xl border border-slate-700 px-6 py-3 font-bold text-slate-300 hover:bg-slate-800"
                     >
                       Vazgeç
@@ -3558,9 +3433,7 @@ export default function Home() {
             )}
 
 
-            {/* ==================================================
-                KAYITLAR
-            ================================================== */}
+            {/* KAYITLAR */}
 
             {sayfa === "kayitlar" && (
 
@@ -3572,11 +3445,10 @@ export default function Home() {
 
                     <input
                       value={arama}
-                      onChange={
-                        (e) =>
-                          setArama(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setArama(
+                          e.target.value
+                        )
                       }
                       placeholder="Ara..."
                       className={inputSinif}
@@ -3584,92 +3456,71 @@ export default function Home() {
 
                     <select
                       value={filtreYil}
-                      onChange={
-                        (e) =>
-                          setFiltreYil(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setFiltreYil(
+                          e.target.value
+                        )
                       }
                       className={inputSinif}
                     >
-
                       <option value="">
                         Tüm Yıllar
                       </option>
 
-                      {yillar.map(
-                        (yil) => (
-
-                          <option
-                            key={yil}
-                            value={yil}
-                          >
-                            {yil}
-                          </option>
-
-                        )
-                      )}
-
+                      {yillar.map((yil) => (
+                        <option
+                          key={yil}
+                          value={yil}
+                        >
+                          {yil}
+                        </option>
+                      ))}
                     </select>
 
                     <select
                       value={filtreAy}
-                      onChange={
-                        (e) =>
-                          setFiltreAy(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setFiltreAy(
+                          e.target.value
+                        )
                       }
                       className={inputSinif}
                     >
-
                       <option value="">
                         Tüm Aylar
                       </option>
 
-                      {AYLAR.map(
-                        (ay) => (
-
-                          <option
-                            key={ay}
-                            value={ay}
-                          >
-                            {ay}
-                          </option>
-
-                        )
-                      )}
-
+                      {AYLAR.map((ay) => (
+                        <option
+                          key={ay}
+                          value={ay}
+                        >
+                          {ay}
+                        </option>
+                      ))}
                     </select>
 
                     <select
                       value={filtreNeden}
-                      onChange={
-                        (e) =>
-                          setFiltreNeden(
-                            e.target.value
-                          )
+                      onChange={(e) =>
+                        setFiltreNeden(
+                          e.target.value
+                        )
                       }
                       className={inputSinif}
                     >
-
                       <option value="">
                         Tüm Nedenler
                       </option>
 
-                      {NEDENLER.map(
-                        (neden) => (
-
-                          <option
-                            key={neden.ad}
-                            value={neden.ad}
-                          >
-                            {neden.ad}
-                          </option>
-
-                        )
-                      )}
-
+                      {NEDENLER.map((neden) => (
+                        <option
+                          key={neden.ad}
+                          value={neden.ad}
+                        >
+                          {neden.ad}
+                        </option>
+                      ))}
                     </select>
 
                   </div>
@@ -3725,14 +3576,11 @@ export default function Home() {
                   {
                     veriYukleniyor
                       ? (
-
                         <BosAlan>
                           Kayıtlar yükleniyor...
                         </BosAlan>
-
                       )
                       : (
-
                         <KayitTablosu
                           kayitlar={
                             filtrelenmisKayitlar
@@ -3747,7 +3595,6 @@ export default function Home() {
                             kaydiSil
                           }
                         />
-
                       )
                   }
 
@@ -3768,15 +3615,14 @@ export default function Home() {
 
         <DetayModal
           kayit={detayKayit}
-          kapat={
-            () =>
-              setDetayKayit(null)
+          kapat={() =>
+            setDetayKayit(null)
           }
           duzenle={
             kaydiDuzenle
           }
           yazdir={
-            tekKaydiYazdir
+            tekKayitYazdir
           }
         />
 
@@ -3812,26 +3658,11 @@ function htmlTemizle(
   return String(
     deger ?? ""
   )
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 }
 
@@ -3900,19 +3731,12 @@ function tekKayitYazdir(
 
     return `
       <div class="field">
-
         <div class="field-title">
-          ${htmlTemizle(
-            baslik
-          )}
+          ${htmlTemizle(baslik)}
         </div>
-
         <div class="field-value">
-          ${htmlTemizle(
-            veri
-          )}
+          ${htmlTemizle(veri)}
         </div>
-
       </div>
     `;
 
@@ -3991,11 +3815,6 @@ function tekKayitYazdir(
           .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0;
-          }
-
-          .grid.two {
-            grid-template-columns: repeat(2, 1fr);
           }
 
           .field {
@@ -4037,12 +3856,10 @@ function tekKayitYazdir(
           }
 
           @media print {
-
             body {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-
           }
 
         </style>
@@ -4093,45 +3910,14 @@ function tekKayitYazdir(
 
           <div class="grid">
 
-            ${alan(
-              "Yıl",
-              kayit.yil
-            )}
-
-            ${alan(
-              "Ay",
-              kayit.ay
-            )}
-
-            ${alan(
-              "İlçe",
-              kayit.ilce
-            )}
-
-            ${alan(
-              "Mahalle",
-              kayit.mahalle
-            )}
-
-            ${alan(
-              "TR",
-              kayit.tr
-            )}
-
-            ${alan(
-              "Lokasyon ID",
-              kayit.lokasyon_id
-            )}
-
-            ${alan(
-              "Trafo ID",
-              kayit.trafo_id
-            )}
-
-            ${alan(
-              "Trafo Tipi",
-              kayit.trafo_tipi
-            )}
+            ${alan("Yıl", kayit.yil)}
+            ${alan("Ay", kayit.ay)}
+            ${alan("İlçe", kayit.ilce)}
+            ${alan("Mahalle", kayit.mahalle)}
+            ${alan("TR", kayit.tr)}
+            ${alan("Lokasyon ID", kayit.lokasyon_id)}
+            ${alan("Trafo ID", kayit.trafo_id)}
+            ${alan("Trafo Tipi", kayit.trafo_tipi)}
 
           </div>
 
@@ -4153,45 +3939,14 @@ function tekKayitYazdir(
                 : null
             )}
 
-            ${alan(
-              "Gerilim",
-              kayit.sokulen_gerilim
-            )}
-
-            ${alan(
-              "Markası",
-              kayit.sokulen_markasi
-            )}
-
-            ${alan(
-              "Seri No",
-              kayit.sokulen_seri_no
-            )}
-
-            ${alan(
-              "İmal Yılı",
-              kayit.sokulen_imal_yili
-            )}
-
-            ${alan(
-              "Trafo Tipi",
-              kayit.sokulen_trafo_tipi
-            )}
-
-            ${alan(
-              "Tamir Yılı",
-              kayit.sokulen_tamir_yili
-            )}
-
-            ${alan(
-              "Tamir Firması",
-              kayit.sokulen_tamir_firmasi
-            )}
-
-            ${alan(
-              "Yüklenici",
-              kayit.sokulen_yuklenici
-            )}
+            ${alan("Gerilim", kayit.sokulen_gerilim)}
+            ${alan("Markası", kayit.sokulen_markasi)}
+            ${alan("Seri No", kayit.sokulen_seri_no)}
+            ${alan("İmal Yılı", kayit.sokulen_imal_yili)}
+            ${alan("Trafo Tipi", kayit.sokulen_trafo_tipi)}
+            ${alan("Tamir Yılı", kayit.sokulen_tamir_yili)}
+            ${alan("Tamir Firması", kayit.sokulen_tamir_firmasi)}
+            ${alan("Yüklenici", kayit.sokulen_yuklenici)}
 
           </div>
 
@@ -4213,40 +3968,13 @@ function tekKayitYazdir(
                 : null
             )}
 
-            ${alan(
-              "Gerilim",
-              kayit.takilan_gerilim
-            )}
-
-            ${alan(
-              "Markası",
-              kayit.takilan_markasi
-            )}
-
-            ${alan(
-              "Seri No",
-              kayit.takilan_seri_no
-            )}
-
-            ${alan(
-              "İmal Yılı",
-              kayit.takilan_imal_yili
-            )}
-
-            ${alan(
-              "Trafo Tipi",
-              kayit.takilan_trafo_tipi
-            )}
-
-            ${alan(
-              "Tamir Yılı",
-              kayit.takilan_tamir_yili
-            )}
-
-            ${alan(
-              "Tamir Firması",
-              kayit.takilan_tamir_firmasi
-            )}
+            ${alan("Gerilim", kayit.takilan_gerilim)}
+            ${alan("Markası", kayit.takilan_markasi)}
+            ${alan("Seri No", kayit.takilan_seri_no)}
+            ${alan("İmal Yılı", kayit.takilan_imal_yili)}
+            ${alan("Trafo Tipi", kayit.takilan_trafo_tipi)}
+            ${alan("Tamir Yılı", kayit.takilan_tamir_yili)}
+            ${alan("Tamir Firması", kayit.takilan_tamir_firmasi)}
 
           </div>
 
@@ -4374,11 +4102,10 @@ function MetinAlani({
 
       <input
         value={deger}
-        onChange={
-          (e) =>
-            degistir(
-              e.target.value
-            )
+        onChange={(e) =>
+          degistir(
+            e.target.value
+          )
         }
         className={inputSinif}
       />
@@ -4418,11 +4145,10 @@ function ComboAlani({
           required={gerekli}
           autoComplete="off"
           value={deger}
-          onChange={
-            (e) =>
-              degistir(
-                e.target.value
-              )
+          onChange={(e) =>
+            degistir(
+              e.target.value
+            )
           }
           placeholder="Seçiniz veya yazınız"
           className={`${inputSinif} pr-10`}
@@ -4434,16 +4160,14 @@ function ComboAlani({
 
         <datalist id={listeId}>
 
-          {secenekler.map(
-            (secenek) => (
+          {secenekler.map((secenek) => (
 
-              <option
-                key={secenek}
-                value={secenek}
-              />
+            <option
+              key={secenek}
+              value={secenek}
+            />
 
-            )
-          )}
+          ))}
 
         </datalist>
 
@@ -4656,30 +4380,28 @@ function GrafikLegend() {
 
     <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
 
-      {NEDENLER.map(
-        (neden) => (
+      {NEDENLER.map((neden) => (
 
-          <div
-            key={neden.ad}
-            className="flex items-center gap-2"
-          >
+        <div
+          key={neden.ad}
+          className="flex items-center gap-2"
+        >
 
-            <span
-              className="h-3 w-3 rounded-sm"
-              style={{
-                backgroundColor:
-                  neden.renk,
-              }}
-            />
+          <span
+            className="h-3 w-3 rounded-sm"
+            style={{
+              backgroundColor:
+                neden.renk,
+            }}
+          />
 
-            <span className="text-[10px] font-bold text-slate-400">
-              {neden.ad}
-            </span>
+          <span className="text-[10px] font-bold text-slate-400">
+            {neden.ad}
+          </span>
 
-          </div>
+        </div>
 
-        )
-      )}
+      ))}
 
     </div>
 
@@ -4846,90 +4568,85 @@ function KayitTablosu({
 
         <tbody>
 
-          {kayitlar.map(
-            (kayit) => (
+          {kayitlar.map((kayit) => (
 
-              <tr
-                key={kayit.id}
-                className="border-b border-slate-800/80 hover:bg-slate-800/30"
-              >
+            <tr
+              key={kayit.id}
+              className="border-b border-slate-800/80 hover:bg-slate-800/30"
+            >
 
-                <td className="whitespace-nowrap px-3 py-4 font-semibold">
-                  {tarihGoster(kayit.tarih)}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4 font-semibold">
+                {tarihGoster(kayit.tarih)}
+              </td>
 
-                <td className="px-3 py-4">
-                  {kayit.yil || "-"}
-                </td>
+              <td className="px-3 py-4">
+                {kayit.yil || "-"}
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4">
-                  {kayit.ay || "-"}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                {kayit.ay || "-"}
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4">
-                  {kayit.ilce || "-"}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                {kayit.ilce || "-"}
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4">
-                  {kayit.mahalle || "-"}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                {kayit.mahalle || "-"}
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4">
-                  {kayit.lokasyon_id || "-"}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                {kayit.lokasyon_id || "-"}
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4">
-                  {kayit.trafo_id || "-"}
-                </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                {kayit.trafo_id || "-"}
+              </td>
 
-                <td className="px-3 py-4">
+              <td className="px-3 py-4">
 
-                  <NedenEtiketi
-                    neden={
-                      kayit.degisim_nedeni
-                    }
-                  />
+                <NedenEtiketi
+                  neden={
+                    kayit.degisim_nedeni
+                  }
+                />
 
-                </td>
+              </td>
 
-                <td className="whitespace-nowrap px-3 py-4 text-right">
+              <td className="whitespace-nowrap px-3 py-4 text-right">
 
-                  <button
-                    onClick={
-                      () =>
-                        detay(kayit)
-                    }
-                    className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300 hover:bg-orange-950"
-                  >
-                    Detay
-                  </button>
+                <button
+                  onClick={() =>
+                    detay(kayit)
+                  }
+                  className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300 hover:bg-orange-950"
+                >
+                  Detay
+                </button>
 
-                  <button
-                    onClick={
-                      () =>
-                        duzenle(kayit)
-                    }
-                    className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300 hover:bg-blue-950"
-                  >
-                    Düzenle
-                  </button>
+                <button
+                  onClick={() =>
+                    duzenle(kayit)
+                  }
+                  className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300 hover:bg-blue-950"
+                >
+                  Düzenle
+                </button>
 
-                  <button
-                    onClick={
-                      () =>
-                        sil(kayit)
-                    }
-                    className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-950"
-                  >
-                    Sil
-                  </button>
+                <button
+                  onClick={() =>
+                    sil(kayit)
+                  }
+                  className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-950"
+                >
+                  Sil
+                </button>
 
-                </td>
+              </td>
 
-              </tr>
+            </tr>
 
-            )
-          )}
+          ))}
 
         </tbody>
 
@@ -4966,14 +4683,13 @@ function DetayModal({
     >
 
       <div
-        onMouseDown={
-          (e) =>
-            e.stopPropagation()
+        onMouseDown={(e) =>
+          e.stopPropagation()
         }
-        className="max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-700 bg-[#0b1628] shadow-2xl"
+        className="flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-[#0b1628] shadow-2xl"
       >
 
-        <div className="flex items-start justify-between border-b border-slate-800 bg-[#101d30] px-5 py-5 sm:px-7">
+        <div className="shrink-0 flex items-start justify-between border-b border-slate-800 bg-[#101d30] px-5 py-5 sm:px-7">
 
           <div>
 
@@ -5020,7 +4736,7 @@ function DetayModal({
         </div>
 
 
-        <div className="max-h-[calc(92vh-155px)] overflow-y-auto p-5 sm:p-7">
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
 
           <DetayBolumu
             baslik="📍 KONUM BİLGİLERİ"
@@ -5250,12 +4966,11 @@ function DetayModal({
         </div>
 
 
-        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-800 bg-[#101d30] px-5 py-4 sm:px-7">
+        <div className="shrink-0 flex flex-wrap items-center justify-end gap-3 border-t border-slate-800 bg-[#101d30] px-5 py-4 sm:px-7">
 
           <button
-            onClick={
-              () =>
-                yazdir(kayit)
+            onClick={() =>
+              yazdir(kayit)
             }
             className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-black text-white transition hover:bg-slate-600"
           >
@@ -5270,9 +4985,8 @@ function DetayModal({
           </button>
 
           <button
-            onClick={
-              () =>
-                duzenle(kayit)
+            onClick={() =>
+              duzenle(kayit)
             }
             className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-500"
           >
