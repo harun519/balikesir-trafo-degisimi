@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "black",
     title: "Trafo Değişimi",
   },
 };
@@ -21,7 +21,6 @@ export const viewport: Viewport = {
   themeColor: "#07111f",
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({
