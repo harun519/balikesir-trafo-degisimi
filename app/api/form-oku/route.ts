@@ -11,11 +11,23 @@ const UYGULAMA_ALANLARI = [
   "takilan_tamir_yili","takilan_tamir_firmasi","tarih","degisim_nedeni","aciklama",
 ] as const;
 
-const NEDENLER = ["ARIZA","DÖNÜŞÜM","GÜÇ DEĞİŞİMİ","TRAFO İPTAL","YATIRIM","YENİ TESİS","ARIZA RİSKİ"];
+const NEDENLER = [
+  "ARIZA",
+  "DÖNÜŞÜM",
+  "GÜÇ DEĞİŞİMİ",
+  "TRAFO İPTAL",
+  "YATIRIM",
+  "YENİ TESİS",
+  "ARIZA RİSKİ",
+];
 
 function jsonSchema() {
   const properties: Record<string, unknown> = {};
-  for (const alan of UYGULAMA_ALANLARI) properties[alan] = { type: ["string", "null"] };
+
+  for (const alan of UYGULAMA_ALANLARI) {
+    properties[alan] = { type: ["string", "null"] };
+  }
+
   return {
     type: "object",
     properties,
@@ -26,93 +38,232 @@ function jsonSchema() {
 
 function outputText(apiSonucu: any): string {
   const parcalar: string[] = [];
+
   for (const item of apiSonucu?.output || []) {
     if (item?.type !== "message") continue;
+
     for (const c of item?.content || []) {
-      if (c?.type === "output_text" && typeof c?.text === "string") parcalar.push(c.text);
+      if (c?.type === "output_text" && typeof c?.text === "string") {
+        parcalar.push(c.text);
+      }
     }
   }
+
   return parcalar.join("\n").trim();
 }
 
+/*
+  Yetki kontrolü:
+  /auth/v1/user çağrısı yerine doğrudan Supabase REST üzerinden app_users tablosunu
+  kullanıyoruz. Bu istek yine kullanıcının access token'ı ile yapılır ve RLS tarafından
+  doğrulanır. Böylece geçersiz token ile form okuma servisi kullanılamaz.
+*/
 async function yetkiKontrol(accessToken: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !anonKey) return { ok: false as const, status: 500, error: "Supabase ayarları eksik." };
 
-  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: { apikey: anonKey, Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
-  if (!userRes.ok) return { ok: false as const, status: 401, error: "Oturum doğrulanamadı." };
-  const user = await userRes.json();
+  if (!supabaseUrl || !anonKey) {
+    return {
+      ok: false as const,
+      status: 500,
+      error: "Supabase ayarları eksik.",
+    };
+  }
 
-  const rolRes = await fetch(`${supabaseUrl}/rest/v1/app_users?id=eq.${encodeURIComponent(user.id)}&select=role&limit=1`, {
-    headers: { apikey: anonKey, Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
-  if (!rolRes.ok) return { ok: false as const, status: 403, error: "Kullanıcı yetkisi okunamadı." };
-  const roller = await rolRes.json();
-  const rol = roller?.[0]?.role;
-  if (rol !== "admin" && rol !== "editor") return { ok: false as const, status: 403, error: "Form okuma için düzenleme yetkisi gerekiyor." };
-  return { ok: true as const };
+  const rolRes = await fetch(
+    `${supabaseUrl}/rest/v1/app_users?select=id,email,role&limit=1`,
+    {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!rolRes.ok) {
+    console.error(
+      "Form okuma yetki kontrolü:",
+      rolRes.status,
+      await rolRes.text().catch(() => "")
+    );
+
+    return {
+      ok: false as const,
+      status: 401,
+      error: "Oturum doğrulanamadı. Lütfen çıkış yapıp tekrar giriş yapın.",
+    };
+  }
+
+  const kullanicilar = await rolRes.json();
+  const kullanici = Array.isArray(kullanicilar) ? kullanicilar[0] : null;
+  const rol = kullanici?.role;
+
+  if (!kullanici) {
+    return {
+      ok: false as const,
+      status: 403,
+      error: "Kullanıcı yetkisi bulunamadı.",
+    };
+  }
+
+  if (rol !== "admin" && rol !== "editor") {
+    return {
+      ok: false as const,
+      status: 403,
+      error: "Form okuma için Admin veya Editor yetkisi gerekiyor.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    kullanici,
+  };
 }
 
 export async function POST(req: NextRequest) {
   try {
     const auth = req.headers.get("authorization") || "";
-    const accessToken = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-    if (!accessToken) return NextResponse.json({ error: "Oturum bilgisi bulunamadı." }, { status: 401 });
+    const accessToken = auth.startsWith("Bearer ")
+      ? auth.slice(7).trim()
+      : "";
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Oturum bilgisi bulunamadı." },
+        { status: 401 }
+      );
+    }
 
     const yetki = await yetkiKontrol(accessToken);
-    if (!yetki.ok) return NextResponse.json({ error: yetki.error }, { status: yetki.status });
+
+    if (!yetki.ok) {
+      return NextResponse.json(
+        { error: yetki.error },
+        { status: yetki.status }
+      );
+    }
 
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "OPENAI_API_KEY Vercel ortam değişkeni tanımlı değil." }, { status: 500 });
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY Vercel ortam değişkeni tanımlı değil." },
+        { status: 500 }
+      );
+    }
 
     const fd = await req.formData();
     const file = fd.get("file");
-    if (!(file instanceof File)) return NextResponse.json({ error: "Form dosyası bulunamadı." }, { status: 400 });
 
-    const izinli = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-    if (!izinli.includes(file.type)) return NextResponse.json({ error: "Yalnızca PDF, JPG, PNG veya WEBP yüklenebilir." }, { status: 400 });
-    if (file.size > 4 * 1024 * 1024) return NextResponse.json({ error: "Dosya en fazla 4 MB olabilir." }, { status: 400 });
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "Form dosyası bulunamadı." },
+        { status: 400 }
+      );
+    }
+
+    const izinli = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!izinli.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Yalnızca PDF, JPG, PNG veya WEBP yüklenebilir." },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Dosya en fazla 4 MB olabilir." },
+        { status: 400 }
+      );
+    }
 
     const bytes = Buffer.from(await file.arrayBuffer());
     const dataUrl = `data:${file.type};base64,${bytes.toString("base64")}`;
-    const dosyaIcerigi = file.type === "application/pdf"
-      ? { type: "input_file", filename: file.name || "trafo-formu.pdf", file_data: dataUrl }
-      : { type: "input_image", image_url: dataUrl, detail: "high" };
+
+    const dosyaIcerigi =
+      file.type === "application/pdf"
+        ? {
+            type: "input_file",
+            filename: file.name || "trafo-formu.pdf",
+            file_data: dataUrl,
+          }
+        : {
+            type: "input_image",
+            image_url: dataUrl,
+            detail: "high",
+          };
 
     const talimat = `
 Bu belge bir elektrik dağıtım şirketinin taranmış trafo değişim/montaj formudur.
+
 Görevin yalnızca BALIKESİR TRAFO DEĞİŞİM uygulamasında bulunan alanları okumaktır.
-Belgede bulunan fakat aşağıdaki uygulama alanları arasında olmayan tüm satırları, ölçümleri, imzaları, onayları, pano testlerini, bağlantı grubu/kısa devre gibi uygulamada karşılığı olmayan bilgileri TAMAMEN ATLA. Bunları açıklama alanına da taşıma.
+
+BELGEDE BULUNAN FAKAT UYGULAMADA KARŞILIĞI OLMAYAN TÜM SATIRLARI TAMAMEN ATLA.
+Bunları aciklama alanına da taşıma.
+
+Özellikle uygulamada alanı yoksa şunları atla:
+- Bağlantı grubu
+- Kısa devre gerilimi
+- Trafo postası mevcut durum ölçümleri
+- Pano akımları
+- Koruma bilgileri
+- Topraklama ölçümleri
+- Yağ seviye/durum bilgileri
+- Muhtemel yanma/arızalanma nedenleri tablosundaki uygulamada karşılığı olmayan teknik satırlar
+- İmza, kontrol, onay ve personel bilgileri
+- Uygulamada karşılığı olmayan diğer bütün bilgiler
 
 Kurallar:
-- Görmediğin veya emin olmadığın değeri uydurma; null döndür.
-- Tarihi YYYY-MM-DD biçiminde döndür. Tarih varsa yil ve ay alanını da üret; ay Türkçe büyük harf olsun (OCAK...ARALIK).
+- Görmediğin, okuyamadığın veya emin olmadığın değeri uydurma; null döndür.
+- Tarihi YYYY-MM-DD biçiminde döndür.
+- Tarih varsa yil ve ay alanını da üret.
+- Ay Türkçe BÜYÜK HARF olsun: OCAK, ŞUBAT, MART, NİSAN, MAYIS, HAZİRAN, TEMMUZ, AĞUSTOS, EYLÜL, EKİM, KASIM, ARALIK.
 - İlçe ve mahalleyi büyük harfle yaz.
-- trafo_tipi alanı KONUM/MONTAJ TİPİDİR; yalnızca DİREK veya BİNA gibi konumu yaz. Sökülen/takılan trafonun GEN.DEPOLU/HERMETİK vb. tipi ayrı alanlardadır.
-- tr alanına formdaki TR / Trafo Bölge Adı bilgisini yaz. Lokasyon ID ve Trafo ID sadece belgede açıkça varsa doldur; tahmin etme.
-- Güç alanlarında yalnızca sayısal kVA değerini yaz (ör. 160).
-- Gerilimi uygulamadaki biçime mümkünse normalize et (ör. 34,5/0,4).
-- Marka, seri no ve imal yılını sökülen ve takılan sütunlarını karıştırmadan oku.
-- Değişim nedeni sadece şu uygulama değerlerinden biri olabilir: ${NEDENLER.join(", ")}. Formdaki işaretli kutuyu ve metni birlikte değerlendir. Örn. güç değişimi/kademe yetersizliği işaretliyse GÜÇ DEĞİŞİMİ.
-- aciklama yalnızca formda gerçekten açıklama/not alanında uygulamadaki kayda doğrudan ait bir metin varsa doldur; uygulamada karşılığı olmayan satırları burada biriktirme.
+- trafo_tipi alanı KONUM / MONTAJ TİPİDİR. Yalnızca DİREK veya BİNA gibi konumu yaz.
+- Sökülen/takılan trafonun GEN.DEPOLU, HERMETİK, KURU TİP vb. bilgileri sokulen_trafo_tipi ve takilan_trafo_tipi alanlarına yaz.
+- tr alanına formdaki TR / Trafo Bölge Adı bilgisini yaz.
+- Lokasyon ID ve Trafo ID yalnızca belgede açıkça varsa doldur; tahmin etme.
+- Güç alanlarında yalnızca sayısal kVA değerini yaz. Örnek: 160
+- Gerilimi uygulamadaki biçime mümkünse normalize et. Örnek: 34,5/0,4
+- Marka, seri no ve imal yılını SÖKÜLEN ve TAKILAN sütunlarını karıştırmadan oku.
+- Değişim nedeni yalnızca şu değerlerden biri olabilir:
+  ${NEDENLER.join(", ")}
+- Formdaki işaretli kutu ile açıklama/metni birlikte değerlendir.
+- Örneğin güç değişimi/kademe yetersizliği işaretliyse GÜÇ DEĞİŞİMİ kullan.
+- aciklama alanını yalnızca formda gerçekten açıklama/not alanında uygulamadaki kayda doğrudan ait bir metin varsa doldur.
+- Uygulamada karşılığı olmayan teknik satırları aciklama içine kesinlikle ekleme.
 - Çıktıda yalnızca şemadaki alanlar olsun.
 `;
 
     const apiRes = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
         model: "gpt-5.6-luna",
         store: false,
-        input: [{
-          role: "user",
-          content: [dosyaIcerigi, { type: "input_text", text: talimat }],
-        }],
+        input: [
+          {
+            role: "user",
+            content: [
+              dosyaIcerigi,
+              {
+                type: "input_text",
+                text: talimat,
+              },
+            ],
+          },
+        ],
         text: {
           format: {
             type: "json_schema",
@@ -125,27 +276,63 @@ Kurallar:
     });
 
     const apiJson = await apiRes.json();
+
     if (!apiRes.ok) {
       console.error("OpenAI form okuma hatası:", apiJson);
-      return NextResponse.json({ error: apiJson?.error?.message || "Form okuma servisi hata verdi." }, { status: 502 });
+
+      return NextResponse.json(
+        {
+          error:
+            apiJson?.error?.message ||
+            "Form okuma servisi hata verdi.",
+        },
+        { status: 502 }
+      );
     }
 
     const metin = outputText(apiJson);
-    if (!metin) return NextResponse.json({ error: "Formdan yapılandırılmış veri alınamadı." }, { status: 502 });
 
-    let data: Record<string, string | null>;
-    try { data = JSON.parse(metin); }
-    catch { return NextResponse.json({ error: "Okunan form verisi çözümlenemedi." }, { status: 502 }); }
-
-    const temiz: Record<string, string | null> = {};
-    for (const alan of UYGULAMA_ALANLARI) {
-      const v = data?.[alan];
-      temiz[alan] = typeof v === "string" && v.trim() ? v.trim() : null;
+    if (!metin) {
+      return NextResponse.json(
+        { error: "Formdan yapılandırılmış veri alınamadı." },
+        { status: 502 }
+      );
     }
 
-    return NextResponse.json({ data: temiz });
+    let data: Record<string, string | null>;
+
+    try {
+      data = JSON.parse(metin);
+    } catch {
+      console.error("Form JSON çözümlenemedi:", metin);
+
+      return NextResponse.json(
+        { error: "Okunan form verisi çözümlenemedi." },
+        { status: 502 }
+      );
+    }
+
+    const temiz: Record<string, string | null> = {};
+
+    for (const alan of UYGULAMA_ALANLARI) {
+      const v = data?.[alan];
+
+      temiz[alan] =
+        typeof v === "string" && v.trim()
+          ? v.trim()
+          : null;
+    }
+
+    return NextResponse.json({
+      data: temiz,
+      okuyan: yetki.kullanici?.email || null,
+    });
   } catch (err) {
     console.error("/api/form-oku:", err);
-    return NextResponse.json({ error: "Form okunurken beklenmeyen bir hata oluştu." }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Form okunurken beklenmeyen bir hata oluştu." },
+      { status: 500 }
+    );
   }
 }
