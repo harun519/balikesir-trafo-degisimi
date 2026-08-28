@@ -388,7 +388,7 @@ export default function Home() {
 
 
   // ============================================================
-  // DETAY AÇIKKEN ESC
+  // DETAY ESC
   // ============================================================
 
   useEffect(() => {
@@ -1573,6 +1573,274 @@ export default function Home() {
 
 
   // ============================================================
+  // EXCEL'E AKTAR
+  // ============================================================
+
+  function excelAktar() {
+
+    if (
+      filtrelenmisKayitlar.length === 0
+    ) {
+
+      window.alert(
+        "Excel'e aktarılacak kayıt bulunmuyor."
+      );
+
+      return;
+    }
+
+    const basliklar = [
+      "SIRA NO",
+      "YIL",
+      "AY",
+      "İLÇE",
+      "MAHALLE",
+      "TR",
+      "LOKASYON ID",
+      "TRAFO ID",
+      "TRAFO TİPİ",
+
+      "SÖKÜLEN GÜCÜ",
+      "SÖKÜLEN GERİLİM",
+      "SÖKÜLEN MARKASI",
+      "SÖKÜLEN SERİ NO",
+      "SÖKÜLEN İMAL YILI",
+      "SÖKÜLEN TRAFO TİPİ",
+      "SÖKÜLEN TAMİR YILI",
+      "SÖKÜLEN TAMİR FİRMASI",
+      "SÖKÜLEN YÜKLENİCİ",
+
+      "TAKILAN GÜCÜ",
+      "TAKILAN GERİLİM",
+      "TAKILAN MARKASI",
+      "TAKILAN SERİ NO",
+      "TAKILAN İMAL YILI",
+      "TAKILAN TRAFO TİPİ",
+      "TAKILAN TAMİR YILI",
+      "TAKILAN TAMİR FİRMASI",
+
+      "TARİH",
+      "DEĞİŞİM NEDENİ",
+      "AÇIKLAMA",
+    ];
+
+    const satirlar =
+      filtrelenmisKayitlar.map(
+        (kayit, index) => [
+
+          kayit.sira_no ??
+            index + 1,
+
+          kayit.yil ?? "",
+          kayit.ay ?? "",
+          kayit.ilce ?? "",
+          kayit.mahalle ?? "",
+          kayit.tr ?? "",
+          kayit.lokasyon_id ?? "",
+          kayit.trafo_id ?? "",
+          kayit.trafo_tipi ?? "",
+
+          kayit.sokulen_gucu ?? "",
+          kayit.sokulen_gerilim ?? "",
+          kayit.sokulen_markasi ?? "",
+          kayit.sokulen_seri_no ?? "",
+          kayit.sokulen_imal_yili ?? "",
+          kayit.sokulen_trafo_tipi ?? "",
+          kayit.sokulen_tamir_yili ?? "",
+          kayit.sokulen_tamir_firmasi ?? "",
+          kayit.sokulen_yuklenici ?? "",
+
+          kayit.takilan_gucu ?? "",
+          kayit.takilan_gerilim ?? "",
+          kayit.takilan_markasi ?? "",
+          kayit.takilan_seri_no ?? "",
+          kayit.takilan_imal_yili ?? "",
+          kayit.takilan_trafo_tipi ?? "",
+          kayit.takilan_tamir_yili ?? "",
+          kayit.takilan_tamir_firmasi ?? "",
+
+          tarihGoster(kayit.tarih),
+          kayit.degisim_nedeni ?? "",
+          kayit.aciklama ?? "",
+
+        ]
+      );
+
+    const tabloBasliklari =
+      basliklar
+        .map(
+          (baslik) =>
+            `<th>${excelTemizle(
+              baslik
+            )}</th>`
+        )
+        .join("");
+
+    const tabloSatirlari =
+      satirlar
+        .map(
+          (satir) => {
+
+            const hucreler =
+              satir
+                .map(
+                  (hucre) =>
+                    `<td>${excelTemizle(
+                      hucre
+                    )}</td>`
+                )
+                .join("");
+
+            return `<tr>${hucreler}</tr>`;
+
+          }
+        )
+        .join("");
+
+    const excelIcerik = `
+      <html
+        xmlns:o="urn:schemas-microsoft-com:office:office"
+        xmlns:x="urn:schemas-microsoft-com:office:excel"
+        xmlns="http://www.w3.org/TR/REC-html40"
+      >
+        <head>
+          <meta charset="UTF-8" />
+          <style>
+            table {
+              border-collapse: collapse;
+              font-family: Arial, sans-serif;
+              font-size: 11pt;
+            }
+
+            th {
+              background: #f97316;
+              color: #ffffff;
+              font-weight: bold;
+              border: 1px solid #777777;
+              padding: 8px;
+              text-align: center;
+              white-space: nowrap;
+            }
+
+            td {
+              border: 1px solid #aaaaaa;
+              padding: 6px;
+              white-space: nowrap;
+              mso-number-format: "\\@";
+            }
+          </style>
+        </head>
+
+        <body>
+
+          <table>
+
+            <thead>
+              <tr>
+                ${tabloBasliklari}
+              </tr>
+            </thead>
+
+            <tbody>
+              ${tabloSatirlari}
+            </tbody>
+
+          </table>
+
+        </body>
+      </html>
+    `;
+
+    const blob =
+      new Blob(
+        [
+          "\uFEFF",
+          excelIcerik,
+        ],
+        {
+          type:
+            "application/vnd.ms-excel;charset=utf-8;",
+        }
+      );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    const bugun =
+      new Date();
+
+    const gun =
+      String(
+        bugun.getDate()
+      ).padStart(2, "0");
+
+    const ay =
+      String(
+        bugun.getMonth() + 1
+      ).padStart(2, "0");
+
+    const yil =
+      bugun.getFullYear();
+
+    const isimParcalari = [
+      "BALIKESIR_TRAFO_DEGISIMI",
+    ];
+
+    if (filtreYil) {
+      isimParcalari.push(
+        filtreYil
+      );
+    }
+
+    if (filtreAy) {
+      isimParcalari.push(
+        filtreAy
+      );
+    }
+
+    if (filtreNeden) {
+
+      isimParcalari.push(
+        filtreNeden
+          .replaceAll(" ", "_")
+          .replaceAll("İ", "I")
+          .replaceAll("Ü", "U")
+          .replaceAll("Ö", "O")
+          .replaceAll("Ş", "S")
+          .replaceAll("Ğ", "G")
+          .replaceAll("Ç", "C")
+      );
+
+    }
+
+    isimParcalari.push(
+      `${gun}-${ay}-${yil}`
+    );
+
+    link.href = url;
+
+    link.download =
+      `${isimParcalari.join("_")}.xls`;
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    document.body.removeChild(
+      link
+    );
+
+    URL.revokeObjectURL(url);
+
+  }
+
+
+  // ============================================================
   // YÜKLENİYOR
   // ============================================================
 
@@ -1688,13 +1956,16 @@ export default function Home() {
                 <form
                   onSubmit={girisYap}
                   className="space-y-5"
+                  autoComplete="on"
                 >
 
                   <Alan baslik="E-posta">
 
                     <input
                       type="email"
+                      name="username"
                       required
+                      autoComplete="username"
                       value={email}
                       onChange={
                         (e) =>
@@ -1711,7 +1982,9 @@ export default function Home() {
 
                     <input
                       type="password"
+                      name="password"
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={
                         (e) =>
@@ -2366,9 +2639,7 @@ export default function Home() {
             )}
 
 
-            {/* ==================================================
-                YENİ / DÜZENLE
-            ================================================== */}
+            {/* YENİ / DÜZENLE */}
 
             {sayfa === "yeni" && (
 
@@ -2889,9 +3160,7 @@ export default function Home() {
             )}
 
 
-            {/* ==================================================
-                KAYITLAR
-            ================================================== */}
+            {/* KAYITLAR */}
 
             {sayfa === "kayitlar" && (
 
@@ -3005,11 +3274,33 @@ export default function Home() {
 
                   </div>
 
-                  <div className="mt-4 text-sm text-slate-400">
-                    {filtrelenmisKayitlar.length} kayıt.
+
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                    <div className="text-sm text-slate-400">
+
+                      <span className="font-black text-white">
+                        {filtrelenmisKayitlar.length}
+                      </span>{" "}
+                      kayıt görüntüleniyor.
+
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={excelAktar}
+                      disabled={
+                        filtrelenmisKayitlar.length === 0
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      📥 Excel&apos;e Aktar
+                    </button>
+
                   </div>
 
                 </div>
+
 
                 <Panel
                   baslik="Trafo Değişim Kayıtları"
@@ -3050,10 +3341,6 @@ export default function Home() {
       </div>
 
 
-      {/* ========================================================
-          DETAY MODAL
-      ======================================================== */}
-
       {detayKayit && (
 
         <DetayModal
@@ -3082,6 +3369,45 @@ export default function Home() {
 
 const inputSinif =
   "w-full rounded-xl border border-slate-700 bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-orange-500";
+
+
+// ============================================================
+// EXCEL TEMİZLE
+// ============================================================
+
+function excelTemizle(
+  deger:
+    | string
+    | number
+    | null
+    | undefined
+) {
+
+  return String(
+    deger ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
 
 
 // ============================================================
@@ -3726,8 +4052,6 @@ function DetayModal({
         className="max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-700 bg-[#0b1628] shadow-2xl"
       >
 
-        {/* BAŞLIK */}
-
         <div className="flex items-start justify-between border-b border-slate-800 bg-[#101d30] px-5 py-5 sm:px-7">
 
           <div>
@@ -3776,11 +4100,7 @@ function DetayModal({
         </div>
 
 
-        {/* İÇERİK */}
-
         <div className="max-h-[calc(92vh-155px)] overflow-y-auto p-5 sm:p-7">
-
-          {/* KONUM */}
 
           <DetayBolumu
             baslik="📍 KONUM BİLGİLERİ"
@@ -3832,8 +4152,6 @@ function DetayModal({
 
           </DetayBolumu>
 
-
-          {/* TRAFO KARŞILAŞTIRMA */}
 
           <div className="mt-5 grid gap-5 xl:grid-cols-2">
 
@@ -3956,8 +4274,6 @@ function DetayModal({
           </div>
 
 
-          {/* İŞLEM */}
-
           <div className="mt-5">
 
             <DetayBolumu
@@ -4013,8 +4329,6 @@ function DetayModal({
 
         </div>
 
-
-        {/* ALT BUTONLAR */}
 
         <div className="flex items-center justify-end gap-3 border-t border-slate-800 bg-[#101d30] px-5 py-4 sm:px-7">
 
