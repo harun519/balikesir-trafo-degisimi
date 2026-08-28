@@ -125,21 +125,62 @@ export default function Home() {
 
   useEffect(()=>{
     if(typeof window==="undefined"||!("serviceWorker" in navigator))return;
+
     let reg:ServiceWorkerRegistration|null=null;
     let timer:number|undefined;
-    const kontrol=async()=>{try{if(reg)await reg.update();}catch{}};
-    navigator.serviceWorker.register("/sw.js").then(r=>{
+    let kapandi=false;
+
+    const workerTakip=(worker:ServiceWorker|null)=>{
+      if(!worker)return;
+      const durumKontrol=()=>{
+        if(worker.state==="installed"&&navigator.serviceWorker.controller&&!kapandi){
+          setPwaGuncellemeVar(true);
+        }
+      };
+      durumKontrol();
+      worker.addEventListener("statechange",durumKontrol);
+    };
+
+    const kayitTakip=(r:ServiceWorkerRegistration)=>{
+      if(r.waiting&&!kapandi)setPwaGuncellemeVar(true);
+      workerTakip(r.installing);
+    };
+
+    const kontrol=async()=>{
+      try{
+        const r=reg??await navigator.serviceWorker.getRegistration();
+        if(!r)return;
+        reg=r;
+        kayitTakip(r);
+        await r.update();
+        kayitTakip(r);
+      }catch{}
+    };
+
+    const gorunurlukKontrol=()=>{
+      if(document.visibilityState==="visible")kontrol();
+    };
+
+    navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>{
+      if(kapandi)return;
       reg=r;
-      if(r.waiting)setPwaGuncellemeVar(true);
-      r.addEventListener("updatefound",()=>{
-        const yeni=r.installing;
-        if(!yeni)return;
-        yeni.addEventListener("statechange",()=>{if(yeni.state==="installed"&&navigator.serviceWorker.controller)setPwaGuncellemeVar(true);});
-      });
-      timer=window.setInterval(kontrol,60*60*1000);
+      kayitTakip(r);
+      r.addEventListener("updatefound",()=>workerTakip(r.installing));
+      kontrol();
+      timer=window.setInterval(kontrol,60*1000);
     }).catch(()=>{});
+
     window.addEventListener("focus",kontrol);
-    return()=>{window.removeEventListener("focus",kontrol);if(timer)window.clearInterval(timer);};
+    window.addEventListener("pageshow",kontrol);
+    document.addEventListener("visibilitychange",gorunurlukKontrol);
+
+    return()=>{
+      kapandi=true;
+      window.removeEventListener("focus",kontrol);
+      window.removeEventListener("pageshow",kontrol);
+      document.removeEventListener("visibilitychange",gorunurlukKontrol);
+      if(timer)window.clearInterval(timer);
+    };
   },[]);
 
   useEffect(() => {
