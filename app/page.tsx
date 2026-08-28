@@ -55,7 +55,7 @@ const BOS_FORM: FormData = {
 
 const inputSinif = "w-full rounded-xl border border-slate-700 bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-orange-500";
 
-function Home() {
+export default function Home() {
   const supabase = useMemo(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -75,7 +75,6 @@ function Home() {
   const [veriYukleniyor,setVeriYukleniyor]=useState(false); const [genelHata,setGenelHata]=useState(""); const [basariMesaji,setBasariMesaji]=useState("");
   const [mobilMenuAcik,setMobilMenuAcik]=useState(false); const [detayKayit,setDetayKayit]=useState<TrafoKaydi|null>(null);
   const [form,setForm]=useState<FormData>(BOS_FORM); const [duzenlenenId,setDuzenlenenId]=useState<number|null>(null); const [kaydediliyor,setKaydediliyor]=useState(false);
-  const [formOkunuyor,setFormOkunuyor]=useState(false); const [formOkumaMesaji,setFormOkumaMesaji]=useState("");
   const [arama,setArama]=useState(""); const [filtreYil,setFiltreYil]=useState(""); const [filtreAy,setFiltreAy]=useState(""); const [filtreNeden,setFiltreNeden]=useState("");
   const [filtreIlce,setFiltreIlce]=useState(""); const [filtreBaslangic,setFiltreBaslangic]=useState(""); const [filtreBitis,setFiltreBitis]=useState("");
   const [dashboardYil,setDashboardYil]=useState(""); const [dashboardIlce,setDashboardIlce]=useState("");
@@ -343,41 +342,7 @@ function Home() {
     });
     if(formHatalari.length)setFormHatalari([]);
   }
-  function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);setFormHatalari([]);setFormOkumaMesaji("");}
-
-  async function taranmisFormOku(e:ChangeEvent<HTMLInputElement>){
-    const dosya=e.target.files?.[0];
-    e.target.value="";
-    if(!dosya)return;
-    if(!session?.access_token){setGenelHata("Taranmış form okuma için oturum açmanız gerekiyor.");return;}
-    const izinli=["application/pdf","image/jpeg","image/png","image/webp"];
-    if(!izinli.includes(dosya.type)){setGenelHata("Yalnızca PDF, JPG, PNG veya WEBP form yükleyebilirsiniz.");return;}
-    if(dosya.size>4*1024*1024){setGenelHata("Form dosyası en fazla 4 MB olabilir.");return;}
-    setFormOkunuyor(true);setFormOkumaMesaji("");setGenelHata("");
-    try{
-      const fd=new window.FormData();fd.append("file",dosya);
-      const r=await fetch("/api/form-oku",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`},body:fd});
-      const sonuc=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(sonuc?.error||"Form okunamadı.");
-      const okunan=(sonuc?.data||{}) as Partial<FormData>;
-      const temiz:Partial<FormData>={};
-      (Object.keys(BOS_FORM) as (keyof FormData)[]).forEach(k=>{
-        const v=okunan[k];
-        if(typeof v==="string"&&v.trim())temiz[k]=v.trim();
-      });
-      if(temiz.tarih){
-        const [yy,mm]=temiz.tarih.split("-");
-        const mi=Number(mm)-1;
-        if(yy)temiz.yil=yy;
-        if(mi>=0&&mi<12)temiz.ay=AYLAR[mi];
-      }
-      setForm(x=>({...x,...temiz}));
-      setFormHatalari([]);
-      const adet=Object.keys(temiz).length;
-      setFormOkumaMesaji(adet?`✅ Form okundu. Uygulamadaki ${adet} alan otomatik dolduruldu. Kaydetmeden önce bilgileri kontrol edin.`:"⚠ Form okundu ancak uygulamadaki alanlarla eşleşen güvenilir bilgi bulunamadı.");
-    }catch(err){setGenelHata(err instanceof Error?err.message:"Form okunamadı.");}
-    finally{setFormOkunuyor(false);}
-  }
+  function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);setFormHatalari([]);}
 
   async function kaydet(e:FormEvent<HTMLFormElement>){
     e.preventDefault(); if(!supabase)return;
@@ -1142,7 +1107,6 @@ function Home() {
           </>}
 
           {sayfa==="yeni"&&duzenleyebilir&&<form onSubmit={kaydet} className="space-y-5">
-            {!duzenlenenId&&<div className="rounded-2xl border border-cyan-800/70 bg-cyan-950/20 p-4 sm:p-5"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black text-cyan-300">📄 Taranmış Formdan Aktar</div><div className="mt-1 text-xs leading-5 text-slate-400">PDF veya fotoğraf yükleyin. Yalnızca uygulamada bulunan alanlar okunup forma aktarılır; formdaki diğer satırlar atlanır.</div></div><label className={`inline-flex cursor-pointer items-center justify-center rounded-xl px-4 py-3 text-sm font-black ${formOkunuyor?"cursor-wait bg-slate-700 text-slate-400":"bg-cyan-600 text-white hover:bg-cyan-500"}`}><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={taranmisFormOku} disabled={formOkunuyor} className="hidden"/>{formOkunuyor?"⏳ Form Okunuyor...":"📷 PDF / Fotoğraf Seç"}</label></div>{formOkumaMesaji&&<div className="mt-4 rounded-xl border border-cyan-800/60 bg-[#07111f] px-4 py-3 text-xs font-bold text-cyan-200">{formOkumaMesaji}</div>}<div className="mt-3 text-[10px] text-slate-500">Not: Okunan bilgiler otomatik kaydedilmez. Önce form alanlarına aktarılır; son kontrol sizde kalır.</div></div>}
             {formHatalari.length>0&&<div className="rounded-2xl border border-red-800 bg-red-950/30 p-4"><div className="font-black text-red-300">⚠ Zorunlu alanları tamamlayın</div><div className="mt-2 text-sm text-red-200">{formHatalari.join(" • ")}</div></div>}
             {akilliFormEslesme&&!duzenlenenId&&<div className="flex flex-col gap-3 rounded-2xl border border-blue-800 bg-blue-950/20 p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black text-blue-300">🧠 Bu trafo daha önce kayıtlı</div><div className="mt-1 text-xs text-slate-400">Son kayıt: {tarihGoster(akilliFormEslesme.tarih)} • {akilliFormEslesme.ilce||"-"} / {akilliFormEslesme.mahalle||"-"}</div></div><div className="flex gap-2"><button type="button" onClick={()=>setGecmisKayit(akilliFormEslesme)} className="rounded-xl border border-blue-700 px-3 py-2 text-xs font-black text-blue-300">Geçmişi Gör</button><button type="button" onClick={()=>setForm(x=>({...x,ilce:x.ilce||akilliFormEslesme.ilce||"",mahalle:x.mahalle||akilliFormEslesme.mahalle||"",tr:x.tr||akilliFormEslesme.tr||"",lokasyon_id:x.lokasyon_id||akilliFormEslesme.lokasyon_id||"",trafo_tipi:x.trafo_tipi||akilliFormEslesme.trafo_tipi||""}))} className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black">Konumu Doldur</button></div></div>}
             {gucDurumu&&<div className="rounded-xl border border-slate-800 bg-[#101d30] px-4 py-3 text-sm font-black text-orange-300">⚡ Otomatik güç karşılaştırması: {gucDurumu}</div>}
@@ -1311,5 +1275,3 @@ function csvParse(text:string){
 }
 function tarihGoster(t:string|null){if(!t)return"-";const p=t.split("-");return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:t}
 function esc(v:unknown){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-
-export default Home;
