@@ -152,8 +152,7 @@ const BU_YIL = new Date().getFullYear();
 
 const YIL_SECENEKLERI = Array.from(
   {
-    length:
-      Math.max(BU_YIL + 2, 2026) - 2017 + 1,
+    length: Math.max(BU_YIL + 2, 2026) - 2017 + 1,
   },
   (_, i) => String(2017 + i)
 );
@@ -347,6 +346,12 @@ export default function Home() {
     useState("");
 
 
+  // MOBİL MENÜ
+
+  const [mobilMenuAcik, setMobilMenuAcik] =
+    useState(false);
+
+
   // DETAY
 
   const [detayKayit, setDetayKayit] =
@@ -398,7 +403,16 @@ export default function Home() {
     function escKapat(e: KeyboardEvent) {
 
       if (e.key === "Escape") {
-        setDetayKayit(null);
+
+        if (detayKayit) {
+          setDetayKayit(null);
+          return;
+        }
+
+        if (mobilMenuAcik) {
+          setMobilMenuAcik(false);
+        }
+
       }
 
     }
@@ -414,7 +428,10 @@ export default function Home() {
         escKapat
       );
 
-  }, []);
+  }, [
+    detayKayit,
+    mobilMenuAcik,
+  ]);
 
 
   // ============================================================
@@ -574,6 +591,26 @@ export default function Home() {
     setSayfa("dashboard");
     setEmail("");
     setPassword("");
+    setMobilMenuAcik(false);
+
+  }
+
+
+  // ============================================================
+  // SAYFA DEĞİŞTİR
+  // ============================================================
+
+  function sayfayaGit(
+    yeniSayfa: Sayfa
+  ) {
+
+    setSayfa(yeniSayfa);
+    setMobilMenuAcik(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
 
   }
 
@@ -877,6 +914,7 @@ export default function Home() {
     );
 
     setSayfa("yeni");
+    setMobilMenuAcik(false);
 
     window.scrollTo({
       top: 0,
@@ -1137,9 +1175,7 @@ export default function Home() {
 
         NEDENLER.forEach(
           (neden) => {
-
             sonuc[neden.ad] = 0;
-
           }
         );
 
@@ -1456,6 +1492,7 @@ export default function Home() {
         )
     );
 
+
   const maxAylik =
     Math.max(
       1,
@@ -1559,7 +1596,7 @@ export default function Home() {
 
 
   // ============================================================
-  // PROFESYONEL XLSX
+  // XLSX
   // ============================================================
 
   async function excelAktar() {
@@ -1604,10 +1641,6 @@ export default function Home() {
       ];
 
 
-      // ========================================================
-      // ANA BAŞLIK
-      // ========================================================
-
       worksheet.mergeCells(
         "A1:AC1"
       );
@@ -1643,10 +1676,6 @@ export default function Home() {
       worksheet.getRow(1).height =
         32;
 
-
-      // ========================================================
-      // RAPOR BİLGİLERİ
-      // ========================================================
 
       worksheet.mergeCells(
         "A2:H2"
@@ -1717,10 +1746,6 @@ export default function Home() {
       worksheet.getRow(3).height =
         8;
 
-
-      // ========================================================
-      // SÜTUNLAR
-      // ========================================================
 
       const sutunlar = [
         ["SIRA NO", 10],
@@ -1843,10 +1868,6 @@ export default function Home() {
         }
       );
 
-
-      // ========================================================
-      // VERİ
-      // ========================================================
 
       filtrelenmisKayitlar.forEach(
         (kayit, index) => {
@@ -1991,40 +2012,29 @@ export default function Home() {
           );
 
 
-          // TARİH
           satir.getCell(27).numFmt =
             "dd.mm.yyyy";
+
+          satir.getCell(1).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+          satir.getCell(2).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
+
+          satir.getCell(3).alignment = {
+            horizontal: "center",
+            vertical: "middle",
+          };
 
           satir.getCell(27).alignment = {
             horizontal: "center",
             vertical: "middle",
           };
 
-
-          // SIRA
-          satir.getCell(1).alignment = {
-            horizontal: "center",
-            vertical: "middle",
-          };
-
-
-          // YIL
-          satir.getCell(2).alignment = {
-            horizontal: "center",
-            vertical: "middle",
-          };
-
-
-          // AY
-          satir.getCell(3).alignment = {
-            horizontal: "center",
-            vertical: "middle",
-          };
-
-
-          // ====================================================
-          // DEĞİŞİM NEDENİ RENGİ
-          // ====================================================
 
           const nedenCell =
             satir.getCell(28);
@@ -2076,10 +2086,6 @@ export default function Home() {
       );
 
 
-      // ========================================================
-      // FİLTRE
-      // ========================================================
-
       worksheet.autoFilter = {
         from: {
           row: 4,
@@ -2091,10 +2097,6 @@ export default function Home() {
         },
       };
 
-
-      // ========================================================
-      // YAZDIRMA
-      // ========================================================
 
       worksheet.pageSetup = {
 
@@ -2129,10 +2131,6 @@ export default function Home() {
 
       };
 
-
-      // ========================================================
-      // DOSYAYI İNDİR
-      // ========================================================
 
       const buffer =
         await workbook.xlsx
@@ -2190,33 +2188,25 @@ export default function Home() {
 
 
       if (filtreYil) {
-
         isimParcalari.push(
           filtreYil
         );
-
       }
 
-
       if (filtreAy) {
-
         isimParcalari.push(
           turkceDosyaAdi(
             filtreAy
           )
         );
-
       }
 
-
       if (filtreNeden) {
-
         isimParcalari.push(
           turkceDosyaAdi(
             filtreNeden
           )
         );
-
       }
 
 
@@ -2357,10 +2347,16 @@ export default function Home() {
 
     pencere.document.write(`
       <!DOCTYPE html>
+
       <html lang="tr">
+
       <head>
+
         <meta charset="UTF-8">
-        <title>Balıkesir Trafo Değişim Raporu</title>
+
+        <title>
+          Balıkesir Trafo Değişim Raporu
+        </title>
 
         <style>
 
@@ -2475,6 +2471,7 @@ export default function Home() {
         </script>
 
       </body>
+
       </html>
     `);
 
@@ -2542,11 +2539,9 @@ export default function Home() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
-
                 Trafo değişim kayıtlarını yönetin,
                 yıllık ve aylık istatistikleri takip edin,
                 arıza ve değişim nedenlerini tek ekrandan analiz edin.
-
               </p>
 
             </div>
@@ -2554,11 +2549,11 @@ export default function Home() {
           </section>
 
 
-          <section className="flex w-full items-center justify-center p-6 lg:w-1/2">
+          <section className="flex w-full items-center justify-center p-5 sm:p-6 lg:w-1/2">
 
             <div className="w-full max-w-md">
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl">
+              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
 
                 <div className="mb-8">
 
@@ -2671,7 +2666,126 @@ export default function Home() {
 
     <main className="min-h-screen bg-[#07111f] text-white">
 
+      {/* MOBİL MENÜ OVERLAY */}
+
+      {mobilMenuAcik && (
+
+        <div
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+          onClick={() =>
+            setMobilMenuAcik(false)
+          }
+        />
+
+      )}
+
+
+      {/* MOBİL MENÜ */}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[82vw] max-w-[310px] flex-col border-r border-slate-800 bg-[#0b1628] shadow-2xl transition-transform duration-300 lg:hidden ${
+          mobilMenuAcik
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }`}
+      >
+
+        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-6">
+
+          <div>
+
+            <div className="text-xs font-bold uppercase tracking-[0.22em] text-orange-400">
+              BALIKESİR
+            </div>
+
+            <div className="mt-1 text-xl font-black">
+              ⚡ TRAFO YÖNETİMİ
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setMobilMenuAcik(false)
+            }
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 text-xl text-slate-400 hover:bg-slate-800"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <nav className="flex-1 space-y-2 overflow-y-auto p-3">
+
+          <MenuButonu
+            aktif={
+              sayfa === "dashboard"
+            }
+            onClick={() =>
+              sayfayaGit(
+                "dashboard"
+              )
+            }
+          >
+            📊 Kontrol Paneli
+          </MenuButonu>
+
+
+          <MenuButonu
+            aktif={
+              sayfa === "yeni" &&
+              !duzenlenenId
+            }
+            onClick={() => {
+
+              formTemizle();
+              sayfayaGit("yeni");
+
+            }}
+          >
+            ➕ Yeni Kayıt
+          </MenuButonu>
+
+
+          <MenuButonu
+            aktif={
+              sayfa === "kayitlar"
+            }
+            onClick={() =>
+              sayfayaGit(
+                "kayitlar"
+              )
+            }
+          >
+            📋 Trafo Kayıtları
+          </MenuButonu>
+
+        </nav>
+
+
+        <div className="border-t border-slate-800 p-4">
+
+          <div className="mb-3 break-all text-xs text-slate-500">
+            {session.user.email}
+          </div>
+
+          <button
+            onClick={cikisYap}
+            className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm font-bold text-slate-300 hover:bg-slate-800"
+          >
+            Çıkış Yap
+          </button>
+
+        </div>
+
+      </aside>
+
+
       <div className="flex min-h-screen">
+
+        {/* MASAÜSTÜ MENÜ */}
 
         <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex">
 
@@ -2699,11 +2813,10 @@ export default function Home() {
                 sayfa ===
                 "dashboard"
               }
-              onClick={
-                () =>
-                  setSayfa(
-                    "dashboard"
-                  )
+              onClick={() =>
+                sayfayaGit(
+                  "dashboard"
+                )
               }
             >
               📊 Kontrol Paneli
@@ -2715,14 +2828,12 @@ export default function Home() {
                 sayfa === "yeni" &&
                 !duzenlenenId
               }
-              onClick={
-                () => {
+              onClick={() => {
 
-                  formTemizle();
-                  setSayfa("yeni");
+                formTemizle();
+                sayfayaGit("yeni");
 
-                }
-              }
+              }}
             >
               ➕ Yeni Kayıt
             </MenuButonu>
@@ -2733,11 +2844,10 @@ export default function Home() {
                 sayfa ===
                 "kayitlar"
               }
-              onClick={
-                () =>
-                  setSayfa(
-                    "kayitlar"
-                  )
+              onClick={() =>
+                sayfayaGit(
+                  "kayitlar"
+                )
               }
             >
               📋 Trafo Kayıtları
@@ -2766,30 +2876,48 @@ export default function Home() {
 
         <section className="min-w-0 flex-1">
 
-          <header className="sticky top-0 z-20 border-b border-slate-800 bg-[#0b1628]/95 px-5 py-4 backdrop-blur lg:px-7">
+          {/* ÜST BAR */}
 
-            <h1 className="text-xl font-black lg:text-2xl">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-[#0b1628]/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4 lg:px-7">
 
-              {
-                sayfa === "dashboard"
-                  ? "Trafo Değişim Kontrol Paneli"
-                  : sayfa === "yeni"
-                  ? duzenlenenId
-                    ? "Trafo Kaydını Düzenle"
-                    : "Yeni Trafo Değişim Kaydı"
-                  : "Trafo Değişim Kayıtları"
+            <button
+              type="button"
+              onClick={() =>
+                setMobilMenuAcik(true)
               }
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-[#07111f] text-xl lg:hidden"
+              aria-label="Menüyü aç"
+            >
+              ☰
+            </button>
 
-            </h1>
 
-            <p className="mt-1 text-xs text-slate-500">
-              BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-            </p>
+            <div className="min-w-0">
+
+              <h1 className="truncate text-lg font-black sm:text-xl lg:text-2xl">
+
+                {
+                  sayfa === "dashboard"
+                    ? "Trafo Değişim Kontrol Paneli"
+                    : sayfa === "yeni"
+                    ? duzenlenenId
+                      ? "Trafo Kaydını Düzenle"
+                      : "Yeni Trafo Değişim Kaydı"
+                    : "Trafo Değişim Kayıtları"
+                }
+
+              </h1>
+
+              <p className="mt-1 hidden text-xs text-slate-500 sm:block">
+                BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
+              </p>
+
+            </div>
 
           </header>
 
 
-          <div className="p-4 sm:p-6 lg:p-7">
+          <div className="p-3 sm:p-5 lg:p-7">
 
             {genelHata && (
 
@@ -2803,9 +2931,7 @@ export default function Home() {
             {basariMesaji && (
 
               <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
-
                 {basariMesaji}
-
               </div>
 
             )}
@@ -2819,9 +2945,9 @@ export default function Home() {
 
               <>
 
-                <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-[#101d30] p-4 lg:flex-row lg:items-end">
+                <div className="mb-5 grid gap-3 rounded-2xl border border-slate-800 bg-[#101d30] p-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto_auto] xl:items-end">
 
-                  <div className="flex-1">
+                  <div>
 
                     <div className="mb-2 text-xs font-bold text-slate-400">
                       YIL
@@ -2862,7 +2988,7 @@ export default function Home() {
                   </div>
 
 
-                  <div className="flex-1">
+                  <div>
 
                     <div className="mb-2 text-xs font-bold text-slate-400">
                       İLÇE
@@ -2904,14 +3030,12 @@ export default function Home() {
 
 
                   <button
-                    onClick={
-                      () => {
+                    onClick={() => {
 
-                        setDashboardYil("");
-                        setDashboardIlce("");
+                      setDashboardYil("");
+                      setDashboardIlce("");
 
-                      }
-                    }
+                    }}
                     className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800"
                   >
                     Filtreyi Temizle
@@ -2919,14 +3043,12 @@ export default function Home() {
 
 
                   <button
-                    onClick={
-                      () => {
+                    onClick={() => {
 
-                        formTemizle();
-                        setSayfa("yeni");
+                      formTemizle();
+                      sayfayaGit("yeni");
 
-                      }
-                    }
+                    }}
                     className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-black hover:bg-orange-400"
                   >
                     + Yeni Trafo Kaydı
@@ -2935,7 +3057,7 @@ export default function Home() {
                 </div>
 
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
 
                   <KpiKart
                     baslik="TOPLAM KAYIT"
@@ -3020,14 +3142,14 @@ export default function Home() {
                     <div className="mt-7 flex flex-col items-center">
 
                       <div
-                        className="relative h-52 w-52 rounded-full"
+                        className="relative h-48 w-48 rounded-full sm:h-52 sm:w-52"
                         style={{
                           background:
                             `conic-gradient(${donutGradient})`,
                         }}
                       >
 
-                        <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-[#101d30]">
+                        <div className="absolute inset-8 flex flex-col items-center justify-center rounded-full bg-[#101d30] sm:inset-9">
 
                           <div className="text-3xl font-black">
                             {
@@ -3056,17 +3178,17 @@ export default function Home() {
                               className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
                             >
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex min-w-0 items-center gap-2">
 
                                 <span
-                                  className="h-3 w-3 rounded-full"
+                                  className="h-3 w-3 shrink-0 rounded-full"
                                   style={{
                                     backgroundColor:
                                       neden.renk,
                                   }}
                                 />
 
-                                <span className="text-xs font-bold">
+                                <span className="truncate text-xs font-bold">
                                   {
                                     neden.ad
                                   }
@@ -3075,7 +3197,7 @@ export default function Home() {
                               </div>
 
 
-                              <span className="text-sm font-black">
+                              <span className="ml-2 text-sm font-black">
 
                                 {
                                   nedenSayilari[
@@ -3105,7 +3227,7 @@ export default function Home() {
                     <GrafikLegend />
 
 
-                    <div className="mt-6 flex h-72 items-end gap-5 overflow-x-auto border-b border-slate-700 pb-1">
+                    <div className="mt-6 flex h-72 items-end gap-4 overflow-x-auto border-b border-slate-700 pb-1 sm:gap-5">
 
                       {yillikNedenler.map(
                         (item) => (
@@ -3114,7 +3236,7 @@ export default function Home() {
                             key={
                               item.yil
                             }
-                            className="flex min-w-24 flex-col items-center justify-end"
+                            className="flex min-w-20 flex-col items-center justify-end sm:min-w-24"
                           >
 
                             <div className="mb-2 text-xs font-black text-slate-300">
@@ -3344,7 +3466,7 @@ export default function Home() {
 
               <form
                 onSubmit={kaydet}
-                className="space-y-6"
+                className="space-y-5 sm:space-y-6"
               >
 
                 <FormBolumu baslik="📍 KONUM BİLGİLERİ">
@@ -3921,22 +4043,20 @@ export default function Home() {
                 </FormBolumu>
 
 
-                <div className="flex justify-end gap-3">
+                <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-800 bg-[#07111f]/95 py-3 backdrop-blur sm:static sm:flex-row sm:justify-end sm:border-0 sm:bg-transparent sm:py-0">
 
                   {duzenlenenId && (
 
                     <button
                       type="button"
-                      onClick={
-                        () => {
+                      onClick={() => {
 
-                          formTemizle();
-                          setSayfa(
-                            "kayitlar"
-                          );
+                        formTemizle();
+                        sayfayaGit(
+                          "kayitlar"
+                        );
 
-                        }
-                      }
+                      }}
                       className="rounded-xl border border-slate-700 px-6 py-3 font-bold"
                     >
                       Vazgeç
@@ -3980,7 +4100,7 @@ export default function Home() {
 
                 <div className="mb-5 rounded-2xl border border-slate-800 bg-[#101d30] p-4">
 
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
                     <input
                       value={arama}
@@ -4124,7 +4244,7 @@ export default function Home() {
                     </div>
 
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
 
                       <button
                         type="button"
@@ -4207,11 +4327,10 @@ export default function Home() {
           kayit={
             detayKayit
           }
-          kapat={
-            () =>
-              setDetayKayit(
-                null
-              )
+          kapat={() =>
+            setDetayKayit(
+              null
+            )
           }
           duzenle={
             kaydiDuzenle
@@ -4325,6 +4444,7 @@ function tekKayitYazdir(
             baslik
           )}
         </div>
+
         <div class="value">
           ${htmlTemizle(
             deger || "-"
@@ -4797,7 +4917,7 @@ function FormGrid({
 
   return (
 
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {children}
     </div>
 
@@ -4818,11 +4938,11 @@ function FormBolumu({
 
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30]">
 
-      <div className="border-b border-slate-800 bg-[#0b1628] px-5 py-4 font-black">
+      <div className="border-b border-slate-800 bg-[#0b1628] px-4 py-4 font-black sm:px-5">
         {baslik}
       </div>
 
-      <div className="p-5 lg:p-6">
+      <div className="p-4 sm:p-5 lg:p-6">
         {children}
       </div>
 
@@ -4891,13 +5011,13 @@ function KpiKart({
         }}
       />
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
 
-        <div className="text-xs font-bold text-slate-400">
+        <div className="min-h-8 text-[10px] font-bold leading-4 text-slate-400 sm:text-xs">
           {baslik}
         </div>
 
-        <div className="mt-3 text-3xl font-black">
+        <div className="mt-2 text-2xl font-black sm:mt-3 sm:text-3xl">
           {sayi}
         </div>
 
@@ -4928,7 +5048,7 @@ function OzetKart({
 
   return (
 
-    <div className="rounded-2xl border border-slate-800 bg-[#101d30] p-5">
+    <div className="rounded-2xl border border-slate-800 bg-[#101d30] p-4 sm:p-5">
 
       <div className="flex items-start gap-4">
 
@@ -4942,7 +5062,7 @@ function OzetKart({
             {baslik}
           </div>
 
-          <div className="mt-2 truncate text-xl font-black">
+          <div className="mt-2 break-words text-lg font-black sm:text-xl">
             {deger}
           </div>
 
@@ -4976,15 +5096,15 @@ function Panel({
 
   return (
 
-    <section className="rounded-2xl border border-slate-800 bg-[#101d30] p-5 lg:p-6">
+    <section className="rounded-2xl border border-slate-800 bg-[#101d30] p-4 sm:p-5 lg:p-6">
 
-      <h2 className="text-lg font-black">
+      <h2 className="text-base font-black sm:text-lg">
         {baslik}
       </h2>
 
       {altBaslik && (
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-xs text-slate-500 sm:text-sm">
           {altBaslik}
         </p>
 
@@ -5003,7 +5123,7 @@ function GrafikLegend() {
 
   return (
 
-    <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
+    <div className="mt-5 flex flex-wrap gap-x-3 gap-y-2 sm:gap-x-4">
 
       {NEDENLER.map(
         (neden) => (
@@ -5021,7 +5141,7 @@ function GrafikLegend() {
               }}
             />
 
-            <span className="text-[10px] font-bold text-slate-400">
+            <span className="text-[9px] font-bold text-slate-400 sm:text-[10px]">
               {neden.ad}
             </span>
 
@@ -5064,7 +5184,7 @@ function BosAlan({
 
   return (
 
-    <div className="my-8 w-full rounded-xl border border-dashed border-slate-700 p-10 text-center text-sm text-slate-500">
+    <div className="my-6 w-full rounded-xl border border-dashed border-slate-700 p-7 text-center text-sm text-slate-500 sm:my-8 sm:p-10">
       {children}
     </div>
 
@@ -5116,7 +5236,7 @@ function NedenEtiketi({
 
 
 // ============================================================
-// KAYIT TABLOSU
+// KAYIT TABLOSU + MOBİL KARTLAR
 // ============================================================
 
 function KayitTablosu({
@@ -5154,162 +5274,330 @@ function KayitTablosu({
 
   return (
 
-    <div className="mt-5 overflow-x-auto">
+    <>
 
-      <table className="min-w-full text-left text-sm">
+      {/* MOBİL KART GÖRÜNÜMÜ */}
 
-        <thead>
+      <div className="mt-5 space-y-3 md:hidden">
 
-          <tr className="border-b border-slate-700 text-[10px] uppercase text-slate-500">
+        {kayitlar.map(
+          (kayit) => (
 
-            <th className="px-3 py-3">
-              Tarih
-            </th>
+            <div
+              key={
+                kayit.id
+              }
+              className="overflow-hidden rounded-2xl border border-slate-800 bg-[#07111f]"
+            >
 
-            <th className="px-3 py-3">
-              Yıl
-            </th>
+              <div className="flex items-start justify-between gap-3 border-b border-slate-800 p-4">
 
-            <th className="px-3 py-3">
-              Ay
-            </th>
+                <div className="min-w-0">
 
-            <th className="px-3 py-3">
-              İlçe
-            </th>
-
-            <th className="px-3 py-3">
-              Mahalle
-            </th>
-
-            <th className="px-3 py-3">
-              Konum
-            </th>
-
-            <th className="px-3 py-3">
-              Trafo ID
-            </th>
-
-            <th className="px-3 py-3">
-              Değişim Nedeni
-            </th>
-
-            <th className="px-3 py-3 text-right">
-              İşlem
-            </th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody>
-
-          {kayitlar.map(
-            (kayit) => (
-
-              <tr
-                key={
-                  kayit.id
-                }
-                className="border-b border-slate-800/80 hover:bg-slate-800/30"
-              >
-
-                <td className="whitespace-nowrap px-3 py-4 font-semibold">
-
-                  {
-                    tarihGoster(
+                  <div className="text-xs font-bold text-orange-400">
+                    {tarihGoster(
                       kayit.tarih
+                    )}
+                  </div>
+
+                  <div className="mt-1 break-words text-base font-black">
+
+                    {
+                      kayit.ilce ||
+                      "İlçe belirtilmemiş"
+                    }
+
+                    {kayit.mahalle
+                      ? ` / ${kayit.mahalle}`
+                      : ""
+                    }
+
+                  </div>
+
+                </div>
+
+
+                <NedenEtiketi
+                  neden={
+                    kayit.degisim_nedeni
+                  }
+                />
+
+              </div>
+
+
+              <div className="grid grid-cols-2 gap-px bg-slate-800">
+
+                <MobilBilgi
+                  baslik="Yıl / Ay"
+                  deger={
+                    `${kayit.yil || "-"} / ${kayit.ay || "-"}`
+                  }
+                />
+
+                <MobilBilgi
+                  baslik="Trafo ID"
+                  deger={
+                    kayit.trafo_id
+                  }
+                />
+
+                <MobilBilgi
+                  baslik="Lokasyon ID"
+                  deger={
+                    kayit.lokasyon_id
+                  }
+                />
+
+                <MobilBilgi
+                  baslik="TR"
+                  deger={
+                    kayit.tr
+                  }
+                />
+
+              </div>
+
+
+              <div className="grid grid-cols-3 gap-2 p-3">
+
+                <button
+                  onClick={() =>
+                    detay(
+                      kayit
                     )
                   }
+                  className="rounded-xl border border-orange-700 px-2 py-2.5 text-xs font-bold text-orange-300"
+                >
+                  Detay
+                </button>
 
-                </td>
 
-                <td className="px-3 py-4">
-                  {kayit.yil || "-"}
-                </td>
+                <button
+                  onClick={() =>
+                    duzenle(
+                      kayit
+                    )
+                  }
+                  className="rounded-xl border border-blue-700 px-2 py-2.5 text-xs font-bold text-blue-300"
+                >
+                  Düzenle
+                </button>
 
-                <td className="px-3 py-4">
-                  {kayit.ay || "-"}
-                </td>
 
-                <td className="px-3 py-4">
-                  {kayit.ilce || "-"}
-                </td>
+                <button
+                  onClick={() =>
+                    sil(
+                      kayit
+                    )
+                  }
+                  className="rounded-xl border border-red-800 px-2 py-2.5 text-xs font-bold text-red-300"
+                >
+                  Sil
+                </button>
 
-                <td className="px-3 py-4">
-                  {kayit.mahalle || "-"}
-                </td>
+              </div>
 
-                <td className="px-3 py-4">
-                  {kayit.lokasyon_id || "-"}
-                </td>
+            </div>
 
-                <td className="px-3 py-4">
-                  {kayit.trafo_id || "-"}
-                </td>
+          )
+        )}
 
-                <td className="px-3 py-4">
+      </div>
 
-                  <NedenEtiketi
-                    neden={
-                      kayit.degisim_nedeni
+
+      {/* MASAÜSTÜ TABLO */}
+
+      <div className="mt-5 hidden overflow-x-auto md:block">
+
+        <table className="min-w-full text-left text-sm">
+
+          <thead>
+
+            <tr className="border-b border-slate-700 text-[10px] uppercase text-slate-500">
+
+              <th className="px-3 py-3">
+                Tarih
+              </th>
+
+              <th className="px-3 py-3">
+                Yıl
+              </th>
+
+              <th className="px-3 py-3">
+                Ay
+              </th>
+
+              <th className="px-3 py-3">
+                İlçe
+              </th>
+
+              <th className="px-3 py-3">
+                Mahalle
+              </th>
+
+              <th className="px-3 py-3">
+                Konum
+              </th>
+
+              <th className="px-3 py-3">
+                Trafo ID
+              </th>
+
+              <th className="px-3 py-3">
+                Değişim Nedeni
+              </th>
+
+              <th className="px-3 py-3 text-right">
+                İşlem
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {kayitlar.map(
+              (kayit) => (
+
+                <tr
+                  key={
+                    kayit.id
+                  }
+                  className="border-b border-slate-800/80 hover:bg-slate-800/30"
+                >
+
+                  <td className="whitespace-nowrap px-3 py-4 font-semibold">
+                    {
+                      tarihGoster(
+                        kayit.tarih
+                      )
                     }
-                  />
+                  </td>
 
-                </td>
+                  <td className="px-3 py-4">
+                    {kayit.yil || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    {kayit.ay || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    {kayit.ilce || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    {kayit.mahalle || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    {kayit.lokasyon_id || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    {kayit.trafo_id || "-"}
+                  </td>
+
+                  <td className="px-3 py-4">
+
+                    <NedenEtiketi
+                      neden={
+                        kayit.degisim_nedeni
+                      }
+                    />
+
+                  </td>
 
 
-                <td className="whitespace-nowrap px-3 py-4 text-right">
+                  <td className="whitespace-nowrap px-3 py-4 text-right">
 
-                  <button
-                    onClick={
-                      () =>
+                    <button
+                      onClick={() =>
                         detay(
                           kayit
                         )
-                    }
-                    className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300"
-                  >
-                    Detay
-                  </button>
+                      }
+                      className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300"
+                    >
+                      Detay
+                    </button>
 
 
-                  <button
-                    onClick={
-                      () =>
+                    <button
+                      onClick={() =>
                         duzenle(
                           kayit
                         )
-                    }
-                    className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300"
-                  >
-                    Düzenle
-                  </button>
+                      }
+                      className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300"
+                    >
+                      Düzenle
+                    </button>
 
 
-                  <button
-                    onClick={
-                      () =>
+                    <button
+                      onClick={() =>
                         sil(
                           kayit
                         )
-                    }
-                    className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300"
-                  >
-                    Sil
-                  </button>
+                      }
+                      className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300"
+                    >
+                      Sil
+                    </button>
 
-                </td>
+                  </td>
 
-              </tr>
+                </tr>
 
-            )
-          )}
+              )
+            )}
 
-        </tbody>
+          </tbody>
 
-      </table>
+        </table>
+
+      </div>
+
+    </>
+
+  );
+
+}
+
+
+function MobilBilgi({
+  baslik,
+  deger,
+}: {
+  baslik: string;
+  deger:
+    | string
+    | number
+    | null
+    | undefined;
+}) {
+
+  return (
+
+    <div className="bg-[#101d30] p-3">
+
+      <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+        {baslik}
+      </div>
+
+      <div className="mt-1 break-words text-xs font-bold text-slate-200">
+        {
+          deger === null ||
+          deger === undefined ||
+          String(deger).trim() === ""
+            ? "-"
+            : String(deger)
+        }
+      </div>
 
     </div>
 
@@ -5343,7 +5631,7 @@ function DetayModal({
   return (
 
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-0 backdrop-blur-sm sm:p-4"
       onMouseDown={
         kapat
       }
@@ -5354,18 +5642,18 @@ function DetayModal({
           (e) =>
             e.stopPropagation()
         }
-        className="flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-[#0b1628] shadow-2xl"
+        className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0b1628] shadow-2xl sm:h-[92vh] sm:max-w-6xl sm:rounded-3xl sm:border sm:border-slate-700"
       >
 
-        <div className="shrink-0 flex items-start justify-between border-b border-slate-800 bg-[#101d30] px-5 py-5 sm:px-7">
+        <div className="flex shrink-0 items-start justify-between border-b border-slate-800 bg-[#101d30] px-4 py-4 sm:px-7 sm:py-5">
 
-          <div>
+          <div className="min-w-0 pr-3">
 
-            <div className="text-xs font-black uppercase tracking-[0.18em] text-orange-400">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-400 sm:text-xs">
               TRAFO DEĞİŞİM KAYDI
             </div>
 
-            <h2 className="mt-1 text-xl font-black sm:text-2xl">
+            <h2 className="mt-1 break-words text-lg font-black sm:text-2xl">
 
               {
                 kayit.ilce ||
@@ -5386,7 +5674,7 @@ function DetayModal({
             </h2>
 
 
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
 
               <span className="rounded-lg bg-[#07111f] px-3 py-1.5 text-xs font-bold text-slate-300">
 
@@ -5422,7 +5710,7 @@ function DetayModal({
         </div>
 
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-7">
 
           <DetayBolumu baslik="📍 KONUM BİLGİLERİ">
 
@@ -5489,7 +5777,7 @@ function DetayModal({
           </DetayBolumu>
 
 
-          <div className="mt-5 grid gap-5 xl:grid-cols-2">
+          <div className="mt-4 grid gap-4 xl:grid-cols-2 sm:mt-5 sm:gap-5">
 
             <DetayBolumu
               baslik="🔴 SÖKÜLEN TRAFO"
@@ -5640,11 +5928,11 @@ function DetayModal({
           </div>
 
 
-          <div className="mt-5">
+          <div className="mt-4 sm:mt-5">
 
             <DetayBolumu baslik="📅 İŞLEM BİLGİLERİ">
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
 
                 <DetayAlan
                   baslik="Tarih"
@@ -5679,7 +5967,7 @@ function DetayModal({
                   AÇIKLAMA
                 </div>
 
-                <div className="whitespace-pre-wrap text-sm text-slate-200">
+                <div className="whitespace-pre-wrap text-sm leading-6 text-slate-200">
 
                   {
                     kayit.aciklama ||
@@ -5697,18 +5985,17 @@ function DetayModal({
         </div>
 
 
-        <div className="shrink-0 flex flex-wrap items-center justify-end gap-3 border-t border-slate-800 bg-[#101d30] px-5 py-4 sm:px-7">
+        <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-slate-800 bg-[#101d30] px-3 py-3 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-3 sm:px-7 sm:py-4">
 
           <button
-            onClick={
-              () =>
-                yazdir(
-                  kayit
-                )
+            onClick={() =>
+              yazdir(
+                kayit
+              )
             }
-            className="rounded-xl bg-slate-700 px-5 py-2.5 text-sm font-black hover:bg-slate-600"
+            className="rounded-xl bg-slate-700 px-2 py-2.5 text-[10px] font-black hover:bg-slate-600 sm:px-5 sm:text-sm"
           >
-            🖨️ Yazdır / PDF
+            🖨️ <span className="hidden xs:inline">Yazdır / </span>PDF
           </button>
 
 
@@ -5716,22 +6003,21 @@ function DetayModal({
             onClick={
               kapat
             }
-            className="rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-bold"
+            className="rounded-xl border border-slate-700 px-2 py-2.5 text-[10px] font-bold sm:px-5 sm:text-sm"
           >
             Kapat
           </button>
 
 
           <button
-            onClick={
-              () =>
-                duzenle(
-                  kayit
-                )
+            onClick={() =>
+              duzenle(
+                kayit
+              )
             }
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-black hover:bg-blue-500"
+            className="rounded-xl bg-blue-600 px-2 py-2.5 text-[10px] font-black hover:bg-blue-500 sm:px-5 sm:text-sm"
           >
-            ✏️ Kaydı Düzenle
+            ✏️ Düzenle
           </button>
 
         </div>
@@ -5765,11 +6051,11 @@ function DetayBolumu({
       className={`overflow-hidden rounded-2xl border ${renkSinif} bg-[#101d30]`}
     >
 
-      <div className="border-b border-slate-800 bg-[#07111f] px-5 py-3 text-sm font-black">
+      <div className="border-b border-slate-800 bg-[#07111f] px-4 py-3 text-sm font-black sm:px-5">
         {baslik}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="p-3 sm:p-5">
         {children}
       </div>
 
