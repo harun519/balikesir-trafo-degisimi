@@ -198,6 +198,60 @@ export default function Home() {
 
   const maxIlce=Math.max(1,...ilceAnalizi.map(x=>x.sayi));
 
+  const gucAnalizi=useMemo(()=>{
+    const kaynak=dashboardKayitlari;
+
+    const sayiDeger=(v:string|null)=>{
+      if(!v)return null;
+      const temiz=v.replace(",",".").replace(/[^0-9.]/g,"");
+      if(!temiz)return null;
+      const n=Number(temiz);
+      return Number.isFinite(n)?n:null;
+    };
+
+    let artan=0,azalan=0,ayni=0,karsilastirilabilir=0;
+    const takilanSayilari:Record<string,number>={};
+    const sokulenSayilari:Record<string,number>={};
+    const gecisler:Record<string,number>={};
+
+    kaynak.forEach(k=>{
+      const s=sayiDeger(k.sokulen_gucu);
+      const t=sayiDeger(k.takilan_gucu);
+
+      if(k.sokulen_gucu){
+        const key=k.sokulen_gucu.trim();
+        sokulenSayilari[key]=(sokulenSayilari[key]||0)+1;
+      }
+      if(k.takilan_gucu){
+        const key=k.takilan_gucu.trim();
+        takilanSayilari[key]=(takilanSayilari[key]||0)+1;
+      }
+
+      if(s!==null&&t!==null){
+        karsilastirilabilir++;
+        if(t>s)artan++;
+        else if(t<s)azalan++;
+        else ayni++;
+
+        const gecis=`${k.sokulen_gucu?.trim()} → ${k.takilan_gucu?.trim()}`;
+        gecisler[gecis]=(gecisler[gecis]||0)+1;
+      }
+    });
+
+    const sirala=(obj:Record<string,number>)=>
+      Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+
+    return{
+      artan,azalan,ayni,karsilastirilabilir,
+      enCokTakilan:sirala(takilanSayilari)[0]||["-",0],
+      enCokSokulen:sirala(sokulenSayilari)[0]||["-",0],
+      takilanSirali:sirala(takilanSayilari).slice(0,8),
+      gecisSirali:sirala(gecisler).slice(0,8),
+    };
+  },[dashboardKayitlari]);
+
+  const gucToplam=Math.max(1,gucAnalizi.karsilastirilabilir);
+
   const filtrelenmisKayitlar=useMemo(()=>{
     const q=arama.trim().toLocaleUpperCase("tr-TR");
     return kayitlar.filter(k=>{
@@ -366,6 +420,75 @@ export default function Home() {
               </Panel>
             </div>
 
+            <div className="mt-5">
+              <Panel
+                baslik="Trafo Güç Analizi"
+                altBaslik="Sökülen ve takılan trafo güçlerinin karşılaştırması"
+              >
+                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <GucKpi baslik="GÜÇ ARTIRILAN" sayi={gucAnalizi.artan} alt={`%${((gucAnalizi.artan/gucToplam)*100).toFixed(1)}`} ikon="↗" ton="emerald"/>
+                  <GucKpi baslik="GÜÇ AZALTILAN" sayi={gucAnalizi.azalan} alt={`%${((gucAnalizi.azalan/gucToplam)*100).toFixed(1)}`} ikon="↘" ton="red"/>
+                  <GucKpi baslik="AYNI GÜÇ" sayi={gucAnalizi.ayni} alt={`%${((gucAnalizi.ayni/gucToplam)*100).toFixed(1)}`} ikon="→" ton="blue"/>
+                  <GucKpi baslik="KARŞILAŞTIRILABİLEN" sayi={gucAnalizi.karsilastirilabilir} alt={`${dashboardKayitlari.length} toplam kayıttan`} ikon="⚡" ton="orange"/>
+                </div>
+
+                <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-black">En Çok Kullanılan Takılan Güçler</div>
+                        <div className="mt-1 text-xs text-slate-500">İlk 8 güç değeri</div>
+                      </div>
+                      <div className="rounded-xl border border-slate-800 bg-[#101d30] px-3 py-2 text-right">
+                        <div className="text-[9px] font-black uppercase text-slate-500">En Çok</div>
+                        <div className="text-sm font-black text-orange-400">{String(gucAnalizi.enCokTakilan[0])} kVA</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 space-y-3">
+                      {gucAnalizi.takilanSirali.length ? gucAnalizi.takilanSirali.map(([guc,sayi],index)=>{
+                        const max=Math.max(1,Number(gucAnalizi.takilanSirali[0]?.[1]||1));
+                        return <div key={guc}>
+                          <div className="mb-1.5 flex items-center justify-between text-xs">
+                            <span className="font-black">{index+1}. {guc} kVA</span>
+                            <span className="font-bold text-slate-400">{sayi} kayıt</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                            <div className="h-full rounded-full bg-orange-500" style={{width:`${Math.max(4,(Number(sayi)/max)*100)}%`}}/>
+                          </div>
+                        </div>
+                      }) : <BosAlan>Takılan güç verisi bulunmuyor.</BosAlan>}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-black">En Sık Güç Geçişleri</div>
+                        <div className="mt-1 text-xs text-slate-500">Sökülen güç → takılan güç</div>
+                      </div>
+                      <div className="rounded-xl border border-slate-800 bg-[#101d30] px-3 py-2 text-right">
+                        <div className="text-[9px] font-black uppercase text-slate-500">En Çok Sökülen</div>
+                        <div className="text-sm font-black text-slate-200">{String(gucAnalizi.enCokSokulen[0])} kVA</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 space-y-2">
+                      {gucAnalizi.gecisSirali.length ? gucAnalizi.gecisSirali.map(([gecis,sayi],index)=>(
+                        <div key={gecis} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-[#101d30] px-4 py-3">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs font-black text-slate-400">{index+1}</div>
+                            <div className="truncate text-sm font-black">{gecis} kVA</div>
+                          </div>
+                          <div className="shrink-0 rounded-full bg-orange-500/15 px-3 py-1 text-xs font-black text-orange-300">{sayi} kayıt</div>
+                        </div>
+                      )) : <BosAlan>Karşılaştırılabilir güç geçişi bulunmuyor.</BosAlan>}
+                    </div>
+                  </div>
+                </div>
+              </Panel>
+            </div>
+
             <div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="Sistemdeki son 8 kayıt" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800">Tüm Kayıtlar →</button>}><KayitTablosu kayitlar={kayitlar.slice(0,8)} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil}/></Panel></div>
           </>}
 
@@ -404,6 +527,24 @@ function OzetKart({ikon,baslik,deger,alt}:{ikon:string;baslik:string;deger:strin
 function Panel({baslik,altBaslik,children,className="",sagIcerik}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode}){return <section className={`rounded-2xl border border-slate-800 bg-[#101d30] p-4 shadow-lg sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs text-slate-500 sm:text-sm">{altBaslik}</p>}</div>{sagIcerik}</div>{children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-800 bg-[#07111f] px-2.5 py-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
 function BarChart({items,max,aylik=false}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean}){return <div className="mt-5 overflow-x-auto"><div className={aylik?"min-w-[900px]":"min-w-[760px]"}><div className={aylik?"relative h-[270px]":"relative h-[350px]"}><div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">{[1,2,3,4,5].map(i=><div key={i} className="border-t border-dashed border-slate-800"/>)}</div><div className="absolute inset-0 flex items-end gap-3 px-2">{items.map(it=><div key={it.label} className="flex min-w-[62px] flex-1 flex-col items-center justify-end"><div className="mb-2 rounded-full bg-[#07111f] px-2 py-1 text-[9px] font-black">{it.total}</div><div className={`flex items-end gap-[2px] ${aylik?"h-[180px]":"h-[255px]"}`}>{NEDENLER.map(n=>{const v=it.values[n.ad]||0,h=v?Math.max(6,(v/max)*(aylik?160:225)):0;return <div key={n.ad} title={`${it.label} - ${n.ad}: ${v}`} className={aylik?"w-[5px] rounded-t":"w-[7px] rounded-t-md"} style={{height:`${h}px`,backgroundColor:n.renk}}/>})}</div><div className="mt-3 w-full border-t border-slate-700 pt-2 text-center text-[10px] font-black text-slate-500">{it.label}</div></div>)}</div></div></div></div>}
+function GucKpi({baslik,sayi,alt,ikon,ton}:{baslik:string;sayi:number;alt:string;ikon:string;ton:"emerald"|"red"|"blue"|"orange"}){
+  const tonlar={
+    emerald:"border-emerald-900/60 bg-emerald-950/20 text-emerald-400",
+    red:"border-red-900/60 bg-red-950/20 text-red-400",
+    blue:"border-blue-900/60 bg-blue-950/20 text-blue-400",
+    orange:"border-orange-900/60 bg-orange-950/20 text-orange-400",
+  };
+  return <div className={`rounded-2xl border p-4 ${tonlar[ton]}`}>
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div>
+        <div className="mt-2 text-2xl font-black text-white sm:text-3xl">{sayi}</div>
+        <div className="mt-1 text-[10px] font-bold">{alt}</div>
+      </div>
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-current/20 bg-[#07111f] text-xl font-black">{ikon}</div>
+    </div>
+  </div>
+}
 function HataKutusu({children}:{children:ReactNode}){return <div className="mb-5 rounded-xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">{children}</div>}
 function BosAlan({children}:{children:ReactNode}){return <div className="my-6 w-full rounded-xl border border-dashed border-slate-700 p-7 text-center text-sm text-slate-500 sm:p-10">{children}</div>}
 function NedenEtiketi({neden}:{neden:string|null}){const n=NEDENLER.find(x=>x.ad===neden);return neden?<span className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black text-white" style={{backgroundColor:n?.renk||"#475569"}}>{neden}</span>:<span className="text-slate-600">-</span>}
