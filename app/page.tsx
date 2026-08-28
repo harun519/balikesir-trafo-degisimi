@@ -96,6 +96,11 @@ export default function Home() {
   }
   async function cikisYap(){ if(!supabase)return; await supabase.auth.signOut(); setSession(null);setSayfa("dashboard");setEmail("");setPassword("");setMobilMenuAcik(false); }
   function sayfayaGit(s:Sayfa){setSayfa(s);setMobilMenuAcik(false);window.scrollTo({top:0,behavior:"smooth"});}
+  function bolumeGit(id:string){
+    setSayfa("dashboard");
+    setMobilMenuAcik(false);
+    setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"}),80);
+  }
   function formDegistir(a:keyof FormData,v:string){setForm(x=>({...x,[a]:v}));}
   function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);}
 
@@ -393,13 +398,13 @@ export default function Home() {
                 <div className="flex min-h-[430px] flex-col"><div className="flex flex-1 items-center justify-center py-5"><div className="relative h-44 w-44 rounded-full sm:h-48 sm:w-48" style={{background:`conic-gradient(${donutGradient})`}}><div className="absolute inset-7 flex flex-col items-center justify-center rounded-full border border-slate-800 bg-[#101d30]"><div className="text-3xl font-black">{dashboardKayitlari.length}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Toplam</div></div></div></div>
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center justify-between rounded-xl border border-slate-800 bg-[#07111f] px-3 py-2.5"><div className="flex min-w-0 items-center gap-2.5"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:n.renk}}/><span className="truncate text-[11px] font-bold text-slate-300">{n.ad}</span></div><span className="ml-3 text-sm font-black">{nedenSayilari[n.ad]||0}</span></div>)}</div>
                 </div>
-              </Panel>
-              <Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full"><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik}/></Panel>
+              </Panel></div>
+              <div id="zaman-analizi" className="scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full"><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik}/></Panel></div>
             </div>
 
             <div className="mt-5"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
 
-            <div className="mt-5">
+            <div className="mt-5 scroll-mt-24" id="neden-guc-analizi">
               <Panel
                 baslik="Değişim Nedeni × Güç Analizi"
                 altBaslik="Değişim nedenlerine göre güç artışı / aynı / azalış dağılımı ve öne çıkan geçişler"
@@ -519,7 +524,7 @@ export default function Home() {
               </Panel>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 scroll-mt-24" id="ilce-analizi">
               <Panel
                 baslik="İlçe Analizi"
                 altBaslik={dashboardYil ? `${dashboardYil} yılı ilçe bazlı trafo değişim dağılımı` : "Tüm yıllar için ilçe bazlı trafo değişim dağılımı"}
@@ -598,7 +603,7 @@ export default function Home() {
               </Panel>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 scroll-mt-24" id="trafo-guc-analizi">
               <Panel
                 baslik="Trafo Güç Analizi"
                 altBaslik="Sökülen ve takılan trafo güçlerinin karşılaştırması"
@@ -690,8 +695,19 @@ export default function Home() {
 }
 
 function Nav({sayfa,duzenlenenId,formTemizle,git}:{sayfa:Sayfa;duzenlenenId:number|null;formTemizle:()=>void;git:(s:Sayfa)=>void}){
-  return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu><MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu><MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu></nav>;
+  return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu>
+<div className="my-2 border-t border-slate-800 pt-2">
+  <div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">ANALİZLER</div>
+  <MenuAlt onClick={()=>bolumeGit("degisim-nedenleri")}>◉ Değişim Nedenleri</MenuAlt>
+  <MenuAlt onClick={()=>bolumeGit("zaman-analizi")}>▥ Yıllık / Aylık Analiz</MenuAlt>
+  <MenuAlt onClick={()=>bolumeGit("neden-guc-analizi")}>⚡ Neden × Güç Analizi</MenuAlt>
+  <MenuAlt onClick={()=>bolumeGit("ilce-analizi")}>📍 İlçe Analizi</MenuAlt>
+  <MenuAlt onClick={()=>bolumeGit("trafo-guc-analizi")}>↗ Trafo Güç Analizi</MenuAlt>
+</div>
+<MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu>
+<MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu></nav>;
 }
+function MenuAlt({children,onClick}:{children:ReactNode;onClick:()=>void}){return <button onClick={onClick} className="mb-0.5 block w-full rounded-lg px-3 py-2 text-left text-[11px] font-bold text-slate-400 transition hover:bg-slate-800 hover:text-white">{children}</button>}
 function Alan({baslik,children}:{baslik:string;children:ReactNode}){return <label className="block"><span className="mb-2 block text-sm font-semibold text-slate-300">{baslik}</span>{children}</label>}
 function MetinAlani({baslik,deger,degistir}:{baslik:string;deger:string;degistir:(v:string)=>void}){return <Alan baslik={baslik}><input value={deger} onChange={e=>degistir(e.target.value)} className={inputSinif}/></Alan>}
 function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];listeId:string;gerekli?:boolean}){return <Alan baslik={baslik}><div className="relative"><input list={listeId} required={gerekli} autoComplete="off" value={deger} onChange={e=>degistir(e.target.value)} placeholder="Seçiniz veya yazınız" className={`${inputSinif} pr-10`}/><div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">▼</div><datalist id={listeId}>{secenekler.map(s=><option key={s} value={s}/>)}</datalist></div></Alan>}
