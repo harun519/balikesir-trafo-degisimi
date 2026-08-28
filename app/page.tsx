@@ -366,12 +366,12 @@ export default function Home() {
     {mobilMenuAcik&&<div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden" onClick={()=>setMobilMenuAcik(false)}/>}
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-[82vw] max-w-[310px] flex-col border-r border-slate-800 bg-[#0b1628] shadow-2xl transition-transform lg:hidden ${mobilMenuAcik?"translate-x-0":"-translate-x-full"}`}>
       <div className="flex items-start justify-between border-b border-slate-800 px-5 py-6"><div><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO YÖNETİMİ</div></div><button onClick={()=>setMobilMenuAcik(false)} className="h-10 w-10 rounded-xl border border-slate-700 text-xl">×</button></div>
-      <Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit}/>
+      <Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit}/>
       <div className="border-t border-slate-800 p-4"><div className="mb-3 break-all text-xs text-slate-500">{session.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm font-bold">Çıkış Yap</button></div>
     </aside>
 
     <div className="flex min-h-screen">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex"><div className="border-b border-slate-800 px-5 py-6"><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO<br/>YÖNETİMİ</div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit}/><div className="border-t border-slate-800 p-3"><div className="mb-3 truncate text-xs text-slate-500">{session.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold">Çıkış Yap</button></div></aside>
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex"><div className="border-b border-slate-800 px-5 py-6"><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO<br/>YÖNETİMİ</div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit}/><div className="border-t border-slate-800 p-3"><div className="mb-3 truncate text-xs text-slate-500">{session.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold">Çıkış Yap</button></div></aside>
 
       <section className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-[#0b1628]/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4 lg:px-7"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-[#07111f] text-xl lg:hidden">☰</button><div className="min-w-0"><h1 className="truncate text-lg font-black sm:text-xl lg:text-2xl">{sayfa==="dashboard"?"Trafo Değişim Kontrol Paneli":sayfa==="yeni"?(duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"):"Trafo Değişim Kayıtları"}</h1><p className="mt-1 hidden text-xs text-slate-500 sm:block">BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ</p></div></header>
@@ -393,12 +393,12 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316"/>{NEDENLER.map(n=><KpiKart key={n.ad} baslik={n.ad} sayi={nedenSayilari[n.ad]||0} renk={n.renk}/>)}</div>
             <div className="mt-4 grid gap-3 md:grid-cols-3"><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN ÇOK DEĞİŞİM YAPILAN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`}/><OzetKart ikon="⚡" baslik="EN ÇOK DEĞİŞİM NEDENİ" deger={String(enCokNeden[0])} alt={`${enCokNeden[1]} kayıt`}/></div>
 
-            <div className="mt-5 grid items-stretch gap-5 xl:grid-cols-[.72fr_1.28fr]">
+            <div id="degisim-nedenleri" className="mt-5 grid scroll-mt-24 items-stretch gap-5 xl:grid-cols-[.72fr_1.28fr]">
               <Panel baslik="Değişim Nedenleri" altBaslik="Seçili filtreye göre dağılım" className="h-full">
                 <div className="flex min-h-[430px] flex-col"><div className="flex flex-1 items-center justify-center py-5"><div className="relative h-44 w-44 rounded-full sm:h-48 sm:w-48" style={{background:`conic-gradient(${donutGradient})`}}><div className="absolute inset-7 flex flex-col items-center justify-center rounded-full border border-slate-800 bg-[#101d30]"><div className="text-3xl font-black">{dashboardKayitlari.length}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Toplam</div></div></div></div>
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center justify-between rounded-xl border border-slate-800 bg-[#07111f] px-3 py-2.5"><div className="flex min-w-0 items-center gap-2.5"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:n.renk}}/><span className="truncate text-[11px] font-bold text-slate-300">{n.ad}</span></div><span className="ml-3 text-sm font-black">{nedenSayilari[n.ad]||0}</span></div>)}</div>
                 </div>
-              </Panel></div>
+              </Panel>
               <div id="zaman-analizi" className="scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full"><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik}/></Panel></div>
             </div>
 
@@ -694,7 +694,7 @@ export default function Home() {
   </main>;
 }
 
-function Nav({sayfa,duzenlenenId,formTemizle,git}:{sayfa:Sayfa;duzenlenenId:number|null;formTemizle:()=>void;git:(s:Sayfa)=>void}){
+function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit}:{sayfa:Sayfa;duzenlenenId:number|null;formTemizle:()=>void;git:(s:Sayfa)=>void;bolumeGit:(id:string)=>void}){
   return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu>
 <div className="my-2 border-t border-slate-800 pt-2">
   <div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">ANALİZLER</div>
