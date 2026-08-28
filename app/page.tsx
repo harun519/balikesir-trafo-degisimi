@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  ReactNode,
   useEffect,
   useMemo,
   useState,
@@ -33,34 +34,13 @@ const AYLAR = [
 ];
 
 const NEDENLER = [
-  {
-    ad: "ARIZA",
-    renk: "#C00000",
-  },
-  {
-    ad: "DÖNÜŞÜM",
-    renk: "#0B5394",
-  },
-  {
-    ad: "GÜÇ DEĞİŞİMİ",
-    renk: "#93C47D",
-  },
-  {
-    ad: "TRAFO İPTAL",
-    renk: "#6FA8DC",
-  },
-  {
-    ad: "YATIRIM",
-    renk: "#FFD966",
-  },
-  {
-    ad: "YENİ TESİS",
-    renk: "#46BDC6",
-  },
-  {
-    ad: "ARIZA RİSKİ",
-    renk: "#EA9999",
-  },
+  { ad: "ARIZA", renk: "#ef4444" },
+  { ad: "DÖNÜŞÜM", renk: "#3b82f6" },
+  { ad: "GÜÇ DEĞİŞİMİ", renk: "#84cc16" },
+  { ad: "TRAFO İPTAL", renk: "#38bdf8" },
+  { ad: "YATIRIM", renk: "#facc15" },
+  { ad: "YENİ TESİS", renk: "#22d3ee" },
+  { ad: "ARIZA RİSKİ", renk: "#fb7185" },
 ];
 
 
@@ -204,10 +184,6 @@ const BOS_FORM: FormData = {
 
 export default function Home() {
 
-  // ==========================================================
-  // SUPABASE
-  // ==========================================================
-
   const supabase = useMemo(() => {
 
     const url =
@@ -220,10 +196,7 @@ export default function Home() {
       return null;
     }
 
-    return createClient(
-      url,
-      key
-    );
+    return createClient(url, key);
 
   }, []);
 
@@ -241,16 +214,10 @@ export default function Home() {
   const [session, setSession] =
     useState<Session | null>(null);
 
-  const [
-    authKontrol,
-    setAuthKontrol,
-  ] =
+  const [authKontrol, setAuthKontrol] =
     useState(true);
 
-  const [
-    girisYukleniyor,
-    setGirisYukleniyor,
-  ] =
+  const [girisYukleniyor, setGirisYukleniyor] =
     useState(false);
 
   const [authHata, setAuthHata] =
@@ -262,29 +229,18 @@ export default function Home() {
   // ==========================================================
 
   const [sayfa, setSayfa] =
-    useState<Sayfa>(
-      "dashboard"
-    );
+    useState<Sayfa>("dashboard");
 
   const [kayitlar, setKayitlar] =
     useState<TrafoKaydi[]>([]);
 
-  const [
-    veriYukleniyor,
-    setVeriYukleniyor,
-  ] =
+  const [veriYukleniyor, setVeriYukleniyor] =
     useState(false);
 
-  const [
-    genelHata,
-    setGenelHata,
-  ] =
+  const [genelHata, setGenelHata] =
     useState("");
 
-  const [
-    basariMesaji,
-    setBasariMesaji,
-  ] =
+  const [basariMesaji, setBasariMesaji] =
     useState("");
 
 
@@ -293,144 +249,95 @@ export default function Home() {
   // ==========================================================
 
   const [form, setForm] =
-    useState<FormData>(
-      BOS_FORM
-    );
+    useState<FormData>(BOS_FORM);
 
-  const [
-    duzenlenenId,
-    setDuzenlenenId,
-  ] =
-    useState<number | null>(
-      null
-    );
+  const [duzenlenenId, setDuzenlenenId] =
+    useState<number | null>(null);
 
-  const [
-    kaydediliyor,
-    setKaydediliyor,
-  ] =
+  const [kaydediliyor, setKaydediliyor] =
     useState(false);
 
 
   // ==========================================================
-  // FİLTRELER
+  // KAYIT FİLTRELERİ
   // ==========================================================
 
-  const [
-    arama,
-    setArama,
-  ] =
+  const [arama, setArama] =
     useState("");
 
-  const [
-    filtreYil,
-    setFiltreYil,
-  ] =
+  const [filtreYil, setFiltreYil] =
     useState("");
 
-  const [
-    filtreAy,
-    setFiltreAy,
-  ] =
+  const [filtreAy, setFiltreAy] =
     useState("");
 
-  const [
-    filtreNeden,
-    setFiltreNeden,
-  ] =
+  const [filtreNeden, setFiltreNeden] =
     useState("");
 
 
   // ==========================================================
-  // DASHBOARD YIL
+  // DASHBOARD FİLTRELERİ
   // ==========================================================
 
-  const [
-    dashboardYil,
-    setDashboardYil,
-  ] =
+  const [dashboardYil, setDashboardYil] =
+    useState("");
+
+  const [dashboardIlce, setDashboardIlce] =
     useState("");
 
 
   // ==========================================================
-  // AUTH KONTROL
+  // AUTH
   // ==========================================================
 
   useEffect(() => {
 
     if (!supabase) {
-
       setAuthHata(
         "Supabase bağlantısı kurulamadı."
       );
 
       setAuthKontrol(false);
-
       return;
     }
 
     supabase.auth
       .getSession()
-      .then(
-        ({ data }) => {
+      .then(({ data }) => {
 
-          setSession(
-            data.session
-          );
+        setSession(data.session);
+        setAuthKontrol(false);
 
-          setAuthKontrol(
-            false
-          );
+      });
+
+    const {
+      data: { subscription },
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, yeniSession) => {
+
+          setSession(yeniSession);
+          setAuthKontrol(false);
 
         }
       );
 
-    const {
-      data: {
-        subscription,
-      },
-    } =
-      supabase.auth
-        .onAuthStateChange(
-          (
-            _event,
-            yeniSession
-          ) => {
-
-            setSession(
-              yeniSession
-            );
-
-            setAuthKontrol(
-              false
-            );
-
-          }
-        );
-
-    return () => {
-
+    return () =>
       subscription.unsubscribe();
-
-    };
 
   }, [supabase]);
 
 
   // ==========================================================
-  // OTURUM AÇILINCA VERİLERİ GETİR
+  // OTURUM AÇILINCA VERİ GETİR
   // ==========================================================
 
   useEffect(() => {
 
     if (session) {
-
       kayitlariGetir();
-
     } else {
-
       setKayitlar([]);
-
     }
 
   }, [session]);
@@ -442,26 +349,15 @@ export default function Home() {
 
   async function kayitlariGetir() {
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     setVeriYukleniyor(true);
-
     setGenelHata("");
 
-    const {
-      data,
-      error,
-    } =
+    const { data, error } =
       await supabase
-
-        .from(
-          "trafo_degisim"
-        )
-
+        .from("trafo_degisim")
         .select("*")
-
         .order(
           "tarih",
           {
@@ -469,7 +365,6 @@ export default function Home() {
             nullsFirst: false,
           }
         )
-
         .order(
           "id",
           {
@@ -479,19 +374,12 @@ export default function Home() {
 
     if (error) {
 
-      console.error(
-        error
-      );
-
       setGenelHata(
         "Kayıtlar yüklenemedi: " +
         error.message
       );
 
-      setVeriYukleniyor(
-        false
-      );
-
+      setVeriYukleniyor(false);
       return;
     }
 
@@ -499,9 +387,7 @@ export default function Home() {
       (data || []) as TrafoKaydi[]
     );
 
-    setVeriYukleniyor(
-      false
-    );
+    setVeriYukleniyor(false);
   }
 
 
@@ -515,38 +401,25 @@ export default function Home() {
 
     e.preventDefault();
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
-    setGirisYukleniyor(
-      true
-    );
-
+    setGirisYukleniyor(true);
     setAuthHata("");
 
-    const {
-      error,
-    } =
+    const { error } =
       await supabase.auth
         .signInWithPassword({
-          email:
-            email.trim(),
-
+          email: email.trim(),
           password,
         });
 
     if (error) {
-
       setAuthHata(
         "E-posta veya şifre hatalı."
       );
-
     }
 
-    setGirisYukleniyor(
-      false
-    );
+    setGirisYukleniyor(false);
   }
 
 
@@ -556,27 +429,20 @@ export default function Home() {
 
   async function cikisYap() {
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
-    await supabase.auth
-      .signOut();
+    await supabase.auth.signOut();
 
     setSession(null);
-
-    setSayfa(
-      "dashboard"
-    );
+    setSayfa("dashboard");
 
     setEmail("");
-
     setPassword("");
   }
 
 
   // ==========================================================
-  // FORM DEĞİŞİKLİĞİ
+  // FORM
   // ==========================================================
 
   function formDegistir(
@@ -587,27 +453,16 @@ export default function Home() {
     setForm(
       (eski) => ({
         ...eski,
-
-        [alan]:
-          deger,
+        [alan]: deger,
       })
     );
   }
 
 
-  // ==========================================================
-  // FORM TEMİZLE
-  // ==========================================================
-
   function formTemizle() {
 
-    setForm(
-      BOS_FORM
-    );
-
-    setDuzenlenenId(
-      null
-    );
+    setForm(BOS_FORM);
+    setDuzenlenenId(null);
   }
 
 
@@ -621,9 +476,7 @@ export default function Home() {
 
     e.preventDefault();
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     if (
       !form.yil ||
@@ -639,22 +492,15 @@ export default function Home() {
       return;
     }
 
-    setKaydediliyor(
-      true
-    );
-
+    setKaydediliyor(true);
     setGenelHata("");
-
     setBasariMesaji("");
-
 
     const veri = {
 
-      yil:
-        Number(form.yil),
+      yil: Number(form.yil),
 
-      ay:
-        form.ay,
+      ay: form.ay,
 
       ilce:
         form.ilce || null,
@@ -735,66 +581,40 @@ export default function Home() {
         form.aciklama || null,
     };
 
-
     let error;
-
 
     if (duzenlenenId) {
 
       const sonuc =
         await supabase
-
-          .from(
-            "trafo_degisim"
-          )
-
-          .update(
-            veri
-          )
-
+          .from("trafo_degisim")
+          .update(veri)
           .eq(
             "id",
             duzenlenenId
           );
 
-      error =
-        sonuc.error;
+      error = sonuc.error;
 
     } else {
 
       const sonuc =
         await supabase
+          .from("trafo_degisim")
+          .insert(veri);
 
-          .from(
-            "trafo_degisim"
-          )
-
-          .insert(
-            veri
-          );
-
-      error =
-        sonuc.error;
+      error = sonuc.error;
     }
 
-
     if (error) {
-
-      console.error(
-        error
-      );
 
       setGenelHata(
         error.message
       );
 
-      setKaydediliyor(
-        false
-      );
-
+      setKaydediliyor(false);
       return;
     }
-
 
     setBasariMesaji(
 
@@ -806,22 +626,21 @@ export default function Home() {
 
     );
 
-
     formTemizle();
 
     await kayitlariGetir();
 
-    setKaydediliyor(
-      false
-    );
+    setKaydediliyor(false);
 
+    setSayfa("kayitlar");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
 
     setTimeout(
-      () => {
-
-        setBasariMesaji("");
-
-      },
+      () => setBasariMesaji(""),
       3000
     );
   }
@@ -924,16 +743,9 @@ export default function Home() {
         kayit.aciklama || "",
     });
 
+    setDuzenlenenId(kayit.id);
 
-    setDuzenlenenId(
-      kayit.id
-    );
-
-
-    setSayfa(
-      "yeni"
-    );
-
+    setSayfa("yeni");
 
     window.scrollTo({
       top: 0,
@@ -950,41 +762,25 @@ export default function Home() {
     kayit: TrafoKaydi
   ) {
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     const cevap =
       window.confirm(
-
-        `${kayit.yil || ""} ${
-          kayit.ay || ""
-        } tarihli kaydı silmek istediğinize emin misiniz?`
-
+        `${tarihGoster(
+          kayit.tarih
+        )} tarihli kaydı silmek istediğinize emin misiniz?`
       );
 
+    if (!cevap) return;
 
-    if (!cevap) {
-      return;
-    }
-
-
-    const {
-      error,
-    } =
+    const { error } =
       await supabase
-
-        .from(
-          "trafo_degisim"
-        )
-
+        .from("trafo_degisim")
         .delete()
-
         .eq(
           "id",
           kayit.id
         );
-
 
     if (error) {
 
@@ -995,44 +791,104 @@ export default function Home() {
       return;
     }
 
-
     await kayitlariGetir();
   }
 
 
   // ==========================================================
-  // YILLAR
+  // TEMEL LİSTELER
   // ==========================================================
 
   const yillar =
     useMemo(
-      () => {
-
-        return Array
+      () =>
+        Array
           .from(
             new Set(
-
               kayitlar
-
                 .map(
                   (k) =>
                     k.yil
                 )
-
                 .filter(
                   Boolean
                 ) as number[]
-
             )
           )
-
           .sort(
             (a, b) =>
               b - a
-          );
+          ),
+      [kayitlar]
+    );
+
+
+  const ilceler =
+    useMemo(
+      () =>
+        Array
+          .from(
+            new Set(
+              kayitlar
+                .map(
+                  (x) =>
+                    x.ilce
+                      ?.trim()
+                )
+                .filter(
+                  Boolean
+                ) as string[]
+            )
+          )
+          .sort(
+            (a, b) =>
+              a.localeCompare(
+                b,
+                "tr"
+              )
+          ),
+      [kayitlar]
+    );
+
+
+  // ==========================================================
+  // DASHBOARD FİLTRELİ VERİ
+  // ==========================================================
+
+  const dashboardKayitlari =
+    useMemo(
+      () => {
+
+        return kayitlar.filter(
+          (kayit) => {
+
+            if (
+              dashboardYil &&
+              String(
+                kayit.yil || ""
+              ) !== dashboardYil
+            ) {
+              return false;
+            }
+
+            if (
+              dashboardIlce &&
+              kayit.ilce !==
+                dashboardIlce
+            ) {
+              return false;
+            }
+
+            return true;
+          }
+        );
 
       },
-      [kayitlar]
+      [
+        kayitlar,
+        dashboardYil,
+        dashboardIlce,
+      ]
     );
 
 
@@ -1045,11 +901,7 @@ export default function Home() {
       () => {
 
         const sonuc:
-          Record<
-            string,
-            number
-          > = {};
-
+          Record<string, number> = {};
 
         NEDENLER.forEach(
           (neden) => {
@@ -1061,8 +913,7 @@ export default function Home() {
           }
         );
 
-
-        kayitlar.forEach(
+        dashboardKayitlari.forEach(
           (kayit) => {
 
             if (
@@ -1081,130 +932,147 @@ export default function Home() {
           }
         );
 
-
         return sonuc;
 
       },
-      [kayitlar]
+      [dashboardKayitlari]
     );
 
 
   // ==========================================================
-  // YILLIK TOPLAMLAR
+  // YILLIK NEDEN VERİLERİ
   // ==========================================================
 
-  const yillikToplamlar =
+  const yillikNedenler =
     useMemo(
       () => {
 
-        const sonuc:
-          Record<
-            number,
-            number
-          > = {};
+        const kullanilacak =
+          dashboardIlce
 
+            ? kayitlar.filter(
+                (x) =>
+                  x.ilce ===
+                  dashboardIlce
+              )
 
-        kayitlar.forEach(
-          (kayit) => {
+            : kayitlar;
 
-            if (!kayit.yil) {
-              return;
-            }
-
-            sonuc[
-              kayit.yil
-            ] =
-              (
-                sonuc[
-                  kayit.yil
-                ] || 0
-              ) + 1;
-
-          }
-        );
-
-
-        return Object
-          .entries(
-            sonuc
-          )
-
+        return [...yillar]
+          .reverse()
           .map(
-            ([yil, toplam]) => ({
-              yil:
-                Number(yil),
+            (yil) => {
 
-              toplam,
-            })
-          )
+              const satir =
+                kullanilacak.filter(
+                  (x) =>
+                    x.yil === yil
+                );
 
-          .sort(
-            (a, b) =>
-              a.yil -
-              b.yil
+              const nedenler:
+                Record<string, number> =
+                  {};
+
+              NEDENLER.forEach(
+                (neden) => {
+
+                  nedenler[
+                    neden.ad
+                  ] =
+                    satir.filter(
+                      (x) =>
+                        x.degisim_nedeni ===
+                        neden.ad
+                    ).length;
+
+                }
+              );
+
+              return {
+                yil,
+                nedenler,
+                toplam:
+                  satir.length,
+              };
+            }
           );
 
       },
-      [kayitlar]
+      [
+        kayitlar,
+        yillar,
+        dashboardIlce,
+      ]
     );
 
 
   // ==========================================================
-  // DASHBOARD SEÇİLİ YIL
+  // AYLIK NEDEN VERİLERİ
   // ==========================================================
 
-  useEffect(() => {
-
-    if (
-      !dashboardYil &&
-      yillar.length > 0
-    ) {
-
-      setDashboardYil(
-        String(
-          yillar[0]
-        )
-      );
-
-    }
-
-  }, [
-    yillar,
-    dashboardYil,
-  ]);
-
-
-  // ==========================================================
-  // AYLIK TOPLAMLAR
-  // ==========================================================
-
-  const aylikToplamlar =
+  const aylikNedenler =
     useMemo(
       () => {
 
         return AYLAR.map(
           (ay) => {
 
-            const toplam =
+            const satir =
               kayitlar.filter(
-                (kayit) =>
+                (x) => {
 
-                  String(
-                    kayit.yil || ""
-                  ) ===
-                    dashboardYil &&
+                  if (
+                    String(
+                      x.yil || ""
+                    ) !==
+                    dashboardYil
+                  ) {
+                    return false;
+                  }
 
-                  kayit.ay ===
-                    ay
+                  if (
+                    x.ay !== ay
+                  ) {
+                    return false;
+                  }
 
-              ).length;
+                  if (
+                    dashboardIlce &&
+                    x.ilce !==
+                      dashboardIlce
+                  ) {
+                    return false;
+                  }
 
+                  return true;
+                }
+              );
+
+            const nedenler:
+              Record<string, number> =
+                {};
+
+            NEDENLER.forEach(
+              (neden) => {
+
+                nedenler[
+                  neden.ad
+                ] =
+                  satir.filter(
+                    (x) =>
+                      x.degisim_nedeni ===
+                      neden.ad
+                  ).length;
+
+              }
+            );
 
             return {
               ay,
-              toplam,
+              toplam:
+                satir.length,
+              nedenler,
             };
-
           }
         );
 
@@ -1212,12 +1080,231 @@ export default function Home() {
       [
         kayitlar,
         dashboardYil,
+        dashboardIlce,
       ]
     );
 
 
   // ==========================================================
-  // FİLTRELİ KAYITLAR
+  // DASHBOARD ÖZETLERİ
+  // ==========================================================
+
+  const son30Gun =
+    useMemo(
+      () => {
+
+        const bugun =
+          new Date();
+
+        const sinir =
+          new Date();
+
+        sinir.setDate(
+          bugun.getDate() -
+            30
+        );
+
+        return kayitlar.filter(
+          (x) => {
+
+            if (!x.tarih) {
+              return false;
+            }
+
+            const tarih =
+              new Date(
+                `${x.tarih}T12:00:00`
+              );
+
+            return (
+              tarih >= sinir &&
+              tarih <= bugun
+            );
+          }
+        ).length;
+
+      },
+      [kayitlar]
+    );
+
+
+  const enCokIlce =
+    useMemo(
+      () => {
+
+        const sayilar:
+          Record<string, number> = {};
+
+        dashboardKayitlari.forEach(
+          (x) => {
+
+            if (!x.ilce) {
+              return;
+            }
+
+            sayilar[
+              x.ilce
+            ] =
+              (
+                sayilar[
+                  x.ilce
+                ] || 0
+              ) + 1;
+
+          }
+        );
+
+        return (
+          Object
+            .entries(
+              sayilar
+            )
+            .sort(
+              (a, b) =>
+                b[1] -
+                a[1]
+            )[0] || [
+              "-",
+              0,
+            ]
+        );
+
+      },
+      [dashboardKayitlari]
+    );
+
+
+  const enCokNeden =
+    useMemo(
+      () => {
+
+        return (
+          Object
+            .entries(
+              nedenSayilari
+            )
+            .sort(
+              (a, b) =>
+                b[1] -
+                a[1]
+            )[0] || [
+              "-",
+              0,
+            ]
+        );
+
+      },
+      [nedenSayilari]
+    );
+
+
+  // ==========================================================
+  // DONUT
+  // ==========================================================
+
+  const donutGradient =
+    useMemo(
+      () => {
+
+        const toplam =
+          dashboardKayitlari.length;
+
+        if (!toplam) {
+          return "#1e293b";
+        }
+
+        let baslangic =
+          0;
+
+        const parcalar:
+          string[] = [];
+
+        NEDENLER.forEach(
+          (neden) => {
+
+            const sayi =
+              nedenSayilari[
+                neden.ad
+              ] || 0;
+
+            const oran =
+              (
+                sayi /
+                toplam
+              ) *
+              100;
+
+            if (
+              oran <= 0
+            ) {
+              return;
+            }
+
+            const bitis =
+              baslangic +
+              oran;
+
+            parcalar.push(
+              `${neden.renk} ${baslangic}% ${bitis}%`
+            );
+
+            baslangic =
+              bitis;
+          }
+        );
+
+        return parcalar.join(
+          ", "
+        );
+
+      },
+      [
+        dashboardKayitlari,
+        nedenSayilari,
+      ]
+    );
+
+
+  // ==========================================================
+  // GRAFİK MAX
+  // ==========================================================
+
+  const maxYillik =
+    Math.max(
+      1,
+      ...yillikNedenler.map(
+        (x) =>
+          Math.max(
+            ...NEDENLER.map(
+              (neden) =>
+                x.nedenler[
+                  neden.ad
+                ] || 0
+            )
+          )
+      )
+    );
+
+
+  const maxAylik =
+    Math.max(
+      1,
+      ...aylikNedenler.map(
+        (x) =>
+          Math.max(
+            ...NEDENLER.map(
+              (neden) =>
+                x.nedenler[
+                  neden.ad
+                ] || 0
+            )
+          )
+      )
+    );
+
+
+  // ==========================================================
+  // KAYIT FİLTRELERİ
   // ==========================================================
 
   const filtrelenmisKayitlar =
@@ -1231,7 +1318,6 @@ export default function Home() {
               "tr-TR"
             );
 
-
         return kayitlar.filter(
           (kayit) => {
 
@@ -1241,39 +1327,30 @@ export default function Home() {
                 kayit.yil || ""
               ) !== filtreYil
             ) {
-
               return false;
             }
-
 
             if (
               filtreAy &&
               kayit.ay !==
                 filtreAy
             ) {
-
               return false;
             }
-
 
             if (
               filtreNeden &&
               kayit.degisim_nedeni !==
                 filtreNeden
             ) {
-
               return false;
             }
 
-
             if (!kelime) {
-
               return true;
             }
 
-
             const metin = [
-
               kayit.ilce,
               kayit.mahalle,
               kayit.tr,
@@ -1284,7 +1361,6 @@ export default function Home() {
               kayit.takilan_markasi,
               kayit.takilan_seri_no,
               kayit.degisim_nedeni,
-
             ]
               .filter(Boolean)
               .join(" ")
@@ -1292,11 +1368,9 @@ export default function Home() {
                 "tr-TR"
               );
 
-
             return metin.includes(
               kelime
             );
-
           }
         );
 
@@ -1312,36 +1386,13 @@ export default function Home() {
 
 
   // ==========================================================
-  // MAX GRAFİK
-  // ==========================================================
-
-  const maksimumYil =
-    Math.max(
-      1,
-      ...yillikToplamlar.map(
-        (x) =>
-          x.toplam
-      )
-    );
-
-
-  const maksimumAy =
-    Math.max(
-      1,
-      ...aylikToplamlar.map(
-        (x) =>
-          x.toplam
-      )
-    );
-
-
-  // ==========================================================
   // YÜKLENİYOR
   // ==========================================================
 
   if (authKontrol) {
 
     return (
+
       <main className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
 
         <div className="text-center">
@@ -1355,6 +1406,7 @@ export default function Home() {
         </div>
 
       </main>
+
     );
   }
 
@@ -1403,36 +1455,17 @@ export default function Home() {
             <div className="grid max-w-xl grid-cols-2 gap-4">
 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-
-                <div className="text-2xl">
-                  📊
-                </div>
-
+                <div className="text-2xl">📊</div>
                 <div className="mt-3 font-bold">
                   Canlı Dashboard
                 </div>
-
-                <div className="mt-1 text-sm text-slate-400">
-                  Yıllık ve aylık istatistikler
-                </div>
-
               </div>
 
-
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-
-                <div className="text-2xl">
-                  🔐
-                </div>
-
+                <div className="text-2xl">🔐</div>
                 <div className="mt-3 font-bold">
                   Güvenli Erişim
                 </div>
-
-                <div className="mt-1 text-sm text-slate-400">
-                  Yetkili kullanıcı girişi
-                </div>
-
               </div>
 
             </div>
@@ -1456,23 +1489,15 @@ export default function Home() {
                     Giriş Yap
                   </h2>
 
-                  <p className="mt-2 text-slate-400">
-                    Hesap bilgilerinizle sisteme giriş yapın.
-                  </p>
-
                 </div>
 
 
                 <form
-                  onSubmit={
-                    girisYap
-                  }
+                  onSubmit={girisYap}
                   className="space-y-5"
                 >
 
-                  <Alan
-                    baslik="E-posta"
-                  >
+                  <Alan baslik="E-posta">
 
                     <input
                       type="email"
@@ -1490,9 +1515,7 @@ export default function Home() {
                   </Alan>
 
 
-                  <Alan
-                    baslik="Şifre"
-                  >
+                  <Alan baslik="Şifre">
 
                     <input
                       type="password"
@@ -1524,14 +1547,12 @@ export default function Home() {
                     disabled={
                       girisYukleniyor
                     }
-                    className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black text-white transition hover:bg-orange-400 disabled:opacity-50"
+                    className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400 disabled:opacity-50"
                   >
 
                     {
                       girisYukleniyor
-
                         ? "Giriş Yapılıyor..."
-
                         : "Sisteme Giriş Yap"
                     }
 
@@ -1548,6 +1569,7 @@ export default function Home() {
         </div>
 
       </main>
+
     );
   }
 
@@ -1562,26 +1584,31 @@ export default function Home() {
 
       <div className="flex min-h-screen">
 
+
         {/* ====================================================
             SOL MENÜ
         ==================================================== */}
 
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex">
 
-          <div className="border-b border-slate-800 px-6 py-7">
+          <div className="border-b border-slate-800 px-5 py-6">
 
             <div className="text-xs font-bold uppercase tracking-[0.22em] text-orange-400">
               BALIKESİR
             </div>
 
             <div className="mt-1 text-xl font-black">
-              ⚡ TRAFO YÖNETİMİ
+              ⚡ TRAFO
+            </div>
+
+            <div className="text-xl font-black">
+              YÖNETİMİ
             </div>
 
           </div>
 
 
-          <nav className="flex-1 space-y-2 p-4">
+          <nav className="flex-1 space-y-2 p-3">
 
             <MenuButonu
               aktif={
@@ -1595,7 +1622,7 @@ export default function Home() {
                   )
               }
             >
-              📊 Dashboard
+              📊 Kontrol Paneli
             </MenuButonu>
 
 
@@ -1638,7 +1665,7 @@ export default function Home() {
           </nav>
 
 
-          <div className="border-t border-slate-800 p-4">
+          <div className="border-t border-slate-800 p-3">
 
             <div className="mb-3 truncate text-xs text-slate-500">
               {session.user.email}
@@ -1648,7 +1675,7 @@ export default function Home() {
               onClick={
                 cikisYap
               }
-              className="w-full rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+              className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800"
             >
               Çıkış Yap
             </button>
@@ -1659,22 +1686,26 @@ export default function Home() {
 
 
         {/* ====================================================
-            İÇERİK
+            ANA İÇERİK
         ==================================================== */}
 
         <section className="min-w-0 flex-1">
 
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#0b1628]/95 px-5 py-4 backdrop-blur lg:px-8">
+          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#0b1628]/95 px-5 py-4 backdrop-blur lg:px-7">
 
             <div>
 
               <h1 className="text-xl font-black lg:text-2xl">
 
                 {
-                  sayfa === "dashboard"
-                    ? "Trafo Değişim Dashboard"
+                  sayfa ===
+                  "dashboard"
 
-                    : sayfa === "yeni"
+                    ? "Trafo Değişim Kontrol Paneli"
+
+                    : sayfa ===
+                      "yeni"
+
                     ? duzenlenenId
                       ? "Trafo Kaydını Düzenle"
                       : "Yeni Trafo Değişim Kaydı"
@@ -1685,91 +1716,20 @@ export default function Home() {
               </h1>
 
               <p className="mt-1 text-xs text-slate-500">
-
                 BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ
-
               </p>
 
             </div>
 
-
-            <button
-              onClick={
-                cikisYap
-              }
-              className="rounded-xl border border-slate-700 px-3 py-2 text-sm lg:hidden"
-            >
-              Çıkış
-            </button>
-
           </header>
 
 
-          {/* MOBİL MENÜ */}
-
-          <div className="grid grid-cols-3 border-b border-slate-800 bg-[#0b1628] lg:hidden">
-
-            <MobilMenu
-              aktif={
-                sayfa ===
-                "dashboard"
-              }
-              onClick={
-                () =>
-                  setSayfa(
-                    "dashboard"
-                  )
-              }
-            >
-              Dashboard
-            </MobilMenu>
-
-            <MobilMenu
-              aktif={
-                sayfa ===
-                "yeni"
-              }
-              onClick={
-                () => {
-
-                  formTemizle();
-
-                  setSayfa(
-                    "yeni"
-                  );
-
-                }
-              }
-            >
-              Yeni
-            </MobilMenu>
-
-            <MobilMenu
-              aktif={
-                sayfa ===
-                "kayitlar"
-              }
-              onClick={
-                () =>
-                  setSayfa(
-                    "kayitlar"
-                  )
-              }
-            >
-              Kayıtlar
-            </MobilMenu>
-
-          </div>
-
-
-          <div className="p-4 sm:p-6 lg:p-8">
+          <div className="p-4 sm:p-6 lg:p-7">
 
             {genelHata && (
-
               <HataKutusu>
                 {genelHata}
               </HataKutusu>
-
             )}
 
 
@@ -1791,17 +1751,88 @@ export default function Home() {
 
               <>
 
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {/* FİLTRELER */}
 
-                  <div>
+                <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-[#101d30] p-4 lg:flex-row lg:items-end">
 
-                    <div className="text-sm text-slate-400">
-                      Genel Durum
+                  <div className="flex-1">
+
+                    <div className="mb-2 text-xs font-bold text-slate-400">
+                      YIL
                     </div>
 
-                    <div className="mt-1 text-lg font-bold">
-                      Toplam {kayitlar.length} kayıt
+                    <select
+                      value={
+                        dashboardYil
+                      }
+                      onChange={
+                        (e) =>
+                          setDashboardYil(
+                            e.target.value
+                          )
+                      }
+                      className={inputSinif}
+                    >
+
+                      <option value="">
+                        Tüm Yıllar
+                      </option>
+
+                      {yillar.map(
+                        (yil) => (
+
+                          <option
+                            key={yil}
+                            value={yil}
+                          >
+                            {yil}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                  </div>
+
+
+                  <div className="flex-1">
+
+                    <div className="mb-2 text-xs font-bold text-slate-400">
+                      İLÇE
                     </div>
+
+                    <select
+                      value={
+                        dashboardIlce
+                      }
+                      onChange={
+                        (e) =>
+                          setDashboardIlce(
+                            e.target.value
+                          )
+                      }
+                      className={inputSinif}
+                    >
+
+                      <option value="">
+                        Tüm İlçeler
+                      </option>
+
+                      {ilceler.map(
+                        (ilce) => (
+
+                          <option
+                            key={ilce}
+                            value={ilce}
+                          >
+                            {ilce}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
 
                   </div>
 
@@ -1810,11 +1841,23 @@ export default function Home() {
                     onClick={
                       () => {
 
-                        formTemizle();
+                        setDashboardYil("");
+                        setDashboardIlce("");
 
-                        setSayfa(
-                          "yeni"
-                        );
+                      }
+                    }
+                    className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800"
+                  >
+                    Filtreyi Temizle
+                  </button>
+
+
+                  <button
+                    onClick={
+                      () => {
+
+                        formTemizle();
+                        setSayfa("yeni");
 
                       }
                     }
@@ -1833,9 +1876,9 @@ export default function Home() {
                   <KpiKart
                     baslik="TOPLAM KAYIT"
                     sayi={
-                      kayitlar.length
+                      dashboardKayitlari.length
                     }
-                    renk="#F97316"
+                    renk="#f97316"
                   />
 
 
@@ -1843,20 +1886,14 @@ export default function Home() {
                     (neden) => (
 
                       <KpiKart
-                        key={
-                          neden.ad
-                        }
-                        baslik={
-                          neden.ad
-                        }
+                        key={neden.ad}
+                        baslik={neden.ad}
                         sayi={
                           nedenSayilari[
                             neden.ad
                           ] || 0
                         }
-                        renk={
-                          neden.renk
-                        }
+                        renk={neden.renk}
                       />
 
                     )
@@ -1865,65 +1902,124 @@ export default function Home() {
                 </div>
 
 
-                {/* GRAFİKLER */}
+                {/* ÖZET KARTLAR */}
 
-                <div className="mt-6 grid gap-6 xl:grid-cols-2">
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+
+                  <OzetKart
+                    ikon="📅"
+                    baslik="SON 30 GÜN"
+                    deger={
+                      son30Gun.toString()
+                    }
+                    alt="Trafo değişim kaydı"
+                  />
+
+                  <OzetKart
+                    ikon="📍"
+                    baslik="EN ÇOK DEĞİŞİM YAPILAN İLÇE"
+                    deger={
+                      String(
+                        enCokIlce[0]
+                      )
+                    }
+                    alt={
+                      `${enCokIlce[1]} kayıt`
+                    }
+                  />
+
+                  <OzetKart
+                    ikon="⚡"
+                    baslik="EN ÇOK DEĞİŞİM NEDENİ"
+                    deger={
+                      String(
+                        enCokNeden[0]
+                      )
+                    }
+                    alt={
+                      `${enCokNeden[1]} kayıt`
+                    }
+                  />
+
+                </div>
+
+
+                {/* DONUT + YILLIK */}
+
+                <div className="mt-6 grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
 
                   <Panel
-                    baslik="Yıllara Göre Değişim"
-                    altBaslik="Toplam trafo değişim sayıları"
+                    baslik="Değişim Nedenleri"
+                    altBaslik="Seçili filtreye göre dağılım"
                   >
 
-                    <div className="mt-8 flex h-64 items-end gap-3 overflow-x-auto border-b border-slate-700 pb-1">
+                    <div className="mt-7 flex flex-col items-center">
 
-                      {yillikToplamlar.length ===
-                      0 ? (
+                      <div
+                        className="relative h-52 w-52 rounded-full"
+                        style={{
+                          background:
+                            `conic-gradient(${donutGradient})`,
+                        }}
+                      >
 
-                        <BosAlan>
-                          Henüz kayıt yok.
-                        </BosAlan>
+                        <div className="absolute inset-9 flex flex-col items-center justify-center rounded-full bg-[#101d30]">
 
-                      ) : (
+                          <div className="text-3xl font-black">
+                            {
+                              dashboardKayitlari.length
+                            }
+                          </div>
 
-                        yillikToplamlar.map(
-                          (item) => (
+                          <div className="text-xs text-slate-500">
+                            TOPLAM
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div className="mt-7 grid w-full gap-2">
+
+                        {NEDENLER.map(
+                          (neden) => (
 
                             <div
-                              key={
-                                item.yil
-                              }
-                              className="flex min-w-14 flex-1 flex-col items-center justify-end"
+                              key={neden.ad}
+                              className="flex items-center justify-between rounded-lg bg-[#07111f] px-3 py-2"
                             >
 
-                              <div className="mb-2 text-sm font-black">
-                                {item.toplam}
+                              <div className="flex items-center gap-2">
+
+                                <span
+                                  className="h-3 w-3 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      neden.renk,
+                                  }}
+                                />
+
+                                <span className="text-xs font-bold">
+                                  {neden.ad}
+                                </span>
+
                               </div>
 
-                              <div
-                                className="w-8 rounded-t-lg bg-orange-500 transition-all"
-                                style={{
-                                  height:
-                                    `${Math.max(
-                                      8,
-                                      (
-                                        item.toplam /
-                                        maksimumYil
-                                      ) *
-                                        190
-                                    )}px`,
-                                }}
-                              />
-
-                              <div className="mt-2 text-xs text-slate-400">
-                                {item.yil}
-                              </div>
+                              <span className="text-sm font-black">
+                                {
+                                  nedenSayilari[
+                                    neden.ad
+                                  ] || 0
+                                }
+                              </span>
 
                             </div>
 
                           )
-                        )
+                        )}
 
-                      )}
+                      </div>
 
                     </div>
 
@@ -1931,90 +2027,72 @@ export default function Home() {
 
 
                   <Panel
-                    baslik="Aylara Göre Değişim"
-                    altBaslik="Seçilen yılın aylık toplamları"
+                    baslik="Yıllara Göre Değişim Nedenleri"
+                    altBaslik="Her renk ayrı bir değişim nedenini gösterir"
                   >
 
-                    <div className="mt-4">
+                    <GrafikLegend />
 
-                      <select
-                        value={
-                          dashboardYil
-                        }
-                        onChange={
-                          (e) =>
-                            setDashboardYil(
-                              e.target.value
-                            )
-                        }
-                        className={inputSinif}
-                      >
+                    <div className="mt-6 flex h-72 items-end gap-5 overflow-x-auto border-b border-slate-700 pb-1">
 
-                        {yillar.map(
-                          (yil) => (
-
-                            <option
-                              key={
-                                yil
-                              }
-                              value={
-                                yil
-                              }
-                            >
-                              {yil}
-                            </option>
-
-                          )
-                        )}
-
-                      </select>
-
-                    </div>
-
-
-                    <div className="mt-6 flex h-56 items-end gap-2 overflow-x-auto border-b border-slate-700">
-
-                      {aylikToplamlar.map(
+                      {yillikNedenler.map(
                         (item) => (
 
                           <div
-                            key={
-                              item.ay
-                            }
-                            className="flex min-w-12 flex-1 flex-col items-center justify-end"
+                            key={item.yil}
+                            className="flex min-w-24 flex-col items-center justify-end"
                           >
 
-                            <div className="mb-1 text-xs font-bold">
-                              {
-                                item.toplam
-                              }
+                            <div className="mb-2 text-xs font-black text-slate-300">
+                              {item.toplam}
                             </div>
 
-                            <div
-                              className="w-5 rounded-t bg-cyan-500"
-                              style={{
-                                height:
-                                  `${Math.max(
-                                    item.toplam
-                                      ? 8
-                                      : 0,
+                            <div className="flex h-52 items-end gap-1">
 
-                                    (
-                                      item.toplam /
-                                      maksimumAy
-                                    ) *
-                                      145
-                                  )}px`,
-                              }}
-                            />
+                              {NEDENLER.map(
+                                (neden) => {
 
-                            <div className="mt-2 text-[9px] text-slate-500">
-                              {
-                                item.ay.substring(
-                                  0,
-                                  3
-                                )
-                              }
+                                  const sayi =
+                                    item.nedenler[
+                                      neden.ad
+                                    ] || 0;
+
+                                  const yukseklik =
+                                    sayi
+                                      ? Math.max(
+                                          7,
+                                          (
+                                            sayi /
+                                            maxYillik
+                                          ) *
+                                            185
+                                        )
+                                      : 0;
+
+                                  return (
+
+                                    <div
+                                      key={neden.ad}
+                                      title={
+                                        `${neden.ad}: ${sayi}`
+                                      }
+                                      className="w-2 rounded-t"
+                                      style={{
+                                        height:
+                                          `${yukseklik}px`,
+                                        backgroundColor:
+                                          neden.renk,
+                                      }}
+                                    />
+
+                                  );
+                                }
+                              )}
+
+                            </div>
+
+                            <div className="mt-2 text-xs text-slate-400">
+                              {item.yil}
                             </div>
 
                           </div>
@@ -2023,6 +2101,111 @@ export default function Home() {
                       )}
 
                     </div>
+
+                  </Panel>
+
+                </div>
+
+
+                {/* AYLIK GRAFİK */}
+
+                <div className="mt-6">
+
+                  <Panel
+                    baslik="Aylara Göre Değişim Nedenleri"
+                    altBaslik={
+                      dashboardYil
+                        ? `${dashboardYil} yılı aylık dağılımı`
+                        : "Aylık dağılım için yukarıdan bir yıl seçin"
+                    }
+                  >
+
+                    <GrafikLegend />
+
+
+                    {!dashboardYil ? (
+
+                      <BosAlan>
+                        Aylık grafiği görüntülemek için yıl seçiniz.
+                      </BosAlan>
+
+                    ) : (
+
+                      <div className="mt-6 flex h-72 items-end gap-3 overflow-x-auto border-b border-slate-700">
+
+                        {aylikNedenler.map(
+                          (item) => (
+
+                            <div
+                              key={item.ay}
+                              className="flex min-w-20 flex-col items-center justify-end"
+                            >
+
+                              <div className="mb-2 text-xs font-black">
+                                {item.toplam}
+                              </div>
+
+                              <div className="flex h-52 items-end gap-[2px]">
+
+                                {NEDENLER.map(
+                                  (neden) => {
+
+                                    const sayi =
+                                      item.nedenler[
+                                        neden.ad
+                                      ] || 0;
+
+                                    const yukseklik =
+                                      sayi
+                                        ? Math.max(
+                                            6,
+                                            (
+                                              sayi /
+                                              maxAylik
+                                            ) *
+                                              180
+                                          )
+                                        : 0;
+
+                                    return (
+
+                                      <div
+                                        key={neden.ad}
+                                        title={
+                                          `${item.ay} - ${neden.ad}: ${sayi}`
+                                        }
+                                        className="w-[6px] rounded-t"
+                                        style={{
+                                          height:
+                                            `${yukseklik}px`,
+                                          backgroundColor:
+                                            neden.renk,
+                                        }}
+                                      />
+
+                                    );
+                                  }
+                                )}
+
+                              </div>
+
+                              <div className="mt-2 text-[10px] text-slate-400">
+                                {
+                                  item.ay.substring(
+                                    0,
+                                    3
+                                  )
+                                }
+                              </div>
+
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                    )}
 
                   </Panel>
 
@@ -2039,22 +2222,18 @@ export default function Home() {
                   >
 
                     <KayitTablosu
-
                       kayitlar={
                         kayitlar.slice(
                           0,
                           8
                         )
                       }
-
                       duzenle={
                         kaydiDuzenle
                       }
-
                       sil={
                         kaydiSil
                       }
-
                     />
 
                   </Panel>
@@ -2067,21 +2246,19 @@ export default function Home() {
 
 
             {/* ==================================================
-                YENİ KAYIT
+                YENİ / DÜZENLE
             ================================================== */}
 
             {sayfa ===
               "yeni" && (
 
               <form
-                onSubmit={
-                  kaydet
-                }
+                onSubmit={kaydet}
                 className="space-y-6"
               >
 
                 <FormBolumu
-                  baslik="📍 LOKASYON BİLGİLERİ"
+                  baslik="📍 KONUM BİLGİLERİ"
                 >
 
                   <FormGrid>
@@ -2091,9 +2268,7 @@ export default function Home() {
                       <input
                         type="number"
                         required
-                        value={
-                          form.yil
-                        }
+                        value={form.yil}
                         onChange={
                           (e) =>
                             formDegistir(
@@ -2111,9 +2286,7 @@ export default function Home() {
 
                       <select
                         required
-                        value={
-                          form.ay
-                        }
+                        value={form.ay}
                         onChange={
                           (e) =>
                             formDegistir(
@@ -2148,9 +2321,7 @@ export default function Home() {
 
                     <MetinAlani
                       baslik="İlçe"
-                      deger={
-                        form.ilce
-                      }
+                      deger={form.ilce}
                       degistir={
                         (v) =>
                           formDegistir(
@@ -2163,9 +2334,7 @@ export default function Home() {
 
                     <MetinAlani
                       baslik="Mahalle"
-                      deger={
-                        form.mahalle
-                      }
+                      deger={form.mahalle}
                       degistir={
                         (v) =>
                           formDegistir(
@@ -2178,9 +2347,7 @@ export default function Home() {
 
                     <MetinAlani
                       baslik="TR"
-                      deger={
-                        form.tr
-                      }
+                      deger={form.tr}
                       degistir={
                         (v) =>
                           formDegistir(
@@ -2552,12 +2719,8 @@ export default function Home() {
                           (neden) => (
 
                             <option
-                              key={
-                                neden.ad
-                              }
-                              value={
-                                neden.ad
-                              }
+                              key={neden.ad}
+                              value={neden.ad}
                             >
                               {neden.ad}
                             </option>
@@ -2608,7 +2771,6 @@ export default function Home() {
                         () => {
 
                           formTemizle();
-
                           setSayfa(
                             "kayitlar"
                           );
@@ -2637,7 +2799,9 @@ export default function Home() {
                         ? "Kaydediliyor..."
 
                         : duzenlenenId
+
                         ? "Değişiklikleri Kaydet"
+
                         : "Trafo Kaydını Kaydet"
                     }
 
@@ -2664,9 +2828,7 @@ export default function Home() {
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
 
                     <input
-                      value={
-                        arama
-                      }
+                      value={arama}
                       onChange={
                         (e) =>
                           setArama(
@@ -2679,9 +2841,7 @@ export default function Home() {
 
 
                     <select
-                      value={
-                        filtreYil
-                      }
+                      value={filtreYil}
                       onChange={
                         (e) =>
                           setFiltreYil(
@@ -2699,12 +2859,8 @@ export default function Home() {
                         (yil) => (
 
                           <option
-                            key={
-                              yil
-                            }
-                            value={
-                              yil
-                            }
+                            key={yil}
+                            value={yil}
                           >
                             {yil}
                           </option>
@@ -2716,9 +2872,7 @@ export default function Home() {
 
 
                     <select
-                      value={
-                        filtreAy
-                      }
+                      value={filtreAy}
                       onChange={
                         (e) =>
                           setFiltreAy(
@@ -2788,11 +2942,9 @@ export default function Home() {
 
 
                   <div className="mt-4 text-sm text-slate-400">
-
                     {
                       filtrelenmisKayitlar.length
-                    } kayıt gösteriliyor.
-
+                    } kayıt.
                   </div>
 
                 </div>
@@ -2814,19 +2966,15 @@ export default function Home() {
 
                       : (
                         <KayitTablosu
-
                           kayitlar={
                             filtrelenmisKayitlar
                           }
-
                           duzenle={
                             kaydiDuzenle
                           }
-
                           sil={
                             kaydiSil
                           }
-
                         />
                       )
                   }
@@ -2844,12 +2992,13 @@ export default function Home() {
       </div>
 
     </main>
+
   );
 }
 
 
 // ============================================================
-// ORTAK STİL
+// STİL
 // ============================================================
 
 const inputSinif =
@@ -2857,7 +3006,7 @@ const inputSinif =
 
 
 // ============================================================
-// FORM BİLEŞENLERİ
+// BİLEŞENLER
 // ============================================================
 
 function Alan({
@@ -2865,7 +3014,7 @@ function Alan({
   children,
 }: {
   baslik: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
@@ -2920,8 +3069,7 @@ function MetinAlani({
 function FormGrid({
   children,
 }: {
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
@@ -2939,8 +3087,7 @@ function FormBolumu({
   children,
 }: {
   baslik: string;
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
@@ -2961,10 +3108,6 @@ function FormBolumu({
 }
 
 
-// ============================================================
-// MENU
-// ============================================================
-
 function MenuButonu({
   aktif,
   onClick,
@@ -2972,16 +3115,13 @@ function MenuButonu({
 }: {
   aktif: boolean;
   onClick: () => void;
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
 
     <button
-      onClick={
-        onClick
-      }
+      onClick={onClick}
       className={`w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
         aktif
           ? "bg-orange-500 text-white"
@@ -2994,40 +3134,6 @@ function MenuButonu({
   );
 }
 
-
-function MobilMenu({
-  aktif,
-  onClick,
-  children,
-}: {
-  aktif: boolean;
-  onClick: () => void;
-  children:
-    React.ReactNode;
-}) {
-
-  return (
-
-    <button
-      onClick={
-        onClick
-      }
-      className={`px-2 py-3 text-xs font-bold ${
-        aktif
-          ? "bg-orange-500 text-white"
-          : "text-slate-400"
-      }`}
-    >
-      {children}
-    </button>
-
-  );
-}
-
-
-// ============================================================
-// KPI
-// ============================================================
 
 function KpiKart({
   baslik,
@@ -3069,9 +3175,51 @@ function KpiKart({
 }
 
 
-// ============================================================
-// PANEL
-// ============================================================
+function OzetKart({
+  ikon,
+  baslik,
+  deger,
+  alt,
+}: {
+  ikon: string;
+  baslik: string;
+  deger: string;
+  alt: string;
+}) {
+
+  return (
+
+    <div className="rounded-2xl border border-slate-800 bg-[#101d30] p-5">
+
+      <div className="flex items-start gap-4">
+
+        <div className="rounded-xl bg-[#07111f] p-3 text-2xl">
+          {ikon}
+        </div>
+
+        <div className="min-w-0">
+
+          <div className="text-xs font-bold text-slate-500">
+            {baslik}
+          </div>
+
+          <div className="mt-2 truncate text-xl font-black">
+            {deger}
+          </div>
+
+          <div className="mt-1 text-xs text-slate-500">
+            {alt}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+}
+
 
 function Panel({
   baslik,
@@ -3080,29 +3228,24 @@ function Panel({
 }: {
   baslik: string;
   altBaslik?: string;
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
 
     <section className="rounded-2xl border border-slate-800 bg-[#101d30] p-5 lg:p-6">
 
-      <div>
+      <h2 className="text-lg font-black">
+        {baslik}
+      </h2>
 
-        <h2 className="text-lg font-black">
-          {baslik}
-        </h2>
+      {altBaslik && (
 
-        {altBaslik && (
+        <p className="mt-1 text-sm text-slate-500">
+          {altBaslik}
+        </p>
 
-          <p className="mt-1 text-sm text-slate-500">
-            {altBaslik}
-          </p>
-
-        )}
-
-      </div>
+      )}
 
       {children}
 
@@ -3112,15 +3255,47 @@ function Panel({
 }
 
 
-// ============================================================
-// HATA
-// ============================================================
+function GrafikLegend() {
+
+  return (
+
+    <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
+
+      {NEDENLER.map(
+        (neden) => (
+
+          <div
+            key={neden.ad}
+            className="flex items-center gap-2"
+          >
+
+            <span
+              className="h-3 w-3 rounded-sm"
+              style={{
+                backgroundColor:
+                  neden.renk,
+              }}
+            />
+
+            <span className="text-[10px] font-bold text-slate-400">
+              {neden.ad}
+            </span>
+
+          </div>
+
+        )
+      )}
+
+    </div>
+
+  );
+}
+
 
 function HataKutusu({
   children,
 }: {
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
@@ -3133,15 +3308,10 @@ function HataKutusu({
 }
 
 
-// ============================================================
-// BOŞ ALAN
-// ============================================================
-
 function BosAlan({
   children,
 }: {
-  children:
-    React.ReactNode;
+  children: ReactNode;
 }) {
 
   return (
@@ -3154,24 +3324,17 @@ function BosAlan({
 }
 
 
-// ============================================================
-// NEDEN ETİKETİ
-// ============================================================
-
 function NedenEtiketi({
   neden,
 }: {
-  neden:
-    string | null;
+  neden: string | null;
 }) {
 
   const bulunan =
     NEDENLER.find(
       (x) =>
-        x.ad ===
-        neden
+        x.ad === neden
     );
-
 
   if (!neden) {
 
@@ -3182,11 +3345,10 @@ function NedenEtiketi({
     );
   }
 
-
   return (
 
     <span
-      className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-black text-white"
+      className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black text-white"
       style={{
         backgroundColor:
           bulunan?.renk ||
@@ -3209,17 +3371,14 @@ function KayitTablosu({
   duzenle,
   sil,
 }: {
-  kayitlar:
-    TrafoKaydi[];
+  kayitlar: TrafoKaydi[];
 
   duzenle: (
-    kayit:
-      TrafoKaydi
+    kayit: TrafoKaydi
   ) => void;
 
   sil: (
-    kayit:
-      TrafoKaydi
+    kayit: TrafoKaydi
   ) => void;
 }) {
 
@@ -3234,7 +3393,6 @@ function KayitTablosu({
     );
   }
 
-
   return (
 
     <div className="mt-5 overflow-x-auto">
@@ -3243,7 +3401,7 @@ function KayitTablosu({
 
         <thead>
 
-          <tr className="border-b border-slate-700 text-xs uppercase text-slate-500">
+          <tr className="border-b border-slate-700 text-[10px] uppercase text-slate-500">
 
             <th className="px-3 py-3">
               Tarih
@@ -3266,7 +3424,7 @@ function KayitTablosu({
             </th>
 
             <th className="px-3 py-3">
-              Lokasyon
+              Konum
             </th>
 
             <th className="px-3 py-3">
@@ -3292,13 +3450,11 @@ function KayitTablosu({
             (kayit) => (
 
               <tr
-                key={
-                  kayit.id
-                }
-                className="border-b border-slate-800/80 transition hover:bg-slate-800/30"
+                key={kayit.id}
+                className="border-b border-slate-800/80 hover:bg-slate-800/30"
               >
 
-                <td className="whitespace-nowrap px-3 py-4">
+                <td className="whitespace-nowrap px-3 py-4 font-semibold">
                   {
                     tarihGoster(
                       kayit.tarih
@@ -3307,39 +3463,27 @@ function KayitTablosu({
                 </td>
 
                 <td className="px-3 py-4">
-                  {
-                    kayit.yil || "-"
-                  }
+                  {kayit.yil || "-"}
                 </td>
 
                 <td className="whitespace-nowrap px-3 py-4">
-                  {
-                    kayit.ay || "-"
-                  }
+                  {kayit.ay || "-"}
                 </td>
 
                 <td className="whitespace-nowrap px-3 py-4">
-                  {
-                    kayit.ilce || "-"
-                  }
+                  {kayit.ilce || "-"}
                 </td>
 
                 <td className="whitespace-nowrap px-3 py-4">
-                  {
-                    kayit.mahalle || "-"
-                  }
+                  {kayit.mahalle || "-"}
                 </td>
 
                 <td className="whitespace-nowrap px-3 py-4">
-                  {
-                    kayit.lokasyon_id || "-"
-                  }
+                  {kayit.lokasyon_id || "-"}
                 </td>
 
                 <td className="whitespace-nowrap px-3 py-4">
-                  {
-                    kayit.trafo_id || "-"
-                  }
+                  {kayit.trafo_id || "-"}
                 </td>
 
                 <td className="px-3 py-4">
@@ -3361,7 +3505,7 @@ function KayitTablosu({
                           kayit
                         )
                     }
-                    className="mr-2 rounded-lg border border-blue-800 px-3 py-2 text-xs font-bold text-blue-300 hover:bg-blue-950"
+                    className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300 hover:bg-blue-950"
                   >
                     Düzenle
                   </button>
@@ -3373,7 +3517,7 @@ function KayitTablosu({
                           kayit
                         )
                     }
-                    className="rounded-lg border border-red-900 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-950"
+                    className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-950"
                   >
                     Sil
                   </button>
@@ -3400,26 +3544,21 @@ function KayitTablosu({
 // ============================================================
 
 function tarihGoster(
-  tarih:
-    string | null
+  tarih: string | null
 ) {
 
   if (!tarih) {
     return "-";
   }
 
-
-  const parcala =
+  const parca =
     tarih.split("-");
 
-
   if (
-    parcala.length !== 3
+    parca.length !== 3
   ) {
-
     return tarih;
   }
 
-
-  return `${parcala[2]}.${parcala[1]}.${parcala[0]}`;
+  return `${parca[2]}.${parca[1]}.${parca[0]}`;
 }
