@@ -62,6 +62,11 @@ export default function Home() {
   const [session,setSession]=useState<Session|null>(null); const [authKontrol,setAuthKontrol]=useState(true);
   const [girisYukleniyor,setGirisYukleniyor]=useState(false); const [authHata,setAuthHata]=useState("");
   const [misafirModu,setMisafirModu]=useState(false);
+  const [sifreSifirlamaModu,setSifreSifirlamaModu]=useState(false);
+  const [yeniSifre,setYeniSifre]=useState("");
+  const [yeniSifreTekrar,setYeniSifreTekrar]=useState("");
+  const [sifreMesaj,setSifreMesaj]=useState("");
+  const [sifreIslem,setSifreIslem]=useState(false);
   const [sayfa,setSayfa]=useState<Sayfa>("dashboard"); const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>([]);
   const [veriYukleniyor,setVeriYukleniyor]=useState(false); const [genelHata,setGenelHata]=useState(""); const [basariMesaji,setBasariMesaji]=useState("");
   const [mobilMenuAcik,setMobilMenuAcik]=useState(false); const [detayKayit,setDetayKayit]=useState<TrafoKaydi|null>(null);
@@ -107,7 +112,15 @@ export default function Home() {
   useEffect(() => {
     if(!supabase){setAuthHata("Supabase bağlantısı kurulamadı.");setAuthKontrol(false);return;}
     supabase.auth.getSession().then(({data})=>{setSession(data.session);if(data.session)setMisafirModu(false);setAuthKontrol(false);});
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>{setSession(s);if(s)setMisafirModu(false);setAuthKontrol(false);});
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((event,s)=>{
+      setSession(s);
+      if(s)setMisafirModu(false);
+      if(event==="PASSWORD_RECOVERY"){
+        setSifreSifirlamaModu(true);
+        setSifreMesaj("");
+      }
+      setAuthKontrol(false);
+    });
     return()=>subscription.unsubscribe();
   },[supabase]);
 
@@ -125,6 +138,56 @@ export default function Home() {
     const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});
     if(error)setAuthHata("E-posta veya şifre hatalı."); setGirisYukleniyor(false);
   }
+  async function sifremiUnuttum(){
+    if(!supabase)return;
+    const temizEmail=email.trim();
+    if(!temizEmail){
+      setAuthHata("Önce e-posta adresinizi yazın.");
+      return;
+    }
+    setSifreIslem(true);
+    setAuthHata("");
+    setSifreMesaj("");
+    const redirectTo=typeof window!=="undefined"?window.location.origin:"";
+    const {error}=await supabase.auth.resetPasswordForEmail(temizEmail,{redirectTo});
+    if(error){
+      setAuthHata(error.message);
+    }else{
+      setSifreMesaj("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin.");
+    }
+    setSifreIslem(false);
+  }
+
+  async function yeniSifreyiKaydet(){
+    if(!supabase)return;
+    if(yeniSifre.length<6){
+      setSifreMesaj("Yeni şifreniz en az 6 karakter olmalıdır.");
+      return;
+    }
+    if(yeniSifre!==yeniSifreTekrar){
+      setSifreMesaj("Girdiğiniz iki şifre aynı değil.");
+      return;
+    }
+    setSifreIslem(true);
+    setSifreMesaj("");
+    const {error}=await supabase.auth.updateUser({password:yeniSifre});
+    if(error){
+      setSifreMesaj("Şifre değiştirilemedi: "+error.message);
+      setSifreIslem(false);
+      return;
+    }
+    setYeniSifre("");
+    setYeniSifreTekrar("");
+    setSifreSifirlamaModu(false);
+    setSifreMesaj("");
+    window.alert("Şifreniz başarıyla değiştirildi. Yeni şifrenizle giriş yapabilirsiniz.");
+    await supabase.auth.signOut();
+    setSession(null);
+    setEmail("");
+    setPassword("");
+    setSifreIslem(false);
+  }
+
   function misafirGirisi(){
     setAuthHata("");
     setMisafirModu(true);
@@ -511,10 +574,28 @@ export default function Home() {
 
   if(authKontrol)return <main className="flex min-h-screen items-center justify-center bg-[#07111f] text-white"><div className="text-center"><div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-orange-500"/><p className="mt-5 text-slate-400">Sistem hazırlanıyor...</p></div></main>;
 
+  if(sifreSifirlamaModu)return <main className="flex min-h-screen items-center justify-center bg-[#07111f] p-4 text-white">
+    <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#101d30] p-6 shadow-2xl sm:p-8">
+      <div className="mb-6">
+        <div className="text-xs font-black tracking-[0.25em] text-orange-400">BALIKESİR</div>
+        <h1 className="mt-2 text-2xl font-black">Yeni Şifre Oluştur</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-400">Hesabınız için yeni şifrenizi belirleyin.</p>
+      </div>
+      <div className="space-y-4">
+        <label className="block"><span className="mb-2 block text-xs font-bold text-slate-400">YENİ ŞİFRE</span><input type="password" autoComplete="new-password" value={yeniSifre} onChange={e=>setYeniSifre(e.target.value)} className={inputSinif} placeholder="En az 6 karakter"/></label>
+        <label className="block"><span className="mb-2 block text-xs font-bold text-slate-400">YENİ ŞİFRE TEKRAR</span><input type="password" autoComplete="new-password" value={yeniSifreTekrar} onChange={e=>setYeniSifreTekrar(e.target.value)} className={inputSinif} placeholder="Yeni şifrenizi tekrar yazın"/></label>
+        {sifreMesaj&&<div className="rounded-xl border border-red-900/70 bg-red-950/30 px-3 py-2 text-xs leading-5 text-red-300">{sifreMesaj}</div>}
+        <button type="button" disabled={sifreIslem} onClick={yeniSifreyiKaydet} className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400 disabled:opacity-50">{sifreIslem?"Kaydediliyor...":"Yeni Şifreyi Kaydet"}</button>
+      </div>
+    </div>
+  </main>;
+
   if(!session&&!misafirModu)return <main className="min-h-screen bg-slate-950 text-white"><div className="flex min-h-screen">
     <section className="hidden w-1/2 flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-orange-950 p-14 lg:flex"><div><div className="inline-flex rounded-2xl bg-orange-500 px-4 py-3 font-bold">⚡ BALIKESİR TRAFO</div><h1 className="mt-10 text-5xl font-black">Trafo Değişim<span className="block text-orange-400">Yönetim Sistemi</span></h1><p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">Trafo değişim kayıtlarını yönetin, istatistikleri takip edin ve değişim nedenlerini tek ekrandan analiz edin.</p></div></section>
     <section className="flex w-full items-center justify-center p-5 lg:w-1/2"><div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl"><div className="text-sm font-bold uppercase tracking-widest text-orange-400">Yönetim Paneli</div><h2 className="mt-2 mb-8 text-3xl font-black">Giriş Yap</h2>
       <form onSubmit={girisYap} autoComplete="on" className="space-y-5"><Alan baslik="E-posta"><input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} className={inputSinif}/></Alan><Alan baslik="Şifre"><input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} className={inputSinif}/></Alan>{authHata&&<HataKutusu>{authHata}</HataKutusu>}<button disabled={girisYukleniyor} className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400">{girisYukleniyor?"Giriş Yapılıyor...":"Sisteme Giriş Yap"}</button>
+      <button type="button" disabled={sifreIslem} onClick={sifremiUnuttum} className="w-full text-center text-sm font-bold text-orange-300 hover:text-orange-200 disabled:opacity-50">{sifreIslem?"Gönderiliyor...":"Şifremi Unuttum"}</button>
+      {sifreMesaj&&<div className="rounded-xl border border-emerald-900/70 bg-emerald-950/30 px-3 py-2 text-xs leading-5 text-emerald-300">{sifreMesaj}</div>}
       <div className="flex items-center gap-3 py-1"><div className="h-px flex-1 bg-slate-800"/><span className="text-[10px] font-black uppercase tracking-wider text-slate-600">veya</span><div className="h-px flex-1 bg-slate-800"/></div>
       <button type="button" onClick={misafirGirisi} className="w-full rounded-xl border border-slate-700 bg-[#07111f] px-4 py-3 font-black text-slate-200 hover:bg-slate-800">👁 Misafir Olarak Görüntüle</button>
       <p className="text-center text-[11px] leading-5 text-slate-500">Misafir modunda kayıtlar görüntülenebilir; ekleme, düzenleme ve silme işlemleri kapalıdır.</p></form>
