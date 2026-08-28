@@ -1,5 +1,5 @@
 /* BALIKESİR TRAFO DEĞİŞİMİ - PWA update worker */
-const CACHE_VERSION = "trafo-app-v3";
+const CACHE_VERSION = "trafo-app-v4";
 
 self.addEventListener("install", () => {
   // Bilerek skipWaiting çağrılmıyor. Yeni sürüm waiting durumunda kalır
