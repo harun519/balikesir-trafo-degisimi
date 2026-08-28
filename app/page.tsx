@@ -94,6 +94,8 @@ export default function Home() {
   const [arsivFiltreIlce,setArsivFiltreIlce]=useState("");
   const [arsivArama,setArsivArama]=useState("");
   const [arsivYukleme,setArsivYukleme]=useState(false);
+  const [driveAktariliyor,setDriveAktariliyor]=useState(false);
+  const [driveAktarimSonucu,setDriveAktarimSonucu]=useState("");
   const [veriYukleniyor,setVeriYukleniyor]=useState(false); const [genelHata,setGenelHata]=useState(""); const [basariMesaji,setBasariMesaji]=useState("");
   const [mobilMenuAcik,setMobilMenuAcik]=useState(false); const [detayKayit,setDetayKayit]=useState<TrafoKaydi|null>(null);
   const [form,setForm]=useState<FormData>(BOS_FORM); const [duzenlenenId,setDuzenlenenId]=useState<number|null>(null); const [kaydediliyor,setKaydediliyor]=useState(false);
@@ -360,6 +362,33 @@ export default function Home() {
     }catch(err:any){
       setGenelHata("Arşiv yükleme hatası: "+(err?.message||"Bilinmeyen hata"));
     }finally{setArsivYukleme(false);}
+  }
+
+  async function googleDriveAgustosTestAktar(){
+    if(!session||!duzenleyebilir)return;
+    if(!confirm("Google Drive TUTANAKLAR → 2026 → AĞUSTOS klasöründeki desteklenen dosyalar arşive aktarılsın mı? Daha önce aktarılan dosyalar atlanacaktır."))return;
+    setDriveAktariliyor(true);
+    setDriveAktarimSonucu("");
+    setGenelHata("");
+    try{
+      const cevap=await fetch("/api/drive-aktar",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:`Bearer ${session.access_token}`
+        },
+        body:JSON.stringify({yil:2026,ay:"AĞUSTOS"})
+      });
+      const sonuc=await cevap.json().catch(()=>({}));
+      if(!cevap.ok)throw new Error(sonuc?.error||"Google Drive aktarımı başarısız oldu.");
+      const mesaj=`2026 AĞUSTOS: ${sonuc.aktarilan||0} dosya aktarıldı, ${sonuc.atlanan||0} dosya atlandı${sonuc.hatali?`, ${sonuc.hatali} hata`:""}.`;
+      setDriveAktarimSonucu(mesaj);
+      setBasariMesaji("Google Drive test aktarımı tamamlandı.");
+      await arsivKayitlariniGetir();
+      setTimeout(()=>setBasariMesaji(""),3500);
+    }catch(err:any){
+      setGenelHata("Google Drive aktarım hatası: "+(err?.message||"Bilinmeyen hata"));
+    }finally{setDriveAktariliyor(false);}
   }
 
   async function arsivDosyaSil(item:ArsivKaydi){
@@ -1299,6 +1328,15 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 <input value={arsivAciklama} onChange={e=>setArsivAciklama(e.target.value)} placeholder="Açıklama (isteğe bağlı)" className={inputSinif}/>
               </div>
               <div className="mt-4 flex justify-end"><button type="button" disabled={arsivYukleme||!arsivDosya} onClick={arsiveYukle} className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">{arsivYukleme?"Yükleniyor...":"📁 Arşive Yükle"}</button></div>
+            </Panel>}
+
+            {duzenleyebilir&&<Panel baslik="☁️ Google Drive'dan Toplu Aktar — TEST" altBaslik="İlk test: TUTANAKLAR → 2026 → AĞUSTOS • PDF/JPG/JPEG/PNG/WEBP">
+              <div className="mt-5 rounded-2xl border border-blue-900/60 bg-blue-950/20 p-4">
+                <div className="text-sm font-black text-blue-200">2026 AĞUSTOS test aktarımı</div>
+                <div className="mt-2 text-xs leading-5 text-slate-400">Google Drive klasöründeki desteklenen dosyalar Supabase Trafo Form Arşivine kopyalanır. Aynı Drive dosyası daha önce aktarıldıysa tekrar yüklenmez. Drive'daki orijinal dosyalara dokunulmaz.</div>
+                {driveAktarimSonucu&&<div className="mt-3 rounded-xl border border-emerald-900 bg-emerald-950/25 px-4 py-3 text-sm font-bold text-emerald-300">✓ {driveAktarimSonucu}</div>}
+                <div className="mt-4 flex justify-end"><button type="button" disabled={driveAktariliyor} onClick={googleDriveAgustosTestAktar} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{driveAktariliyor?"Drive'dan aktarılıyor...":"☁️ 2026 AĞUSTOS'u Drive'dan Aktar"}</button></div>
+              </div>
             </Panel>}
 
             <div className={`${duzenleyebilir?"mt-5":""} rounded-2xl border border-slate-800 bg-[#101d30] p-4`}>
