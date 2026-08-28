@@ -15,7 +15,8 @@ import {
 
 
 // ============================================================
-// SABİTLER
+// KAYNAK LİSTELERİ
+// Google E-Tablo > KAYNAK sekmesinden alınmıştır.
 // ============================================================
 
 const AYLAR = [
@@ -33,6 +34,109 @@ const AYLAR = [
   "ARALIK",
 ];
 
+const ILCE_SECENEKLERI = [
+  "BALYA",
+  "İVRİNDİ",
+  "SAVAŞTEPE",
+  "SINDIRGI",
+  "BİGADİÇ",
+  "DURSUNBEY",
+  "KEPSUT",
+  "SUSURLUK",
+  "ALTIEYLÜL",
+  "KARESİ",
+];
+
+const KONUM_TRAFO_TIPLERI = [
+  "DİREK",
+  "BİNA",
+];
+
+const GUC_SECENEKLERI = [
+  "25",
+  "40",
+  "50",
+  "63",
+  "80",
+  "100",
+  "125",
+  "160",
+  "200",
+  "250",
+  "315",
+  "400",
+  "500",
+  "630",
+  "800",
+  "1000",
+  "1250",
+  "1600",
+  "2500",
+  "5000",
+  "6300",
+  "10000",
+];
+
+const GERILIM_SECENEKLERI = [
+  "6,3/0,4",
+  "34,5/0,4",
+  "34,5/6,3",
+];
+
+const MARKA_SECENEKLERI = [
+  "ABB",
+  "AEG-ETİ",
+  "ALSTOM",
+  "ANKARA",
+  "AREVA",
+  "ASTOR",
+  "ATLAS",
+  "AZP",
+  "BESE",
+  "BEST",
+  "BETA",
+  "BEZ",
+  "DTS",
+  "ELEKTROMEKANİK",
+  "ELEKTROSAN",
+  "ELKİMA",
+  "ELTAŞ",
+  "EREN",
+  "ESAŞ",
+  "ESİTAŞ",
+  "ETİKETSİZ",
+  "ETİTAŞ",
+  "KAPLAN",
+  "MAKSAN",
+  "MEKSAN",
+  "MMS AŞ",
+  "ÖZÇELİK",
+  "ÖZGÜNEY",
+  "ÖZTRAFO",
+  "SEM",
+  "SÖNMEZ",
+  "STS",
+  "TİMSAN",
+  "TRAFOSAN",
+  "TRANSTEK",
+  "TEK TRAFO",
+  "MERLİNGERİN",
+  "DELFİN",
+  "NİLKAR",
+  "ELKT.MECANİCA",
+  "EFACEC",
+  "EKOS ELECTRİC",
+  "EUROPOWER",
+  "---",
+];
+
+const TRAFO_TIP_SECENEKLERI = [
+  "GEN.DEPOLU",
+  "HERMETİK",
+  "KURU TİP",
+  "DÖKME REÇİNELİ",
+];
+
 const NEDENLER = [
   { ad: "ARIZA", renk: "#ef4444" },
   { ad: "DÖNÜŞÜM", renk: "#3b82f6" },
@@ -42,6 +146,22 @@ const NEDENLER = [
   { ad: "YENİ TESİS", renk: "#22d3ee" },
   { ad: "ARIZA RİSKİ", renk: "#fb7185" },
 ];
+
+
+// ============================================================
+// YIL SEÇENEKLERİ
+// 2017'den başlayıp güncel yıldan 2 yıl sonrasına kadar otomatik.
+// ============================================================
+
+const BU_YIL = new Date().getFullYear();
+
+const YIL_SECENEKLERI = Array.from(
+  {
+    length:
+      Math.max(BU_YIL + 2, 2026) - 2017 + 1,
+  },
+  (_, i) => String(2017 + i)
+);
 
 
 // ============================================================
@@ -183,7 +303,9 @@ const BOS_FORM: FormData = {
 // ============================================================
 
 export default function Home() {
+
   const supabase = useMemo(() => {
+
     const url =
       process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -194,7 +316,11 @@ export default function Home() {
       return null;
     }
 
-    return createClient(url, key);
+    return createClient(
+      url,
+      key
+    );
+
   }, []);
 
 
@@ -214,8 +340,10 @@ export default function Home() {
   const [authKontrol, setAuthKontrol] =
     useState(true);
 
-  const [girisYukleniyor, setGirisYukleniyor] =
-    useState(false);
+  const [
+    girisYukleniyor,
+    setGirisYukleniyor,
+  ] = useState(false);
 
   const [authHata, setAuthHata] =
     useState("");
@@ -231,14 +359,18 @@ export default function Home() {
   const [kayitlar, setKayitlar] =
     useState<TrafoKaydi[]>([]);
 
-  const [veriYukleniyor, setVeriYukleniyor] =
-    useState(false);
+  const [
+    veriYukleniyor,
+    setVeriYukleniyor,
+  ] = useState(false);
 
   const [genelHata, setGenelHata] =
     useState("");
 
-  const [basariMesaji, setBasariMesaji] =
-    useState("");
+  const [
+    basariMesaji,
+    setBasariMesaji,
+  ] = useState("");
 
 
   // ==========================================================
@@ -248,11 +380,15 @@ export default function Home() {
   const [form, setForm] =
     useState<FormData>(BOS_FORM);
 
-  const [duzenlenenId, setDuzenlenenId] =
-    useState<number | null>(null);
+  const [
+    duzenlenenId,
+    setDuzenlenenId,
+  ] = useState<number | null>(null);
 
-  const [kaydediliyor, setKaydediliyor] =
-    useState(false);
+  const [
+    kaydediliyor,
+    setKaydediliyor,
+  ] = useState(false);
 
 
   // ==========================================================
@@ -268,19 +404,25 @@ export default function Home() {
   const [filtreAy, setFiltreAy] =
     useState("");
 
-  const [filtreNeden, setFiltreNeden] =
-    useState("");
+  const [
+    filtreNeden,
+    setFiltreNeden,
+  ] = useState("");
 
 
   // ==========================================================
   // DASHBOARD FİLTRELERİ
   // ==========================================================
 
-  const [dashboardYil, setDashboardYil] =
-    useState("");
+  const [
+    dashboardYil,
+    setDashboardYil,
+  ] = useState("");
 
-  const [dashboardIlce, setDashboardIlce] =
-    useState("");
+  const [
+    dashboardIlce,
+    setDashboardIlce,
+  ] = useState("");
 
 
   // ==========================================================
@@ -288,34 +430,58 @@ export default function Home() {
   // ==========================================================
 
   useEffect(() => {
+
     if (!supabase) {
+
       setAuthHata(
         "Supabase bağlantısı kurulamadı."
       );
 
       setAuthKontrol(false);
+
       return;
     }
 
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        setSession(data.session);
-        setAuthKontrol(false);
+
+        setSession(
+          data.session
+        );
+
+        setAuthKontrol(
+          false
+        );
+
       });
 
     const {
-      data: { subscription },
+      data: {
+        subscription,
+      },
     } =
-      supabase.auth.onAuthStateChange(
-        (_event, yeniSession) => {
-          setSession(yeniSession);
-          setAuthKontrol(false);
-        }
-      );
+      supabase.auth
+        .onAuthStateChange(
+          (
+            _event,
+            yeniSession
+          ) => {
+
+            setSession(
+              yeniSession
+            );
+
+            setAuthKontrol(
+              false
+            );
+
+          }
+        );
 
     return () =>
       subscription.unsubscribe();
+
   }, [supabase]);
 
 
@@ -324,11 +490,17 @@ export default function Home() {
   // ==========================================================
 
   useEffect(() => {
+
     if (session) {
+
       kayitlariGetir();
+
     } else {
+
       setKayitlar([]);
+
     }
+
   }, [session]);
 
 
@@ -337,36 +509,52 @@ export default function Home() {
   // ==========================================================
 
   async function kayitlariGetir() {
-    if (!supabase) return;
+
+    if (!supabase) {
+      return;
+    }
 
     setVeriYukleniyor(true);
+
     setGenelHata("");
 
-    const { data, error } =
+    const {
+      data,
+      error,
+    } =
       await supabase
-        .from("trafo_degisim")
+        .from(
+          "trafo_degisim"
+        )
         .select("*")
         .order(
           "tarih",
           {
-            ascending: false,
-            nullsFirst: false,
+            ascending:
+              false,
+            nullsFirst:
+              false,
           }
         )
         .order(
           "id",
           {
-            ascending: false,
+            ascending:
+              false,
           }
         );
 
     if (error) {
+
       setGenelHata(
         "Kayıtlar yüklenemedi: " +
           error.message
       );
 
-      setVeriYukleniyor(false);
+      setVeriYukleniyor(
+        false
+      );
+
       return;
     }
 
@@ -374,7 +562,10 @@ export default function Home() {
       (data || []) as TrafoKaydi[]
     );
 
-    setVeriYukleniyor(false);
+    setVeriYukleniyor(
+      false
+    );
+
   }
 
 
@@ -385,27 +576,41 @@ export default function Home() {
   async function girisYap(
     e: FormEvent<HTMLFormElement>
   ) {
+
     e.preventDefault();
 
-    if (!supabase) return;
+    if (!supabase) {
+      return;
+    }
 
-    setGirisYukleniyor(true);
+    setGirisYukleniyor(
+      true
+    );
+
     setAuthHata("");
 
-    const { error } =
+    const {
+      error,
+    } =
       await supabase.auth
         .signInWithPassword({
-          email: email.trim(),
+          email:
+            email.trim(),
           password,
         });
 
     if (error) {
+
       setAuthHata(
         "E-posta veya şifre hatalı."
       );
+
     }
 
-    setGirisYukleniyor(false);
+    setGirisYukleniyor(
+      false
+    );
+
   }
 
 
@@ -414,15 +619,23 @@ export default function Home() {
   // ==========================================================
 
   async function cikisYap() {
-    if (!supabase) return;
+
+    if (!supabase) {
+      return;
+    }
 
     await supabase.auth.signOut();
 
     setSession(null);
-    setSayfa("dashboard");
+
+    setSayfa(
+      "dashboard"
+    );
 
     setEmail("");
+
     setPassword("");
+
   }
 
 
@@ -434,18 +647,28 @@ export default function Home() {
     alan: keyof FormData,
     deger: string
   ) {
+
     setForm(
       (eski) => ({
         ...eski,
-        [alan]: deger,
+        [alan]:
+          deger,
       })
     );
+
   }
 
 
   function formTemizle() {
-    setForm(BOS_FORM);
-    setDuzenlenenId(null);
+
+    setForm(
+      BOS_FORM
+    );
+
+    setDuzenlenenId(
+      null
+    );
+
   }
 
 
@@ -456,9 +679,12 @@ export default function Home() {
   async function kaydet(
     e: FormEvent<HTMLFormElement>
   ) {
+
     e.preventDefault();
 
-    if (!supabase) return;
+    if (!supabase) {
+      return;
+    }
 
     if (
       !form.yil ||
@@ -466,6 +692,7 @@ export default function Home() {
       !form.tarih ||
       !form.degisim_nedeni
     ) {
+
       setGenelHata(
         "Yıl, Ay, Tarih ve Değişim Nedeni zorunludur."
       );
@@ -473,85 +700,115 @@ export default function Home() {
       return;
     }
 
-    setKaydediliyor(true);
+    setKaydediliyor(
+      true
+    );
+
     setGenelHata("");
+
     setBasariMesaji("");
 
     const veri = {
+
       yil:
-        Number(form.yil),
+        Number(
+          form.yil
+        ),
 
       ay:
         form.ay,
 
       ilce:
-        form.ilce || null,
+        form.ilce ||
+        null,
 
       mahalle:
-        form.mahalle || null,
+        form.mahalle ||
+        null,
 
       tr:
-        form.tr || null,
+        form.tr ||
+        null,
 
       lokasyon_id:
-        form.lokasyon_id || null,
+        form.lokasyon_id ||
+        null,
 
       trafo_id:
-        form.trafo_id || null,
+        form.trafo_id ||
+        null,
 
       trafo_tipi:
-        form.trafo_tipi || null,
+        form.trafo_tipi ||
+        null,
 
       sokulen_gucu:
-        form.sokulen_gucu || null,
+        form.sokulen_gucu ||
+        null,
 
       sokulen_gerilim:
-        form.sokulen_gerilim || null,
+        form.sokulen_gerilim ||
+        null,
 
       sokulen_markasi:
-        form.sokulen_markasi || null,
+        form.sokulen_markasi ||
+        null,
 
       sokulen_seri_no:
-        form.sokulen_seri_no || null,
+        form.sokulen_seri_no ||
+        null,
 
       sokulen_imal_yili:
-        form.sokulen_imal_yili || null,
+        form.sokulen_imal_yili ||
+        null,
 
       sokulen_trafo_tipi:
-        form.sokulen_trafo_tipi || null,
+        form.sokulen_trafo_tipi ||
+        null,
 
       sokulen_tamir_yili:
-        form.sokulen_tamir_yili || null,
+        form.sokulen_tamir_yili ||
+        null,
 
       sokulen_tamir_firmasi:
-        form.sokulen_tamir_firmasi || null,
+        form.sokulen_tamir_firmasi ||
+        null,
 
       sokulen_yuklenici:
-        form.sokulen_yuklenici || null,
+        form.sokulen_yuklenici ||
+        null,
 
       takilan_gucu:
-        form.takilan_gucu || null,
+        form.takilan_gucu ||
+        null,
 
       takilan_gerilim:
-        form.takilan_gerilim || null,
+        form.takilan_gerilim ||
+        null,
 
       takilan_markasi:
-        form.takilan_markasi || null,
+        form.takilan_markasi ||
+        null,
 
       takilan_seri_no:
-        form.takilan_seri_no || null,
+        form.takilan_seri_no ||
+        null,
 
       takilan_imal_yili:
-        form.takilan_imal_yili || null,
+        form.takilan_imal_yili ||
+        null,
 
       takilan_trafo_tipi:
-        form.takilan_trafo_tipi || null,
+        form.takilan_trafo_tipi ||
+        null,
 
       takilan_tamir_yili:
-        form.takilan_tamir_yili || null,
+        form.takilan_tamir_yili ||
+        null,
 
       takilan_tamir_firmasi:
-        form.takilan_tamir_firmasi || null,
+        form.takilan_tamir_firmasi ||
+        null,
 
       tarih:
         form.tarih,
@@ -560,45 +817,62 @@ export default function Home() {
         form.degisim_nedeni,
 
       aciklama:
-        form.aciklama || null,
+        form.aciklama ||
+        null,
     };
 
     let error;
 
     if (duzenlenenId) {
+
       const sonuc =
         await supabase
-          .from("trafo_degisim")
-          .update(veri)
+          .from(
+            "trafo_degisim"
+          )
+          .update(
+            veri
+          )
           .eq(
             "id",
             duzenlenenId
           );
 
-      error = sonuc.error;
+      error =
+        sonuc.error;
+
     } else {
+
       const sonuc =
         await supabase
-          .from("trafo_degisim")
-          .insert(veri);
+          .from(
+            "trafo_degisim"
+          )
+          .insert(
+            veri
+          );
 
-      error = sonuc.error;
+      error =
+        sonuc.error;
+
     }
 
     if (error) {
+
       setGenelHata(
         error.message
       );
 
-      setKaydediliyor(false);
+      setKaydediliyor(
+        false
+      );
+
       return;
     }
 
     setBasariMesaji(
       duzenlenenId
-
         ? "Kayıt başarıyla güncellendi."
-
         : "Yeni trafo değişim kaydı başarıyla eklendi."
     );
 
@@ -606,7 +880,9 @@ export default function Home() {
 
     await kayitlariGetir();
 
-    setKaydediliyor(false);
+    setKaydediliyor(
+      false
+    );
 
     setSayfa(
       "kayitlar"
@@ -614,14 +890,18 @@ export default function Home() {
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior:
+        "smooth",
     });
 
     setTimeout(
       () =>
-        setBasariMesaji(""),
+        setBasariMesaji(
+          ""
+        ),
       3000
     );
+
   }
 
 
@@ -632,92 +912,123 @@ export default function Home() {
   function kaydiDuzenle(
     kayit: TrafoKaydi
   ) {
+
     setForm({
+
       yil:
         kayit.yil
-          ? String(kayit.yil)
+          ? String(
+              kayit.yil
+            )
           : "",
 
       ay:
-        kayit.ay || "",
+        kayit.ay ||
+        "",
 
       ilce:
-        kayit.ilce || "",
+        kayit.ilce ||
+        "",
 
       mahalle:
-        kayit.mahalle || "",
+        kayit.mahalle ||
+        "",
 
       tr:
-        kayit.tr || "",
+        kayit.tr ||
+        "",
 
       lokasyon_id:
-        kayit.lokasyon_id || "",
+        kayit.lokasyon_id ||
+        "",
 
       trafo_id:
-        kayit.trafo_id || "",
+        kayit.trafo_id ||
+        "",
 
       trafo_tipi:
-        kayit.trafo_tipi || "",
+        kayit.trafo_tipi ||
+        "",
 
       sokulen_gucu:
-        kayit.sokulen_gucu || "",
+        kayit.sokulen_gucu ||
+        "",
 
       sokulen_gerilim:
-        kayit.sokulen_gerilim || "",
+        kayit.sokulen_gerilim ||
+        "",
 
       sokulen_markasi:
-        kayit.sokulen_markasi || "",
+        kayit.sokulen_markasi ||
+        "",
 
       sokulen_seri_no:
-        kayit.sokulen_seri_no || "",
+        kayit.sokulen_seri_no ||
+        "",
 
       sokulen_imal_yili:
-        kayit.sokulen_imal_yili || "",
+        kayit.sokulen_imal_yili ||
+        "",
 
       sokulen_trafo_tipi:
-        kayit.sokulen_trafo_tipi || "",
+        kayit.sokulen_trafo_tipi ||
+        "",
 
       sokulen_tamir_yili:
-        kayit.sokulen_tamir_yili || "",
+        kayit.sokulen_tamir_yili ||
+        "",
 
       sokulen_tamir_firmasi:
-        kayit.sokulen_tamir_firmasi || "",
+        kayit.sokulen_tamir_firmasi ||
+        "",
 
       sokulen_yuklenici:
-        kayit.sokulen_yuklenici || "",
+        kayit.sokulen_yuklenici ||
+        "",
 
       takilan_gucu:
-        kayit.takilan_gucu || "",
+        kayit.takilan_gucu ||
+        "",
 
       takilan_gerilim:
-        kayit.takilan_gerilim || "",
+        kayit.takilan_gerilim ||
+        "",
 
       takilan_markasi:
-        kayit.takilan_markasi || "",
+        kayit.takilan_markasi ||
+        "",
 
       takilan_seri_no:
-        kayit.takilan_seri_no || "",
+        kayit.takilan_seri_no ||
+        "",
 
       takilan_imal_yili:
-        kayit.takilan_imal_yili || "",
+        kayit.takilan_imal_yili ||
+        "",
 
       takilan_trafo_tipi:
-        kayit.takilan_trafo_tipi || "",
+        kayit.takilan_trafo_tipi ||
+        "",
 
       takilan_tamir_yili:
-        kayit.takilan_tamir_yili || "",
+        kayit.takilan_tamir_yili ||
+        "",
 
       takilan_tamir_firmasi:
-        kayit.takilan_tamir_firmasi || "",
+        kayit.takilan_tamir_firmasi ||
+        "",
 
       tarih:
-        kayit.tarih || "",
+        kayit.tarih ||
+        "",
 
       degisim_nedeni:
-        kayit.degisim_nedeni || "",
+        kayit.degisim_nedeni ||
+        "",
 
       aciklama:
-        kayit.aciklama || "",
+        kayit.aciklama ||
+        "",
     });
 
     setDuzenlenenId(
@@ -730,8 +1041,10 @@ export default function Home() {
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior:
+        "smooth",
     });
+
   }
 
 
@@ -742,7 +1055,10 @@ export default function Home() {
   async function kaydiSil(
     kayit: TrafoKaydi
   ) {
-    if (!supabase) return;
+
+    if (!supabase) {
+      return;
+    }
 
     const cevap =
       window.confirm(
@@ -751,11 +1067,17 @@ export default function Home() {
         )} tarihli kaydı silmek istediğinize emin misiniz?`
       );
 
-    if (!cevap) return;
+    if (!cevap) {
+      return;
+    }
 
-    const { error } =
+    const {
+      error,
+    } =
       await supabase
-        .from("trafo_degisim")
+        .from(
+          "trafo_degisim"
+        )
         .delete()
         .eq(
           "id",
@@ -763,6 +1085,7 @@ export default function Home() {
         );
 
     if (error) {
+
       setGenelHata(
         error.message
       );
@@ -771,6 +1094,7 @@ export default function Home() {
     }
 
     await kayitlariGetir();
+
   }
 
 
@@ -798,7 +1122,6 @@ export default function Home() {
             (a, b) =>
               b - a
           ),
-
       [kayitlar]
     );
 
@@ -809,20 +1132,25 @@ export default function Home() {
 
   const ilceler =
     useMemo(
-      () =>
-        Array
-          .from(
-            new Set(
-              kayitlar
-                .map(
-                  (x) =>
-                    x.ilce
-                      ?.trim()
-                )
-                .filter(
-                  Boolean
-                ) as string[]
+      () => {
+
+        const kayitIlceleri =
+          kayitlar
+            .map(
+              (x) =>
+                x.ilce
+                  ?.trim()
             )
+            .filter(
+              Boolean
+            ) as string[];
+
+        return Array
+          .from(
+            new Set([
+              ...ILCE_SECENEKLERI,
+              ...kayitIlceleri,
+            ])
           )
           .sort(
             (a, b) =>
@@ -830,8 +1158,9 @@ export default function Home() {
                 b,
                 "tr"
               )
-          ),
+          );
 
+      },
       [kayitlar]
     );
 
@@ -843,13 +1172,17 @@ export default function Home() {
   const dashboardKayitlari =
     useMemo(
       () => {
+
         return kayitlar.filter(
           (kayit) => {
+
             if (
               dashboardYil &&
               String(
-                kayit.yil || ""
-              ) !== dashboardYil
+                kayit.yil ||
+                ""
+              ) !==
+                dashboardYil
             ) {
               return false;
             }
@@ -863,10 +1196,11 @@ export default function Home() {
             }
 
             return true;
+
           }
         );
-      },
 
+      },
       [
         kayitlar,
         dashboardYil,
@@ -876,16 +1210,16 @@ export default function Home() {
 
 
   // ==========================================================
-  // SON 30 GÜN - DÜZELTİLMİŞ
+  // SON 30 GÜN
   // ==========================================================
 
   const son30Gun =
     useMemo(
       () => {
+
         const bugun =
           new Date();
 
-        // Saat / timezone farkını tamamen kaldırıyoruz.
         const bugunUtc =
           Date.UTC(
             bugun.getFullYear(),
@@ -893,7 +1227,6 @@ export default function Home() {
             bugun.getDate()
           );
 
-        // Bugün dahil toplam 30 takvim günü.
         const otuzGunOnceUtc =
           bugunUtc -
           29 *
@@ -902,61 +1235,67 @@ export default function Home() {
             60 *
             1000;
 
-        return dashboardKayitlari.filter(
-          (kayit) => {
-            if (!kayit.tarih) {
-              return false;
+        return dashboardKayitlari
+          .filter(
+            (kayit) => {
+
+              if (!kayit.tarih) {
+                return false;
+              }
+
+              const parcalar =
+                kayit.tarih.split(
+                  "-"
+                );
+
+              if (
+                parcalar.length !==
+                3
+              ) {
+                return false;
+              }
+
+              const yil =
+                Number(
+                  parcalar[0]
+                );
+
+              const ay =
+                Number(
+                  parcalar[1]
+                );
+
+              const gun =
+                Number(
+                  parcalar[2]
+                );
+
+              if (
+                !yil ||
+                !ay ||
+                !gun
+              ) {
+                return false;
+              }
+
+              const kayitUtc =
+                Date.UTC(
+                  yil,
+                  ay - 1,
+                  gun
+                );
+
+              return (
+                kayitUtc >=
+                  otuzGunOnceUtc &&
+                kayitUtc <=
+                  bugunUtc
+              );
+
             }
+          ).length;
 
-            const parcalar =
-              kayit.tarih.split("-");
-
-            if (
-              parcalar.length !== 3
-            ) {
-              return false;
-            }
-
-            const yil =
-              Number(
-                parcalar[0]
-              );
-
-            const ay =
-              Number(
-                parcalar[1]
-              );
-
-            const gun =
-              Number(
-                parcalar[2]
-              );
-
-            if (
-              !yil ||
-              !ay ||
-              !gun
-            ) {
-              return false;
-            }
-
-            const kayitUtc =
-              Date.UTC(
-                yil,
-                ay - 1,
-                gun
-              );
-
-            return (
-              kayitUtc >=
-                otuzGunOnceUtc &&
-              kayitUtc <=
-                bugunUtc
-            );
-          }
-        ).length;
       },
-
       [dashboardKayitlari]
     );
 
@@ -968,6 +1307,7 @@ export default function Home() {
   const nedenSayilari =
     useMemo(
       () => {
+
         const sonuc:
           Record<
             string,
@@ -976,30 +1316,37 @@ export default function Home() {
 
         NEDENLER.forEach(
           (neden) => {
+
             sonuc[
               neden.ad
             ] = 0;
+
           }
         );
 
-        dashboardKayitlari.forEach(
-          (kayit) => {
-            if (
-              kayit.degisim_nedeni &&
-              sonuc[
-                kayit.degisim_nedeni
-              ] !== undefined
-            ) {
-              sonuc[
-                kayit.degisim_nedeni
-              ]++;
+        dashboardKayitlari
+          .forEach(
+            (kayit) => {
+
+              if (
+                kayit.degisim_nedeni &&
+                sonuc[
+                  kayit.degisim_nedeni
+                ] !== undefined
+              ) {
+
+                sonuc[
+                  kayit.degisim_nedeni
+                ]++;
+
+              }
+
             }
-          }
-        );
+          );
 
         return sonuc;
-      },
 
+      },
       [dashboardKayitlari]
     );
 
@@ -1011,26 +1358,28 @@ export default function Home() {
   const yillikNedenler =
     useMemo(
       () => {
+
         const kullanilacak =
           dashboardIlce
-
             ? kayitlar.filter(
                 (x) =>
                   x.ilce ===
                   dashboardIlce
               )
-
             : kayitlar;
 
         return [...yillar]
           .reverse()
           .map(
             (yil) => {
+
               const satir =
-                kullanilacak.filter(
-                  (x) =>
-                    x.yil === yil
-                );
+                kullanilacak
+                  .filter(
+                    (x) =>
+                      x.yil ===
+                      yil
+                  );
 
               const nedenler:
                 Record<
@@ -1040,6 +1389,7 @@ export default function Home() {
 
               NEDENLER.forEach(
                 (neden) => {
+
                   nedenler[
                     neden.ad
                   ] =
@@ -1048,6 +1398,7 @@ export default function Home() {
                         x.degisim_nedeni ===
                         neden.ad
                     ).length;
+
                 }
               );
 
@@ -1057,10 +1408,11 @@ export default function Home() {
                 toplam:
                   satir.length,
               };
+
             }
           );
-      },
 
+      },
       [
         kayitlar,
         yillar,
@@ -1076,37 +1428,44 @@ export default function Home() {
   const aylikNedenler =
     useMemo(
       () => {
+
         return AYLAR.map(
           (ay) => {
+
             const satir =
-              kayitlar.filter(
-                (x) => {
-                  if (
-                    String(
-                      x.yil || ""
-                    ) !==
-                    dashboardYil
-                  ) {
-                    return false;
-                  }
+              kayitlar
+                .filter(
+                  (x) => {
 
-                  if (
-                    x.ay !== ay
-                  ) {
-                    return false;
-                  }
+                    if (
+                      String(
+                        x.yil ||
+                        ""
+                      ) !==
+                        dashboardYil
+                    ) {
+                      return false;
+                    }
 
-                  if (
-                    dashboardIlce &&
-                    x.ilce !==
-                      dashboardIlce
-                  ) {
-                    return false;
-                  }
+                    if (
+                      x.ay !==
+                      ay
+                    ) {
+                      return false;
+                    }
 
-                  return true;
-                }
-              );
+                    if (
+                      dashboardIlce &&
+                      x.ilce !==
+                        dashboardIlce
+                    ) {
+                      return false;
+                    }
+
+                    return true;
+
+                  }
+                );
 
             const nedenler:
               Record<
@@ -1116,6 +1475,7 @@ export default function Home() {
 
             NEDENLER.forEach(
               (neden) => {
+
                 nedenler[
                   neden.ad
                 ] =
@@ -1124,6 +1484,7 @@ export default function Home() {
                       x.degisim_nedeni ===
                       neden.ad
                   ).length;
+
               }
             );
 
@@ -1133,10 +1494,11 @@ export default function Home() {
                 satir.length,
               nedenler,
             };
+
           }
         );
-      },
 
+      },
       [
         kayitlar,
         dashboardYil,
@@ -1152,28 +1514,33 @@ export default function Home() {
   const enCokIlce =
     useMemo(
       () => {
+
         const sayilar:
           Record<
             string,
             number
           > = {};
 
-        dashboardKayitlari.forEach(
-          (x) => {
-            if (!x.ilce) {
-              return;
-            }
+        dashboardKayitlari
+          .forEach(
+            (x) => {
 
-            sayilar[
-              x.ilce
-            ] =
-              (
-                sayilar[
-                  x.ilce
-                ] || 0
-              ) + 1;
-          }
-        );
+              if (!x.ilce) {
+                return;
+              }
+
+              sayilar[
+                x.ilce
+              ] =
+                (
+                  sayilar[
+                    x.ilce
+                  ] ||
+                  0
+                ) + 1;
+
+            }
+          );
 
         return (
           Object
@@ -1189,8 +1556,8 @@ export default function Home() {
               0,
             ]
         );
-      },
 
+      },
       [dashboardKayitlari]
     );
 
@@ -1202,6 +1569,7 @@ export default function Home() {
   const enCokNeden =
     useMemo(
       () => {
+
         return (
           Object
             .entries(
@@ -1216,8 +1584,8 @@ export default function Home() {
               0,
             ]
         );
-      },
 
+      },
       [nedenSayilari]
     );
 
@@ -1229,11 +1597,14 @@ export default function Home() {
   const donutGradient =
     useMemo(
       () => {
+
         const toplam =
           dashboardKayitlari.length;
 
         if (!toplam) {
+
           return "#1e293b 0% 100%";
+
         }
 
         let baslangic =
@@ -1244,10 +1615,12 @@ export default function Home() {
 
         NEDENLER.forEach(
           (neden) => {
+
             const sayi =
               nedenSayilari[
                 neden.ad
-              ] || 0;
+              ] ||
+              0;
 
             const oran =
               (
@@ -1257,7 +1630,8 @@ export default function Home() {
               100;
 
             if (
-              oran <= 0
+              oran <=
+              0
             ) {
               return;
             }
@@ -1272,14 +1646,15 @@ export default function Home() {
 
             baslangic =
               bitis;
+
           }
         );
 
         return parcalar.join(
           ", "
         );
-      },
 
+      },
       [
         dashboardKayitlari,
         nedenSayilari,
@@ -1294,36 +1669,37 @@ export default function Home() {
   const maxYillik =
     Math.max(
       1,
-
-      ...yillikNedenler.map(
-        (x) =>
-          Math.max(
-            ...NEDENLER.map(
-              (neden) =>
-                x.nedenler[
-                  neden.ad
-                ] || 0
+      ...yillikNedenler
+        .map(
+          (x) =>
+            Math.max(
+              ...NEDENLER.map(
+                (neden) =>
+                  x.nedenler[
+                    neden.ad
+                  ] ||
+                  0
+              )
             )
-          )
-      )
+        )
     );
-
 
   const maxAylik =
     Math.max(
       1,
-
-      ...aylikNedenler.map(
-        (x) =>
-          Math.max(
-            ...NEDENLER.map(
-              (neden) =>
-                x.nedenler[
-                  neden.ad
-                ] || 0
+      ...aylikNedenler
+        .map(
+          (x) =>
+            Math.max(
+              ...NEDENLER.map(
+                (neden) =>
+                  x.nedenler[
+                    neden.ad
+                  ] ||
+                  0
+              )
             )
-          )
-      )
+        )
     );
 
 
@@ -1334,6 +1710,7 @@ export default function Home() {
   const filtrelenmisKayitlar =
     useMemo(
       () => {
+
         const kelime =
           arama
             .trim()
@@ -1343,11 +1720,14 @@ export default function Home() {
 
         return kayitlar.filter(
           (kayit) => {
+
             if (
               filtreYil &&
               String(
-                kayit.yil || ""
-              ) !== filtreYil
+                kayit.yil ||
+                ""
+              ) !==
+                filtreYil
             ) {
               return false;
             }
@@ -1384,7 +1764,9 @@ export default function Home() {
               kayit.takilan_seri_no,
               kayit.degisim_nedeni,
             ]
-              .filter(Boolean)
+              .filter(
+                Boolean
+              )
               .join(" ")
               .toLocaleUpperCase(
                 "tr-TR"
@@ -1393,10 +1775,11 @@ export default function Home() {
             return metin.includes(
               kelime
             );
+
           }
         );
-      },
 
+      },
       [
         kayitlar,
         arama,
@@ -1412,26 +1795,36 @@ export default function Home() {
   // ==========================================================
 
   if (authKontrol) {
+
     return (
+
       <main className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
+
         <div className="text-center">
+
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-orange-500" />
 
           <p className="mt-5 text-slate-400">
             Sistem hazırlanıyor...
           </p>
+
         </div>
+
       </main>
+
     );
+
   }
 
 
   // ==========================================================
-  // GİRİŞ EKRANI
+  // GİRİŞ
   // ==========================================================
 
   if (!session) {
+
     return (
+
       <main className="min-h-screen bg-slate-950 text-white">
 
         <div className="flex min-h-screen">
@@ -1439,16 +1832,19 @@ export default function Home() {
           <section className="hidden w-1/2 flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-orange-950 p-14 lg:flex">
 
             <div>
+
               <div className="inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-4 py-3 font-bold">
                 ⚡ BALIKESİR TRAFO
               </div>
 
               <h1 className="mt-10 max-w-xl text-5xl font-black leading-tight">
+
                 Trafo Değişim
 
                 <span className="block text-orange-400">
                   Yönetim Sistemi
                 </span>
+
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
@@ -1456,12 +1852,13 @@ export default function Home() {
                 yıllık ve aylık istatistikleri takip edin,
                 arıza ve değişim nedenlerini tek ekrandan analiz edin.
               </p>
-            </div>
 
+            </div>
 
             <div className="grid max-w-xl grid-cols-2 gap-4">
 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
                 <div className="text-2xl">
                   📊
                 </div>
@@ -1469,10 +1866,11 @@ export default function Home() {
                 <div className="mt-3 font-bold">
                   Canlı Dashboard
                 </div>
+
               </div>
 
-
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
                 <div className="text-2xl">
                   🔐
                 </div>
@@ -1480,12 +1878,12 @@ export default function Home() {
                 <div className="mt-3 font-bold">
                   Güvenli Erişim
                 </div>
+
               </div>
 
             </div>
 
           </section>
-
 
           <section className="flex w-full items-center justify-center p-6 lg:w-1/2">
 
@@ -1504,7 +1902,6 @@ export default function Home() {
                   </h2>
 
                 </div>
-
 
                 <form
                   onSubmit={
@@ -1534,7 +1931,6 @@ export default function Home() {
 
                   </Alan>
 
-
                   <Alan baslik="Şifre">
 
                     <input
@@ -1556,13 +1952,15 @@ export default function Home() {
 
                   </Alan>
 
-
                   {authHata && (
-                    <HataKutusu>
-                      {authHata}
-                    </HataKutusu>
-                  )}
 
+                    <HataKutusu>
+                      {
+                        authHata
+                      }
+                    </HataKutusu>
+
+                  )}
 
                   <button
                     type="submit"
@@ -1571,11 +1969,13 @@ export default function Home() {
                     }
                     className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400 disabled:opacity-50"
                   >
+
                     {
                       girisYukleniyor
                         ? "Giriş Yapılıyor..."
                         : "Sisteme Giriş Yap"
                     }
+
                   </button>
 
                 </form>
@@ -1589,7 +1989,9 @@ export default function Home() {
         </div>
 
       </main>
+
     );
+
   }
 
 
@@ -1598,13 +2000,12 @@ export default function Home() {
   // ==========================================================
 
   return (
+
     <main className="min-h-screen bg-[#07111f] text-white">
 
       <div className="flex min-h-screen">
 
-        {/* ====================================================
-            SOL MENÜ
-        ==================================================== */}
+        {/* SOL MENÜ */}
 
         <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800 bg-[#0b1628] lg:flex">
 
@@ -1624,7 +2025,6 @@ export default function Home() {
 
           </div>
 
-
           <nav className="flex-1 space-y-2 p-3">
 
             <MenuButonu
@@ -1642,26 +2042,26 @@ export default function Home() {
               📊 Kontrol Paneli
             </MenuButonu>
 
-
             <MenuButonu
               aktif={
                 sayfa ===
-                "yeni" &&
+                  "yeni" &&
                 !duzenlenenId
               }
               onClick={
                 () => {
+
                   formTemizle();
 
                   setSayfa(
                     "yeni"
                   );
+
                 }
               }
             >
               ➕ Yeni Kayıt
             </MenuButonu>
-
 
             <MenuButonu
               aktif={
@@ -1679,7 +2079,6 @@ export default function Home() {
             </MenuButonu>
 
           </nav>
-
 
           <div className="border-t border-slate-800 p-3">
 
@@ -1703,9 +2102,7 @@ export default function Home() {
         </aside>
 
 
-        {/* ====================================================
-            ANA İÇERİK
-        ==================================================== */}
+        {/* ANA İÇERİK */}
 
         <section className="min-w-0 flex-1">
 
@@ -1741,24 +2138,26 @@ export default function Home() {
 
           </header>
 
-
           <div className="p-4 sm:p-6 lg:p-7">
 
             {genelHata && (
+
               <HataKutusu>
                 {
                   genelHata
                 }
               </HataKutusu>
+
             )}
 
-
             {basariMesaji && (
+
               <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">
                 {
                   basariMesaji
                 }
               </div>
+
             )}
 
 
@@ -1770,8 +2169,6 @@ export default function Home() {
               "dashboard" && (
 
               <>
-
-                {/* FİLTRELER */}
 
                 <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-[#101d30] p-4 lg:flex-row lg:items-end">
 
@@ -1802,6 +2199,7 @@ export default function Home() {
 
                       {yillar.map(
                         (yil) => (
+
                           <option
                             key={
                               yil
@@ -1814,13 +2212,13 @@ export default function Home() {
                               yil
                             }
                           </option>
+
                         )
                       )}
 
                     </select>
 
                   </div>
-
 
                   <div className="flex-1">
 
@@ -1849,6 +2247,7 @@ export default function Home() {
 
                       {ilceler.map(
                         (ilce) => (
+
                           <option
                             key={
                               ilce
@@ -1861,6 +2260,7 @@ export default function Home() {
                               ilce
                             }
                           </option>
+
                         )
                       )}
 
@@ -1868,12 +2268,18 @@ export default function Home() {
 
                   </div>
 
-
                   <button
                     onClick={
                       () => {
-                        setDashboardYil("");
-                        setDashboardIlce("");
+
+                        setDashboardYil(
+                          ""
+                        );
+
+                        setDashboardIlce(
+                          ""
+                        );
+
                       }
                     }
                     className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800"
@@ -1881,12 +2287,16 @@ export default function Home() {
                     Filtreyi Temizle
                   </button>
 
-
                   <button
                     onClick={
                       () => {
+
                         formTemizle();
-                        setSayfa("yeni");
+
+                        setSayfa(
+                          "yeni"
+                        );
+
                       }
                     }
                     className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-black hover:bg-orange-400"
@@ -1896,8 +2306,6 @@ export default function Home() {
 
                 </div>
 
-
-                {/* KPI */}
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -1909,9 +2317,9 @@ export default function Home() {
                     renk="#f97316"
                   />
 
-
                   {NEDENLER.map(
                     (neden) => (
+
                       <KpiKart
                         key={
                           neden.ad
@@ -1922,19 +2330,19 @@ export default function Home() {
                         sayi={
                           nedenSayilari[
                             neden.ad
-                          ] || 0
+                          ] ||
+                          0
                         }
                         renk={
                           neden.renk
                         }
                       />
+
                     )
                   )}
 
                 </div>
 
-
-                {/* ÖZET */}
 
                 <div className="mt-5 grid gap-4 md:grid-cols-3">
 
@@ -1946,7 +2354,6 @@ export default function Home() {
                     }
                     alt="Trafo değişim kaydı"
                   />
-
 
                   <OzetKart
                     ikon="📍"
@@ -1960,7 +2367,6 @@ export default function Home() {
                       `${enCokIlce[1]} kayıt`
                     }
                   />
-
 
                   <OzetKart
                     ikon="⚡"
@@ -1977,8 +2383,6 @@ export default function Home() {
 
                 </div>
 
-
-                {/* DONUT / YILLIK */}
 
                 <div className="mt-6 grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
 
@@ -2013,7 +2417,6 @@ export default function Home() {
 
                       </div>
 
-
                       <div className="mt-7 grid w-full gap-2">
 
                         {NEDENLER.map(
@@ -2044,12 +2447,12 @@ export default function Home() {
 
                               </div>
 
-
                               <span className="text-sm font-black">
                                 {
                                   nedenSayilari[
                                     neden.ad
-                                  ] || 0
+                                  ] ||
+                                  0
                                 }
                               </span>
 
@@ -2072,7 +2475,6 @@ export default function Home() {
 
                     <GrafikLegend />
 
-
                     <div className="mt-6 flex h-72 items-end gap-5 overflow-x-auto border-b border-slate-700 pb-1">
 
                       {yillikNedenler.map(
@@ -2091,7 +2493,6 @@ export default function Home() {
                               }
                             </div>
 
-
                             <div className="flex h-52 items-end gap-1">
 
                               {NEDENLER.map(
@@ -2100,7 +2501,8 @@ export default function Home() {
                                   const sayi =
                                     item.nedenler[
                                       neden.ad
-                                    ] || 0;
+                                    ] ||
+                                    0;
 
                                   const yukseklik =
                                     sayi
@@ -2115,6 +2517,7 @@ export default function Home() {
                                       : 0;
 
                                   return (
+
                                     <div
                                       key={
                                         neden.ad
@@ -2130,12 +2533,13 @@ export default function Home() {
                                           neden.renk,
                                       }}
                                     />
+
                                   );
+
                                 }
                               )}
 
                             </div>
-
 
                             <div className="mt-2 text-xs text-slate-400">
                               {
@@ -2155,8 +2559,6 @@ export default function Home() {
                 </div>
 
 
-                {/* AYLIK */}
-
                 <div className="mt-6">
 
                   <Panel
@@ -2169,7 +2571,6 @@ export default function Home() {
                   >
 
                     <GrafikLegend />
-
 
                     {!dashboardYil ? (
 
@@ -2197,7 +2598,6 @@ export default function Home() {
                                 }
                               </div>
 
-
                               <div className="flex h-52 items-end gap-[2px]">
 
                                 {NEDENLER.map(
@@ -2206,7 +2606,8 @@ export default function Home() {
                                     const sayi =
                                       item.nedenler[
                                         neden.ad
-                                      ] || 0;
+                                      ] ||
+                                      0;
 
                                     const yukseklik =
                                       sayi
@@ -2221,6 +2622,7 @@ export default function Home() {
                                         : 0;
 
                                     return (
+
                                       <div
                                         key={
                                           neden.ad
@@ -2236,12 +2638,13 @@ export default function Home() {
                                             neden.renk,
                                         }}
                                       />
+
                                     );
+
                                   }
                                 )}
 
                               </div>
-
 
                               <div className="mt-2 text-[10px] text-slate-400">
                                 {
@@ -2265,8 +2668,6 @@ export default function Home() {
 
                 </div>
 
-
-                {/* SON KAYITLAR */}
 
                 <div className="mt-6">
 
@@ -2300,7 +2701,7 @@ export default function Home() {
 
 
             {/* ==================================================
-                YENİ / DÜZENLE
+                YENİ / DÜZENLE FORMU
             ================================================== */}
 
             {sayfa ===
@@ -2313,34 +2714,32 @@ export default function Home() {
                 className="space-y-6"
               >
 
+                {/* KONUM */}
+
                 <FormBolumu
                   baslik="📍 KONUM BİLGİLERİ"
                 >
 
                   <FormGrid>
 
-                    <Alan baslik="Yıl *">
-
-                      <input
-                        type="number"
-                        required
-                        value={
-                          form.yil
-                        }
-                        onChange={
-                          (e) =>
-                            formDegistir(
-                              "yil",
-                              e.target.value
-                            )
-                        }
-                        className={
-                          inputSinif
-                        }
-                      />
-
-                    </Alan>
-
+                    <ComboAlani
+                      baslik="Yıl *"
+                      deger={
+                        form.yil
+                      }
+                      degistir={
+                        (v) =>
+                          formDegistir(
+                            "yil",
+                            v
+                          )
+                      }
+                      secenekler={
+                        YIL_SECENEKLERI
+                      }
+                      listeId="yil-listesi"
+                      gerekli
+                    />
 
                     <Alan baslik="Ay *">
 
@@ -2367,6 +2766,7 @@ export default function Home() {
 
                         {AYLAR.map(
                           (ay) => (
+
                             <option
                               key={
                                 ay
@@ -2379,6 +2779,7 @@ export default function Home() {
                                 ay
                               }
                             </option>
+
                           )
                         )}
 
@@ -2386,8 +2787,7 @@ export default function Home() {
 
                     </Alan>
 
-
-                    <MetinAlani
+                    <ComboAlani
                       baslik="İlçe"
                       deger={
                         form.ilce
@@ -2399,8 +2799,11 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        ILCE_SECENEKLERI
+                      }
+                      listeId="ilce-listesi"
                     />
-
 
                     <MetinAlani
                       baslik="Mahalle"
@@ -2416,7 +2819,6 @@ export default function Home() {
                       }
                     />
 
-
                     <MetinAlani
                       baslik="TR"
                       deger={
@@ -2430,7 +2832,6 @@ export default function Home() {
                           )
                       }
                     />
-
 
                     <MetinAlani
                       baslik="Lokasyon ID"
@@ -2446,7 +2847,6 @@ export default function Home() {
                       }
                     />
 
-
                     <MetinAlani
                       baslik="Trafo ID"
                       deger={
@@ -2461,8 +2861,7 @@ export default function Home() {
                       }
                     />
 
-
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Trafo Tipi"
                       deger={
                         form.trafo_tipi
@@ -2474,6 +2873,10 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        KONUM_TRAFO_TIPLERI
+                      }
+                      listeId="konum-trafo-tipi-listesi"
                     />
 
                   </FormGrid>
@@ -2481,13 +2884,15 @@ export default function Home() {
                 </FormBolumu>
 
 
+                {/* SÖKÜLEN TRAFO */}
+
                 <FormBolumu
                   baslik="🔴 SÖKÜLEN TRAFO"
                 >
 
                   <FormGrid>
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Gücü"
                       deger={
                         form.sokulen_gucu
@@ -2499,9 +2904,13 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        GUC_SECENEKLERI
+                      }
+                      listeId="sokulen-guc-listesi"
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Gerilim"
                       deger={
                         form.sokulen_gerilim
@@ -2513,9 +2922,13 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        GERILIM_SECENEKLERI
+                      }
+                      listeId="sokulen-gerilim-listesi"
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Markası"
                       deger={
                         form.sokulen_markasi
@@ -2527,6 +2940,10 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        MARKA_SECENEKLERI
+                      }
+                      listeId="sokulen-marka-listesi"
                     />
 
                     <MetinAlani
@@ -2557,7 +2974,7 @@ export default function Home() {
                       }
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Trafo Tipi"
                       deger={
                         form.sokulen_trafo_tipi
@@ -2569,6 +2986,10 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        TRAFO_TIP_SECENEKLERI
+                      }
+                      listeId="sokulen-trafo-tipi-listesi"
                     />
 
                     <MetinAlani
@@ -2618,13 +3039,15 @@ export default function Home() {
                 </FormBolumu>
 
 
+                {/* TAKILAN TRAFO */}
+
                 <FormBolumu
                   baslik="🟢 TAKILAN TRAFO"
                 >
 
                   <FormGrid>
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Gücü"
                       deger={
                         form.takilan_gucu
@@ -2636,9 +3059,13 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        GUC_SECENEKLERI
+                      }
+                      listeId="takilan-guc-listesi"
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Gerilim"
                       deger={
                         form.takilan_gerilim
@@ -2650,9 +3077,13 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        GERILIM_SECENEKLERI
+                      }
+                      listeId="takilan-gerilim-listesi"
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Markası"
                       deger={
                         form.takilan_markasi
@@ -2664,6 +3095,10 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        MARKA_SECENEKLERI
+                      }
+                      listeId="takilan-marka-listesi"
                     />
 
                     <MetinAlani
@@ -2694,7 +3129,7 @@ export default function Home() {
                       }
                     />
 
-                    <MetinAlani
+                    <ComboAlani
                       baslik="Trafo Tipi"
                       deger={
                         form.takilan_trafo_tipi
@@ -2706,6 +3141,10 @@ export default function Home() {
                             v
                           )
                       }
+                      secenekler={
+                        TRAFO_TIP_SECENEKLERI
+                      }
+                      listeId="takilan-trafo-tipi-listesi"
                     />
 
                     <MetinAlani
@@ -2741,6 +3180,8 @@ export default function Home() {
                 </FormBolumu>
 
 
+                {/* İŞLEM */}
+
                 <FormBolumu
                   baslik="📅 İŞLEM BİLGİLERİ"
                 >
@@ -2769,7 +3210,6 @@ export default function Home() {
 
                     </Alan>
 
-
                     <Alan baslik="Değişim Nedeni *">
 
                       <select
@@ -2795,6 +3235,7 @@ export default function Home() {
 
                         {NEDENLER.map(
                           (neden) => (
+
                             <option
                               key={
                                 neden.ad
@@ -2807,6 +3248,7 @@ export default function Home() {
                                 neden.ad
                               }
                             </option>
+
                           )
                         )}
 
@@ -2815,7 +3257,6 @@ export default function Home() {
                     </Alan>
 
                   </FormGrid>
-
 
                   <div className="mt-4">
 
@@ -2855,11 +3296,13 @@ export default function Home() {
                       type="button"
                       onClick={
                         () => {
+
                           formTemizle();
 
                           setSayfa(
                             "kayitlar"
                           );
+
                         }
                       }
                       className="rounded-xl border border-slate-700 px-6 py-3 font-bold text-slate-300 hover:bg-slate-800"
@@ -2868,7 +3311,6 @@ export default function Home() {
                     </button>
 
                   )}
-
 
                   <button
                     type="submit"
@@ -2880,13 +3322,9 @@ export default function Home() {
 
                     {
                       kaydediliyor
-
                         ? "Kaydediliyor..."
-
                         : duzenlenenId
-
                         ? "Değişiklikleri Kaydet"
-
                         : "Trafo Kaydını Kaydet"
                     }
 
@@ -2928,7 +3366,6 @@ export default function Home() {
                       }
                     />
 
-
                     <select
                       value={
                         filtreYil
@@ -2950,6 +3387,7 @@ export default function Home() {
 
                       {yillar.map(
                         (yil) => (
+
                           <option
                             key={
                               yil
@@ -2962,11 +3400,11 @@ export default function Home() {
                               yil
                             }
                           </option>
+
                         )
                       )}
 
                     </select>
-
 
                     <select
                       value={
@@ -2989,6 +3427,7 @@ export default function Home() {
 
                       {AYLAR.map(
                         (ay) => (
+
                           <option
                             key={
                               ay
@@ -3001,11 +3440,11 @@ export default function Home() {
                               ay
                             }
                           </option>
+
                         )
                       )}
 
                     </select>
-
 
                     <select
                       value={
@@ -3028,6 +3467,7 @@ export default function Home() {
 
                       {NEDENLER.map(
                         (neden) => (
+
                           <option
                             key={
                               neden.ad
@@ -3040,13 +3480,13 @@ export default function Home() {
                               neden.ad
                             }
                           </option>
+
                         )
                       )}
 
                     </select>
 
                   </div>
-
 
                   <div className="mt-4 text-sm text-slate-400">
                     {
@@ -3056,7 +3496,6 @@ export default function Home() {
 
                 </div>
 
-
                 <Panel
                   baslik="Trafo Değişim Kayıtları"
                   altBaslik="Kayıtları düzenleyebilir veya silebilirsiniz"
@@ -3064,14 +3503,15 @@ export default function Home() {
 
                   {
                     veriYukleniyor
-
                       ? (
+
                         <BosAlan>
                           Kayıtlar yükleniyor...
                         </BosAlan>
-                      )
 
+                      )
                       : (
+
                         <KayitTablosu
                           kayitlar={
                             filtrelenmisKayitlar
@@ -3083,6 +3523,7 @@ export default function Home() {
                             kaydiSil
                           }
                         />
+
                       )
                   }
 
@@ -3099,7 +3540,9 @@ export default function Home() {
       </div>
 
     </main>
+
   );
+
 }
 
 
@@ -3112,7 +3555,7 @@ const inputSinif =
 
 
 // ============================================================
-// BİLEŞENLER
+// FORM BİLEŞENLERİ
 // ============================================================
 
 function Alan({
@@ -3122,7 +3565,9 @@ function Alan({
   baslik: string;
   children: ReactNode;
 }) {
+
   return (
+
     <label className="block">
 
       <span className="mb-2 block text-sm font-semibold text-slate-300">
@@ -3136,7 +3581,9 @@ function Alan({
       }
 
     </label>
+
   );
+
 }
 
 
@@ -3152,8 +3599,14 @@ function MetinAlani({
       deger: string
     ) => void;
 }) {
+
   return (
-    <Alan baslik={baslik}>
+
+    <Alan
+      baslik={
+        baslik
+      }
+    >
 
       <input
         value={
@@ -3171,7 +3624,104 @@ function MetinAlani({
       />
 
     </Alan>
+
   );
+
+}
+
+
+// ============================================================
+// COMBOBOX
+// HTML DATALIST:
+// - Kutuyu tıklayınca seçenekler görünür.
+// - Yazmaya başlayınca seçenekleri filtreler.
+// - Eski bir kayıt listede yoksa yine de gösterilebilir.
+// ============================================================
+
+function ComboAlani({
+  baslik,
+  deger,
+  degistir,
+  secenekler,
+  listeId,
+  gerekli = false,
+}: {
+  baslik: string;
+  deger: string;
+  degistir:
+    (
+      deger: string
+    ) => void;
+  secenekler: string[];
+  listeId: string;
+  gerekli?: boolean;
+}) {
+
+  return (
+
+    <Alan
+      baslik={
+        baslik
+      }
+    >
+
+      <div className="relative">
+
+        <input
+          type="text"
+          list={
+            listeId
+          }
+          required={
+            gerekli
+          }
+          autoComplete="off"
+          value={
+            deger
+          }
+          onChange={
+            (e) =>
+              degistir(
+                e.target.value
+              )
+          }
+          placeholder="Seçiniz veya yazınız"
+          className={`${inputSinif} pr-10`}
+        />
+
+        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+          ▼
+        </div>
+
+        <datalist
+          id={
+            listeId
+          }
+        >
+
+          {secenekler.map(
+            (secenek) => (
+
+              <option
+                key={
+                  secenek
+                }
+                value={
+                  secenek
+                }
+              />
+
+            )
+          )}
+
+        </datalist>
+
+      </div>
+
+    </Alan>
+
+  );
+
 }
 
 
@@ -3180,13 +3730,17 @@ function FormGrid({
 }: {
   children: ReactNode;
 }) {
+
   return (
+
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {
         children
       }
     </div>
+
   );
+
 }
 
 
@@ -3197,7 +3751,9 @@ function FormBolumu({
   baslik: string;
   children: ReactNode;
 }) {
+
   return (
+
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30]">
 
       <div className="border-b border-slate-800 bg-[#0b1628] px-5 py-4 font-black">
@@ -3213,7 +3769,9 @@ function FormBolumu({
       </div>
 
     </section>
+
   );
+
 }
 
 
@@ -3226,7 +3784,9 @@ function MenuButonu({
   onClick: () => void;
   children: ReactNode;
 }) {
+
   return (
+
     <button
       onClick={
         onClick
@@ -3241,7 +3801,9 @@ function MenuButonu({
         children
       }
     </button>
+
   );
+
 }
 
 
@@ -3254,7 +3816,9 @@ function KpiKart({
   sayi: number;
   renk: string;
 }) {
+
   return (
+
     <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30]">
 
       <div
@@ -3282,7 +3846,9 @@ function KpiKart({
       </div>
 
     </div>
+
   );
+
 }
 
 
@@ -3297,7 +3863,9 @@ function OzetKart({
   deger: string;
   alt: string;
 }) {
+
   return (
+
     <div className="rounded-2xl border border-slate-800 bg-[#101d30] p-5">
 
       <div className="flex items-start gap-4">
@@ -3307,7 +3875,6 @@ function OzetKart({
             ikon
           }
         </div>
-
 
         <div className="min-w-0">
 
@@ -3334,7 +3901,9 @@ function OzetKart({
       </div>
 
     </div>
+
   );
+
 }
 
 
@@ -3347,7 +3916,9 @@ function Panel({
   altBaslik?: string;
   children: ReactNode;
 }) {
+
   return (
+
     <section className="rounded-2xl border border-slate-800 bg-[#101d30] p-5 lg:p-6">
 
       <h2 className="text-lg font-black">
@@ -3356,27 +3927,31 @@ function Panel({
         }
       </h2>
 
-
       {altBaslik && (
+
         <p className="mt-1 text-sm text-slate-500">
           {
             altBaslik
           }
         </p>
-      )}
 
+      )}
 
       {
         children
       }
 
     </section>
+
   );
+
 }
 
 
 function GrafikLegend() {
+
   return (
+
     <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
 
       {NEDENLER.map(
@@ -3409,7 +3984,9 @@ function GrafikLegend() {
       )}
 
     </div>
+
   );
+
 }
 
 
@@ -3418,13 +3995,17 @@ function HataKutusu({
 }: {
   children: ReactNode;
 }) {
+
   return (
+
     <div className="mb-5 rounded-xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
       {
         children
       }
     </div>
+
   );
+
 }
 
 
@@ -3433,13 +4014,17 @@ function BosAlan({
 }: {
   children: ReactNode;
 }) {
+
   return (
+
     <div className="my-8 w-full rounded-xl border border-dashed border-slate-700 p-10 text-center text-sm text-slate-500">
       {
         children
       }
     </div>
+
   );
+
 }
 
 
@@ -3448,21 +4033,28 @@ function NedenEtiketi({
 }: {
   neden: string | null;
 }) {
+
   const bulunan =
     NEDENLER.find(
       (x) =>
-        x.ad === neden
+        x.ad ===
+        neden
     );
 
   if (!neden) {
+
     return (
+
       <span className="text-slate-600">
         -
       </span>
+
     );
+
   }
 
   return (
+
     <span
       className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black text-white"
       style={{
@@ -3475,7 +4067,9 @@ function NedenEtiketi({
         neden
       }
     </span>
+
   );
+
 }
 
 
@@ -3503,17 +4097,24 @@ function KayitTablosu({
         TrafoKaydi
     ) => void;
 }) {
+
   if (
-    kayitlar.length === 0
+    kayitlar.length ===
+    0
   ) {
+
     return (
+
       <BosAlan>
         Henüz kayıt bulunmuyor.
       </BosAlan>
+
     );
+
   }
 
   return (
+
     <div className="mt-5 overflow-x-auto">
 
       <table className="min-w-full text-left text-sm">
@@ -3561,7 +4162,6 @@ function KayitTablosu({
           </tr>
 
         </thead>
-
 
         <tbody>
 
@@ -3635,7 +4235,6 @@ function KayitTablosu({
 
                 </td>
 
-
                 <td className="whitespace-nowrap px-3 py-4 text-right">
 
                   <button
@@ -3649,7 +4248,6 @@ function KayitTablosu({
                   >
                     Düzenle
                   </button>
-
 
                   <button
                     onClick={
@@ -3675,7 +4273,9 @@ function KayitTablosu({
       </table>
 
     </div>
+
   );
+
 }
 
 
@@ -3687,6 +4287,7 @@ function tarihGoster(
   tarih:
     string | null
 ) {
+
   if (!tarih) {
     return "-";
   }
@@ -3695,10 +4296,12 @@ function tarihGoster(
     tarih.split("-");
 
   if (
-    parca.length !== 3
+    parca.length !==
+    3
   ) {
     return tarih;
   }
 
   return `${parca[2]}.${parca[1]}.${parca[0]}`;
+
 }
