@@ -458,6 +458,23 @@ export default function Home() {
     dashboardKayitlari.forEach(k=>{if(k.degisim_nedeni&&r[k.degisim_nedeni]!==undefined)r[k.degisim_nedeni]++;});return r;
   },[dashboardKayitlari]);
 
+  // Hızlı filtrelerden bir değişim nedeni seçildiğinde üst KPI kartını da dinamik güncelle.
+  // Tümü / Bu Yıl / Son 30 Gün / güç filtrelerinde varsayılan KPI ARIZA olarak kalır.
+  const seciliNedenKpi=useMemo(()=>{
+    const nedenFiltreleri:Record<string,string>={
+      ariza:"ARIZA",
+      donusum:"DÖNÜŞÜM",
+      "guc-degisimi":"GÜÇ DEĞİŞİMİ",
+      "trafo-iptal":"TRAFO İPTAL",
+      yatirim:"YATIRIM",
+      "yeni-tesis":"YENİ TESİS",
+      "ariza-riski":"ARIZA RİSKİ",
+    };
+    const ad=nedenFiltreleri[dashboardHizliFiltre]||"ARIZA";
+    const renk=NEDENLER.find(n=>n.ad===ad)?.renk||"#ef4444";
+    return {ad,renk};
+  },[dashboardHizliFiltre]);
+
   const yillikNedenler=useMemo(()=>{
     const ys=Array.from(new Set(dashboardKayitlari.map(x=>x.yil).filter(Boolean) as number[])).sort((a,b)=>a-b);
     return ys.map(yil=>{const s=dashboardKayitlari.filter(x=>x.yil===yil),nedenler:Record<string,number>={};NEDENLER.forEach(n=>nedenler[n.ad]=s.filter(x=>x.degisim_nedeni===n.ad).length);return{yil,nedenler,toplam:s.length};});
@@ -800,7 +817,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><KpiKart baslik="ARIZA" sayi={nedenSayilari["ARIZA"]||0} renk="#ef4444" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:"ARIZA",baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN YOĞUN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`} onClick={()=>enCokIlce[0]!=="-"&&kayitListesineGit({ilce:String(enCokIlce[0]),yil:dashboardYil,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/></div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><KpiKart baslik={seciliNedenKpi.ad} sayi={nedenSayilari[seciliNedenKpi.ad]||0} renk={seciliNedenKpi.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:seciliNedenKpi.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN YOĞUN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`} onClick={()=>enCokIlce[0]!=="-"&&kayitListesineGit({ilce:String(enCokIlce[0]),yil:dashboardYil,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/></div>
             <div className="mt-3"><button onClick={()=>setDetayliKpiAcik(x=>!x)} className="rounded-xl border border-slate-800 bg-[#101d30] px-4 py-2 text-xs font-black text-slate-400 hover:text-white">{detayliKpiAcik?"▲ Detaylı KPI'ları Gizle":"▼ Detaylı KPI'ları Göster"}</button>{detayliKpiAcik&&<div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">{NEDENLER.filter(n=>n.ad!=="ARIZA").map(n=><KpiKart key={n.ad} baslik={n.ad} sayi={nedenSayilari[n.ad]||0} renk={n.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/>)}</div>}</div>
 
             <div id="degisim-nedenleri" className="mt-5 grid scroll-mt-24 items-stretch gap-5 xl:grid-cols-[.72fr_1.28fr]">
