@@ -524,12 +524,12 @@ export default function Home() {
     {mobilMenuAcik&&<div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden" onClick={()=>setMobilMenuAcik(false)}/>}
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-[82vw] max-w-[310px] flex-col border-r border-slate-800 bg-[#0b1628] shadow-2xl transition-transform lg:hidden ${mobilMenuAcik?"translate-x-0":"-translate-x-full"}`}>
       <div className="flex items-start justify-between border-b border-slate-800 px-5 py-6"><div><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO YÖNETİMİ</div></div><button onClick={()=>setMobilMenuAcik(false)} className="h-10 w-10 rounded-xl border border-slate-700 text-xl">×</button></div>
-      <Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz}/>
+      <Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz} misafirModu={misafirModu}/>
       <div className="border-t border-slate-800 p-4"><div className="mb-3 break-all text-xs text-slate-500">{misafirModu ? "👁 Görüntüleme Modu" : session?.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm font-bold">Çıkış Yap</button></div>
     </aside>
 
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 self-start flex-col border-r border-slate-800 bg-[#0b1628] lg:flex"><div className="border-b border-slate-800 px-5 py-6"><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO<br/>YÖNETİMİ</div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz}/><div className="border-t border-slate-800 p-3"><div className="mb-3 truncate text-xs text-slate-500">{misafirModu ? "👁 Görüntüleme Modu" : session?.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold">Çıkış Yap</button></div></aside>
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 self-start flex-col border-r border-slate-800 bg-[#0b1628] lg:flex"><div className="border-b border-slate-800 px-5 py-6"><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO<br/>YÖNETİMİ</div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz} misafirModu={misafirModu}/><div className="border-t border-slate-800 p-3"><div className="mb-3 truncate text-xs text-slate-500">{misafirModu ? "👁 Görüntüleme Modu" : session?.user.email}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold">Çıkış Yap</button></div></aside>
 
       <section className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-[#0b1628]/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4 lg:px-7"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-[#07111f] text-xl lg:hidden">☰</button><div className="min-w-0"><h1 className="truncate text-lg font-black sm:text-xl lg:text-2xl">{sayfa==="dashboard"?"Trafo Değişim Kontrol Paneli":sayfa==="yeni"?(duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"):"Trafo Değişim Kayıtları"}</h1><p className="mt-1 hidden text-xs text-slate-500 sm:block">BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ</p></div></header>
@@ -885,7 +885,7 @@ export default function Home() {
   </main>;
 }
 
-function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz}:{sayfa:Sayfa;duzenlenenId:number|null;formTemizle:()=>void;git:(s:Sayfa)=>void;bolumeGit:(id:string)=>void;aktifAnaliz:string}){
+function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz,misafirModu}:{sayfa:Sayfa;duzenlenenId:number|null;formTemizle:()=>void;git:(s:Sayfa)=>void;bolumeGit:(id:string)=>void;aktifAnaliz:string;misafirModu:boolean}){
   return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu>
 <div className="my-2 border-t border-slate-800 pt-2">
   <div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">ANALİZLER</div>
