@@ -23,7 +23,13 @@ const NEDENLER = [
 const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
-type Sayfa = "dashboard" | "yeni" | "kayitlar" | "loglar" | "kullanicilar";
+type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "loglar" | "kullanicilar";
+type ArsivKaydi = {
+  id:string; kayit_id:number|null; yil:number; ay:string; ilce:string|null; mahalle:string|null;
+  tr:string|null; lokasyon_id:string|null; trafo_id:string|null; dosya_adi:string; dosya_yolu:string;
+  mime_type:string; dosya_boyutu:number|null; aciklama:string|null; yukleyen_id:string|null;
+  yukleyen_email:string|null; created_at:string; updated_at:string; signed_url?:string|null;
+};
 type KullaniciRolu = "admin" | "editor" | "viewer";
 type AppUser = { id:string; email:string|null; role:KullaniciRolu; created_at?:string; updated_at?:string; };
 type AuditLog = { id:number; table_name:string; record_id:number|null; action:"INSERT"|"UPDATE"|"DELETE"; user_id:string|null; user_email:string|null; old_data:Record<string,unknown>|null; new_data:Record<string,unknown>|null; created_at:string; };
@@ -72,6 +78,22 @@ export default function Home() {
   const [sifreMesaj,setSifreMesaj]=useState("");
   const [sifreIslem,setSifreIslem]=useState(false);
   const [sayfa,setSayfa]=useState<Sayfa>("dashboard"); const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>([]);
+  const [arsivKayitlari,setArsivKayitlari]=useState<ArsivKaydi[]>([]);
+  const [arsivYukleniyor,setArsivYukleniyor]=useState(false);
+  const [arsivDosya,setArsivDosya]=useState<File|null>(null);
+  const [arsivYil,setArsivYil]=useState(String(new Date().getFullYear()));
+  const [arsivAy,setArsivAy]=useState(AYLAR[new Date().getMonth()]);
+  const [arsivIlce,setArsivIlce]=useState("");
+  const [arsivMahalle,setArsivMahalle]=useState("");
+  const [arsivTr,setArsivTr]=useState("");
+  const [arsivLokasyon,setArsivLokasyon]=useState("");
+  const [arsivTrafo,setArsivTrafo]=useState("");
+  const [arsivAciklama,setArsivAciklama]=useState("");
+  const [arsivFiltreYil,setArsivFiltreYil]=useState("");
+  const [arsivFiltreAy,setArsivFiltreAy]=useState("");
+  const [arsivFiltreIlce,setArsivFiltreIlce]=useState("");
+  const [arsivArama,setArsivArama]=useState("");
+  const [arsivYukleme,setArsivYukleme]=useState(false);
   const [veriYukleniyor,setVeriYukleniyor]=useState(false); const [genelHata,setGenelHata]=useState(""); const [basariMesaji,setBasariMesaji]=useState("");
   const [mobilMenuAcik,setMobilMenuAcik]=useState(false); const [detayKayit,setDetayKayit]=useState<TrafoKaydi|null>(null);
   const [form,setForm]=useState<FormData>(BOS_FORM); const [duzenlenenId,setDuzenlenenId]=useState<number|null>(null); const [kaydediliyor,setKaydediliyor]=useState(false);
@@ -199,6 +221,7 @@ export default function Home() {
   },[supabase]);
 
   useEffect(()=>{ if(session||misafirModu) kayitlariGetir(); else setKayitlar([]); },[session,misafirModu]);
+  useEffect(()=>{ if(session||misafirModu) arsivKayitlariniGetir(); else setArsivKayitlari([]); },[session,misafirModu]);
   useEffect(()=>{
     if(session){kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setKullanicilar([]);setAuditLoglar([]);}
   },[session]);
@@ -237,7 +260,112 @@ export default function Home() {
     });
   }
 
-  async function kayitlariGetir(){
+  
+  async function arsivKayitlariniGetir(){
+    if(!supabase)return;
+    setArsivYukleniyor(true);
+    const {data,error}=await supabase
+      .from("trafo_form_arsivi")
+      .select("*")
+      .order("yil",{ascending:false})
+      .order("created_at",{ascending:false});
+    if(error){
+      setGenelHata("Arşiv yüklenemedi: "+error.message);
+      setArsivYukleniyor(false);
+      return;
+    }
+    const liste=(data||[]) as ArsivKaydi[];
+    const urlListesi=await Promise.all(liste.map(async item=>{
+      const {data:urlData}=await supabase.storage
+        .from("trafo-form-arsivi")
+        .createSignedUrl(item.dosya_yolu,60*60);
+      return {...item,signed_url:urlData?.signedUrl||null};
+    }));
+    setArsivKayitlari(urlListesi);
+    setArsivYukleniyor(false);
+  }
+
+  function arsivDosyaSec(e:ChangeEvent<HTMLInputElement>){
+    const f=e.target.files?.[0]||null;
+    if(!f){setArsivDosya(null);return;}
+    const izinli=["application/pdf","image/jpeg","image/png","image/webp"];
+    if(!izinli.includes(f.type)){
+      setGenelHata("Arşive yalnızca PDF, JPG/JPEG, PNG veya WEBP yüklenebilir.");
+      e.target.value="";
+      return;
+    }
+    if(f.size>15*1024*1024){
+      setGenelHata("Arşiv dosyası en fazla 15 MB olabilir.");
+      e.target.value="";
+      return;
+    }
+    setGenelHata("");
+    setArsivDosya(f);
+  }
+
+  async function arsiveYukle(){
+    if(!supabase||!session||!duzenleyebilir)return;
+    if(!arsivDosya){setGenelHata("Önce PDF veya görsel dosyası seçin.");return;}
+    if(!arsivYil||!arsivAy){setGenelHata("Yıl ve Ay zorunludur.");return;}
+    setArsivYukleme(true);setGenelHata("");
+    try{
+      const temizAd=arsivDosya.name
+        .normalize("NFKD")
+        .replace(/[^\w.\-]+/g,"_")
+        .replace(/_+/g,"_");
+      const yol=`${arsivYil}/${arsivAy}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${temizAd}`;
+      const {error:storageError}=await supabase.storage
+        .from("trafo-form-arsivi")
+        .upload(yol,arsivDosya,{contentType:arsivDosya.type,upsert:false});
+      if(storageError)throw storageError;
+
+      const {error:dbError}=await supabase.from("trafo_form_arsivi").insert({
+        yil:Number(arsivYil),
+        ay:arsivAy,
+        ilce:arsivIlce||null,
+        mahalle:arsivMahalle||null,
+        tr:arsivTr||null,
+        lokasyon_id:arsivLokasyon||null,
+        trafo_id:arsivTrafo||null,
+        dosya_adi:arsivDosya.name,
+        dosya_yolu:yol,
+        mime_type:arsivDosya.type,
+        dosya_boyutu:arsivDosya.size,
+        aciklama:arsivAciklama||null,
+        yukleyen_id:session.user.id,
+        yukleyen_email:session.user.email||null
+      });
+      if(dbError){
+        await supabase.storage.from("trafo-form-arsivi").remove([yol]);
+        throw dbError;
+      }
+
+      setArsivDosya(null);setArsivIlce("");setArsivMahalle("");setArsivTr("");
+      setArsivLokasyon("");setArsivTrafo("");setArsivAciklama("");
+      const input=document.getElementById("arsiv-dosya-input") as HTMLInputElement|null;
+      if(input)input.value="";
+      await arsivKayitlariniGetir();
+      setBasariMesaji("Dosya Trafo Form Arşivine yüklendi.");
+      setTimeout(()=>setBasariMesaji(""),3000);
+    }catch(err:any){
+      setGenelHata("Arşiv yükleme hatası: "+(err?.message||"Bilinmeyen hata"));
+    }finally{setArsivYukleme(false);}
+  }
+
+  async function arsivDosyaSil(item:ArsivKaydi){
+    if(!supabase||!yonetici)return;
+    if(!confirm(`"${item.dosya_adi}" arşivden silinsin mi?`))return;
+    setGenelHata("");
+    const {error:storageError}=await supabase.storage.from("trafo-form-arsivi").remove([item.dosya_yolu]);
+    if(storageError){setGenelHata("Dosya silinemedi: "+storageError.message);return;}
+    const {error:dbError}=await supabase.from("trafo_form_arsivi").delete().eq("id",item.id);
+    if(dbError){setGenelHata("Arşiv kaydı silinemedi: "+dbError.message);return;}
+    setArsivKayitlari(eski=>eski.filter(x=>x.id!==item.id));
+    setBasariMesaji("Arşiv dosyası silindi.");
+    setTimeout(()=>setBasariMesaji(""),2500);
+  }
+
+async function kayitlariGetir(){
     if(!supabase)return; setVeriYukleniyor(true); setGenelHata("");
     const {data,error}=await supabase.from("trafo_degisim").select("*").order("tarih",{ascending:false,nullsFirst:false}).order("id",{ascending:false});
     if(error){setGenelHata("Kayıtlar yüklenemedi: "+error.message);setVeriYukleniyor(false);return;}
@@ -615,7 +743,25 @@ export default function Home() {
   const gucDegisimiNedeni=nedenGucAnalizi.find(x=>x.neden==="GÜÇ DEĞİŞİMİ")||null;
   const arizaNedeni=nedenGucAnalizi.find(x=>x.neden==="ARIZA")||null;
 
-  const filtrelenmisKayitlar=useMemo(()=>{
+  
+  const arsivYillari=useMemo(()=>Array.from(new Set(arsivKayitlari.map(x=>String(x.yil)))).sort((a,b)=>Number(b)-Number(a)),[arsivKayitlari]);
+  const arsivIlceler=useMemo(()=>Array.from(new Set(arsivKayitlari.map(x=>x.ilce).filter(Boolean) as string[])).sort((a,b)=>a.localeCompare(b,"tr")),[arsivKayitlari]);
+  const filtrelenmisArsiv=useMemo(()=>{
+    const q=arsivArama.trim().toLocaleUpperCase("tr-TR");
+    return arsivKayitlari.filter(x=>{
+      if(arsivFiltreYil&&String(x.yil)!==arsivFiltreYil)return false;
+      if(arsivFiltreAy&&x.ay!==arsivFiltreAy)return false;
+      if(arsivFiltreIlce&&x.ilce!==arsivFiltreIlce)return false;
+      if(q){
+        const metin=[x.dosya_adi,x.ilce,x.mahalle,x.tr,x.lokasyon_id,x.trafo_id,x.aciklama]
+          .map(v=>String(v||"").toLocaleUpperCase("tr-TR")).join(" ");
+        if(!metin.includes(q))return false;
+      }
+      return true;
+    });
+  },[arsivKayitlari,arsivFiltreYil,arsivFiltreAy,arsivFiltreIlce,arsivArama]);
+
+const filtrelenmisKayitlar=useMemo(()=>{
     const q=arama.trim().toLocaleUpperCase("tr-TR");
     return kayitlar.filter(k=>{
       if(filtreYil&&String(k.yil||"")!==filtreYil)return false;
@@ -769,7 +915,7 @@ export default function Home() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 self-start flex-col border-r border-slate-800 bg-[#0b1628] lg:flex"><div className="border-b border-slate-800 px-5 py-6"><div className="text-xs font-bold tracking-[.22em] text-orange-400">BALIKESİR</div><div className="mt-1 text-xl font-black">⚡ TRAFO<br/>YÖNETİMİ</div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz} misafirModu={misafirModu} rol={kullaniciRolu}/><div className="border-t border-slate-800 p-3"><div className="mb-3 truncate text-xs text-slate-500">{misafirModu ? "👁 Görüntüleme Modu" : <>{session?.user.email}<span className="ml-2 rounded-full bg-orange-500/15 px-2 py-1 text-[9px] font-black uppercase text-orange-300">{kullaniciRolu}</span></>}</div><button onClick={cikisYap} className="w-full rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold">Çıkış Yap</button></div></aside>
 
       <section className="w-full min-w-0 max-w-full flex-1 overflow-x-hidden">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-[#0b1628]/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4 lg:px-7"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-[#07111f] text-xl lg:hidden">☰</button><div className="min-w-0"><h1 className="truncate text-lg font-black sm:text-xl lg:text-2xl">{sayfa==="dashboard"?"Trafo Değişim Kontrol Paneli":sayfa==="yeni"?(duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"):sayfa==="kayitlar"?"Trafo Değişim Kayıtları":sayfa==="loglar"?"Değişiklik Geçmişi / Log":"Kullanıcı Yetkileri"}</h1><p className="mt-1 hidden text-xs text-slate-500 sm:block">BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ</p></div></header>
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-[#0b1628]/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4 lg:px-7"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-[#07111f] text-xl lg:hidden">☰</button><div className="min-w-0"><h1 className="truncate text-lg font-black sm:text-xl lg:text-2xl">{sayfa==="dashboard"?"Trafo Değişim Kontrol Paneli":sayfa==="yeni"?(duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"):sayfa==="kayitlar"?"Trafo Değişim Kayıtları":sayfa==="arsiv"?"Trafo Form Arşivi":sayfa==="loglar"?"Değişiklik Geçmişi / Log":"Kullanıcı Yetkileri"}</h1><p className="mt-1 hidden text-xs text-slate-500 sm:block">BALIKESİR TRAFO DEĞİŞİM YÖNETİM SİSTEMİ</p></div></header>
 
         <div className="w-full min-w-0 max-w-full p-3 sm:p-5 lg:p-7">
           {pwaGuncellemeVar&&<div className="mb-5 flex flex-col gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/10 p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black text-orange-300">⚡ Yeni sürüm hazır</div><div className="mt-1 text-xs text-slate-400">Uygulamanın güncel sürümünü yükleyebilirsiniz.</div></div><button onClick={pwaGuncelle} className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-black">Güncelle</button></div>}
@@ -1125,6 +1271,60 @@ export default function Home() {
             <Panel baslik="Trafo Değişim Kayıtları" altBaslik="Detay, geçmiş, düzenleme ve yetkinize göre silme işlemleri">{veriYukleniyor?<BosAlan>Kayıtlar yükleniyor...</BosAlan>:<KayitTablosu kayitlar={filtrelenmisKayitlar} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/>}</Panel>
           </>}
 
+          
+          {sayfa==="arsiv"&&<>
+            {duzenleyebilir&&<Panel baslik="📤 Arşive Dosya Yükle" altBaslik="PDF, JPG/JPEG, PNG veya WEBP • En fazla 15 MB">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="sm:col-span-2 xl:col-span-4">
+                  <input id="arsiv-dosya-input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={arsivDosyaSec} className="block w-full rounded-xl border border-dashed border-slate-700 bg-[#07111f] p-4 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-orange-500 file:px-4 file:py-2 file:font-black file:text-white"/>
+                  {arsivDosya&&<div className="mt-2 text-xs text-slate-400">Seçilen: <b className="text-white">{arsivDosya.name}</b> • {(arsivDosya.size/1024/1024).toFixed(2)} MB</div>}
+                </div>
+                <select value={arsivYil} onChange={e=>setArsivYil(e.target.value)} className={inputSinif}><option value="">Yıl *</option>{YIL_SECENEKLERI.map(y=><option key={y}>{y}</option>)}</select>
+                <select value={arsivAy} onChange={e=>setArsivAy(e.target.value)} className={inputSinif}><option value="">Ay *</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select>
+                <select value={arsivIlce} onChange={e=>setArsivIlce(e.target.value)} className={inputSinif}><option value="">İlçe</option>{ILCE_SECENEKLERI.map(i=><option key={i}>{i}</option>)}</select>
+                <input value={arsivMahalle} onChange={e=>setArsivMahalle(e.target.value.toLocaleUpperCase("tr-TR"))} placeholder="Mahalle" className={inputSinif}/>
+                <input value={arsivTr} onChange={e=>setArsivTr(e.target.value)} placeholder="TR / Trafo Bölge Adı" className={inputSinif}/>
+                <input value={arsivLokasyon} onChange={e=>setArsivLokasyon(e.target.value)} placeholder="Lokasyon ID" className={inputSinif}/>
+                <input value={arsivTrafo} onChange={e=>setArsivTrafo(e.target.value)} placeholder="Trafo ID" className={inputSinif}/>
+                <input value={arsivAciklama} onChange={e=>setArsivAciklama(e.target.value)} placeholder="Açıklama (isteğe bağlı)" className={inputSinif}/>
+              </div>
+              <div className="mt-4 flex justify-end"><button type="button" disabled={arsivYukleme||!arsivDosya} onClick={arsiveYukle} className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">{arsivYukleme?"Yükleniyor...":"📁 Arşive Yükle"}</button></div>
+            </Panel>}
+
+            <div className={`${duzenleyebilir?"mt-5":""} rounded-2xl border border-slate-800 bg-[#101d30] p-4`}>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-black uppercase tracking-wider text-slate-500">📁 TRAFO FORM ARŞİVİ</div><div className="mt-1 text-xs text-slate-500">Yıl • Ay • İlçe bazında PDF ve görsel arşivi</div></div><button onClick={arsivKayitlariniGetir} className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-black">↻ Yenile</button></div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <input value={arsivArama} onChange={e=>setArsivArama(e.target.value)} placeholder="Dosya, mahalle, TR, Trafo ID ara..." className={inputSinif}/>
+                <select value={arsivFiltreYil} onChange={e=>setArsivFiltreYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{arsivYillari.map(y=><option key={y}>{y}</option>)}</select>
+                <select value={arsivFiltreAy} onChange={e=>setArsivFiltreAy(e.target.value)} className={inputSinif}><option value="">Tüm Aylar</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select>
+                <select value={arsivFiltreIlce} onChange={e=>setArsivFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{arsivIlceler.map(i=><option key={i}>{i}</option>)}</select>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500"><span><b className="text-white">{filtrelenmisArsiv.length}</b> dosya</span><button type="button" onClick={()=>{setArsivArama("");setArsivFiltreYil("");setArsivFiltreAy("");setArsivFiltreIlce("");}} className="font-black hover:text-white">🧹 Filtreyi Temizle</button></div>
+            </div>
+
+            <div className="mt-5">
+              {arsivYukleniyor?<div className="rounded-2xl border border-slate-800 bg-[#101d30] p-8 text-center text-slate-400">Arşiv yükleniyor...</div>:
+              filtrelenmisArsiv.length===0?<BosAlan>Seçili filtrelerde arşiv dosyası bulunmuyor.</BosAlan>:
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filtrelenmisArsiv.map(item=>{
+                  const gorsel=item.mime_type.startsWith("image/");
+                  return <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30] shadow-xl">
+                    <button type="button" onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="block w-full text-left">
+                      {gorsel&&item.signed_url?
+                        <img src={item.signed_url} alt={item.dosya_adi} className="h-44 w-full bg-[#07111f] object-contain"/>:
+                        <div className="flex h-44 items-center justify-center bg-[#07111f]"><div className="text-center"><div className="text-5xl">📄</div><div className="mt-2 text-xs font-black text-red-300">PDF BELGESİ</div></div></div>}
+                    </button>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="truncate text-sm font-black" title={item.dosya_adi}>{item.dosya_adi}</div><div className="mt-1 text-[10px] font-bold text-orange-300">{item.yil} • {item.ay}{item.ilce?` • ${item.ilce}`:""}</div></div><div className="shrink-0 rounded-lg border border-slate-700 px-2 py-1 text-[9px] font-black">{gorsel?"GÖRSEL":"PDF"}</div></div>
+                      <div className="mt-3 space-y-1 text-xs text-slate-400">{item.mahalle&&<div>📍 {item.mahalle}</div>}{item.tr&&<div>⚡ {item.tr}</div>}{item.trafo_id&&<div>Trafo ID: <b className="text-slate-200">{item.trafo_id}</b></div>}{item.lokasyon_id&&<div>Lokasyon: <b className="text-slate-200">{item.lokasyon_id}</b></div>}{item.aciklama&&<div className="pt-1 text-slate-500">{item.aciklama}</div>}</div>
+                      <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-black disabled:opacity-40">👁 Görüntüle</button>{yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-lg border border-red-900 bg-red-950/30 px-3 py-2 text-xs font-black text-red-300">Sil</button>}</div>
+                    </div>
+                  </div>
+                })}
+              </div>}
+            </div>
+          </>}
+
           {sayfa==="loglar"&&yonetici&&<>
             <div className="mb-5 rounded-2xl border border-slate-800 bg-[#101d30] p-4"><div className="flex flex-col gap-3 sm:flex-row"><input value={logArama} onChange={e=>setLogArama(e.target.value)} placeholder="Kullanıcı, kayıt no veya değişen değer ara..." className={inputSinif}/><button onClick={auditLoglariGetir} className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-black">↻ Yenile</button></div></div>
             <Panel baslik="Değişiklik Geçmişi / Log" altBaslik="Yeni kayıt, düzenleme ve silme işlemleri veritabanı tarafından otomatik kaydedilir"><div className="mt-5 space-y-3">{filtrelenmisLoglar.length?filtrelenmisLoglar.map(l=><LogSatiri key={l.id} log={l} kayitAc={(id)=>{const k=kayitlar.find(x=>x.id===id);if(k)setDetayKayit(k);}}/>):<BosAlan>Henüz log kaydı bulunmuyor.</BosAlan>}</div></Panel>
@@ -1155,6 +1355,7 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz,misafirMo
 </div>
 {duzenleyebilir&&<MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu>}
 <MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu>
+<MenuButonu aktif={sayfa==="arsiv"} onClick={()=>git("arsiv")}>📁 Trafo Form Arşivi</MenuButonu>
 {admin&&<div className="my-2 border-t border-slate-800 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="loglar"} onClick={()=>git("loglar")}>🕘 Değişiklik Logları</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
 }
 function HizliFiltre({children,onClick,aktif}:{children:ReactNode;onClick:()=>void;aktif:boolean}){return <button type="button" onClick={onClick} className={`rounded-lg border px-3 py-2 text-[10px] font-black transition ${aktif?"border-orange-500 bg-orange-500/15 text-orange-300":"border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"}`}>{children}</button>}
