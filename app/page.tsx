@@ -67,7 +67,9 @@ export default function Home() {
   const [form,setForm]=useState<FormData>(BOS_FORM); const [duzenlenenId,setDuzenlenenId]=useState<number|null>(null); const [kaydediliyor,setKaydediliyor]=useState(false);
   const [arama,setArama]=useState(""); const [filtreYil,setFiltreYil]=useState(""); const [filtreAy,setFiltreAy]=useState(""); const [filtreNeden,setFiltreNeden]=useState("");
   const [dashboardYil,setDashboardYil]=useState(""); const [dashboardIlce,setDashboardIlce]=useState("");
-  const [dashboardHizliFiltre,setDashboardHizliFiltre]=useState<""|"bu-yil"|"son30"|"ariza"|"guc-artisi">("");
+  const [dashboardHizliFiltre,setDashboardHizliFiltre]=useState<
+    ""|"bu-yil"|"son30"|"ariza"|"donusum"|"guc-degisimi"|"trafo-iptal"|"yatirim"|"yeni-tesis"|"ariza-riski"|"guc-artisi"|"guc-azalisi"|"ayni-guc"
+  >("");
   const [aktifAnaliz,setAktifAnaliz]=useState("dashboard");
   const [detayliKpiAcik,setDetayliKpiAcik]=useState(false);
   const [csvYukleniyor,setCsvYukleniyor]=useState(false);
@@ -190,7 +192,20 @@ export default function Home() {
       if(dashboardYil&&String(k.yil||"")!==dashboardYil)return false;
       if(dashboardIlce&&k.ilce!==dashboardIlce)return false;
       if(dashboardHizliFiltre==="bu-yil"&&k.yil!==BU_YIL)return false;
-      if(dashboardHizliFiltre==="ariza"&&k.degisim_nedeni!=="ARIZA")return false;
+
+      const nedenFiltreleri:Record<string,string>={
+        ariza:"ARIZA",
+        donusum:"DÖNÜŞÜM",
+        "guc-degisimi":"GÜÇ DEĞİŞİMİ",
+        "trafo-iptal":"TRAFO İPTAL",
+        yatirim:"YATIRIM",
+        "yeni-tesis":"YENİ TESİS",
+        "ariza-riski":"ARIZA RİSKİ",
+      };
+
+      const seciliNeden=nedenFiltreleri[dashboardHizliFiltre];
+      if(seciliNeden&&k.degisim_nedeni!==seciliNeden)return false;
+
       if(dashboardHizliFiltre==="son30"){
         if(!k.tarih)return false;
         const p=k.tarih.split("-");
@@ -198,10 +213,22 @@ export default function Home() {
         const d=Date.UTC(+p[0],+p[1]-1,+p[2]);
         if(d<otuzGunOnce||d>bugunUtc)return false;
       }
+
       if(dashboardHizliFiltre==="guc-artisi"){
         const s=guc(k.sokulen_gucu),t=guc(k.takilan_gucu);
         if(s===null||t===null||t<=s)return false;
       }
+
+      if(dashboardHizliFiltre==="guc-azalisi"){
+        const s=guc(k.sokulen_gucu),t=guc(k.takilan_gucu);
+        if(s===null||t===null||t>=s)return false;
+      }
+
+      if(dashboardHizliFiltre==="ayni-guc"){
+        const s=guc(k.sokulen_gucu),t=guc(k.takilan_gucu);
+        if(s===null||t===null||t!==s)return false;
+      }
+
       return true;
     });
   },[kayitlar,dashboardYil,dashboardIlce,dashboardHizliFiltre]);
@@ -493,8 +520,36 @@ export default function Home() {
                 <button onClick={()=>{setDashboardYil("");setDashboardIlce("");setDashboardHizliFiltre("");}} className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-bold hover:bg-slate-800">Filtreyi Temizle</button>
                 <button onClick={()=>{formTemizle();sayfayaGit("yeni");}} className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-black hover:bg-orange-400">+ Yeni Trafo Kaydı</button>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3 text-xs"><span className="font-bold text-slate-500">Aktif görünüm:</span><Etiket>{dashboardYil||"Tüm Yıllar"}</Etiket><Etiket>{dashboardIlce||"Tüm İlçeler"}</Etiket>{dashboardHizliFiltre&&<Etiket>{dashboardHizliFiltre==="bu-yil"?"Bu Yıl":dashboardHizliFiltre==="son30"?"Son 30 Gün":dashboardHizliFiltre==="ariza"?"Sadece Arıza":"Güç Artışı"}</Etiket>}<span className="ml-auto hidden text-slate-500 sm:inline">{dashboardKayitlari.length} kayıt</span></div>
-              <div className="mt-3 flex flex-wrap gap-2"><span className="mr-1 self-center text-[10px] font-black uppercase tracking-wider text-slate-600">Hızlı Filtre</span><HizliFiltre aktif={dashboardHizliFiltre===""} onClick={()=>setDashboardHizliFiltre("")}>Tümü</HizliFiltre><HizliFiltre aktif={dashboardHizliFiltre==="bu-yil"} onClick={()=>setDashboardHizliFiltre("bu-yil")}>Bu Yıl</HizliFiltre><HizliFiltre aktif={dashboardHizliFiltre==="son30"} onClick={()=>setDashboardHizliFiltre("son30")}>Son 30 Gün</HizliFiltre><HizliFiltre aktif={dashboardHizliFiltre==="ariza"} onClick={()=>setDashboardHizliFiltre("ariza")}>Sadece Arıza</HizliFiltre><HizliFiltre aktif={dashboardHizliFiltre==="guc-artisi"} onClick={()=>setDashboardHizliFiltre("guc-artisi")}>Güç Artışı</HizliFiltre><button onClick={dashboardYazdir} className="ml-auto rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-black text-slate-300 hover:bg-slate-800">🖨 Dashboard PDF</button></div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3 text-xs"><span className="font-bold text-slate-500">Aktif görünüm:</span><Etiket>{dashboardYil||"Tüm Yıllar"}</Etiket><Etiket>{dashboardIlce||"Tüm İlçeler"}</Etiket>{dashboardHizliFiltre&&<Etiket>{({
+  "bu-yil":"Bu Yıl",
+  son30:"Son 30 Gün",
+  ariza:"Arıza",
+  donusum:"Dönüşüm",
+  "guc-degisimi":"Güç Değişimi",
+  "trafo-iptal":"Trafo İptal",
+  yatirim:"Yatırım",
+  "yeni-tesis":"Yeni Tesis",
+  "ariza-riski":"Arıza Riski",
+  "guc-artisi":"Güç Artışı",
+  "guc-azalisi":"Güç Azalışı",
+  "ayni-guc":"Aynı Güç"
+} as Record<string,string>)[dashboardHizliFiltre]}</Etiket>}<span className="ml-auto hidden text-slate-500 sm:inline">{dashboardKayitlari.length} kayıt</span></div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="mr-1 self-center text-[10px] font-black uppercase tracking-wider text-slate-600">Hızlı Filtre</span>
+                <HizliFiltre aktif={dashboardHizliFiltre===""} onClick={()=>setDashboardHizliFiltre("")}>Tümü</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="bu-yil"} onClick={()=>setDashboardHizliFiltre("bu-yil")}>Bu Yıl</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="son30"} onClick={()=>setDashboardHizliFiltre("son30")}>Son 30 Gün</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="ariza"} onClick={()=>setDashboardHizliFiltre("ariza")}>Arıza</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="donusum"} onClick={()=>setDashboardHizliFiltre("donusum")}>Dönüşüm</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="guc-degisimi"} onClick={()=>setDashboardHizliFiltre("guc-degisimi")}>Güç Değişimi</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="trafo-iptal"} onClick={()=>setDashboardHizliFiltre("trafo-iptal")}>Trafo İptal</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="yatirim"} onClick={()=>setDashboardHizliFiltre("yatirim")}>Yatırım</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="yeni-tesis"} onClick={()=>setDashboardHizliFiltre("yeni-tesis")}>Yeni Tesis</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="ariza-riski"} onClick={()=>setDashboardHizliFiltre("ariza-riski")}>Arıza Riski</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="guc-artisi"} onClick={()=>setDashboardHizliFiltre("guc-artisi")}>Güç Artışı</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="guc-azalisi"} onClick={()=>setDashboardHizliFiltre("guc-azalisi")}>Güç Azalışı</HizliFiltre>
+                <HizliFiltre aktif={dashboardHizliFiltre==="ayni-guc"} onClick={()=>setDashboardHizliFiltre("ayni-guc")}>Aynı Güç</HizliFiltre>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316"/><KpiKart baslik="ARIZA" sayi={nedenSayilari["ARIZA"]||0} renk="#ef4444"/><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN YOĞUN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`}/></div>
