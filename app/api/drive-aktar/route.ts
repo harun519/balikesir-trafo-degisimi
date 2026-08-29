@@ -67,38 +67,139 @@ async function indir(token:string,id:string){
 async function sync(actor:{id:string|null;email:string|null}){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!key)throw new Error("Supabase sunucu ortam değişkenleri eksik.");
+
   const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
   const token=await googleToken();
+
+  // Mevcut arşiv yollarını TEK sorguda alıyoruz.
+  // Böylece her Drive dosyası için ayrı Supabase sorgusu yapıp süre kaybetmiyoruz.
+  const {data:mevcutRows,error:mevcutErr}=await db
+    .from("trafo_form_arsivi")
+    .select("dosya_yolu")
+    .limit(5000);
+
+  if(mevcutErr)throw new Error("Arşiv listesi okunamadı: "+mevcutErr.message);
+  const mevcutYollar=new Set((mevcutRows||[]).map((r:any)=>String(r.dosya_yolu||"")));
+
   const root=await liste(token,ROOT);
-  const yillar=root.map(x=>({...x,yil:yilOku(x.name)})).filter(x=>x.mimeType===FOLDER&&x.yil!==null).sort((a,b)=>(a.yil as number)-(b.yil as number));
+  const yillar=root
+    .map(x=>({...x,yil:yilOku(x.name)}))
+    .filter(x=>x.mimeType===FOLDER&&x.yil!==null)
+    .sort((a,b)=>(a.yil as number)-(b.yil as number));
+
   let ayKlasoruSayisi=0,bulunan=0,aktarilan=0,atlanan=0,hatali=0;
   const detaylar:any[]=[];
 
+  // Önce tüm yıl/ay klasörlerini keşfet.
+  const ayKlasorleri:{yil:number;ay:string;id:string}[]=[];
   for(const yf of yillar){
     const yi=await liste(token,yf.id);
-    const aylar=yi.map(x=>({...x,ay:ayOku(x.name)})).filter(x=>x.mimeType===FOLDER&&x.ay!==null);
-    ayKlasoruSayisi+=aylar.length;
-    for(const af of aylar){
-      const files=(await liste(token,af.id)).filter(x=>ALLOWED.has(x.mimeType));bulunan+=files.length;
-      for(const f of files){
-        try{
-          const path=`${yf.yil}/${safe(af.ay as string)}/drive_${f.id}_${safe(f.name)||"dosya"}`;
-          const {data:varmi,error:ve}=await db.from("trafo_form_arsivi").select("id").eq("dosya_yolu",path).maybeSingle();
-          if(ve)throw new Error("Arşiv kontrolü: "+ve.message);
-          if(varmi){atlanan++;continue}
-          if(Number(f.size||0)>MAX){atlanan++;detaylar.push({dosya:f.name,durum:"atlandi",mesaj:"15 MB sınırı"});continue}
-          const buf=await indir(token,f.id);if(buf.length>MAX){atlanan++;continue}
-          const {error:se}=await db.storage.from(BUCKET).upload(path,buf,{contentType:f.mimeType,upsert:false});
-          if(se)throw new Error("Storage: "+se.message);
-          const m=meta(f.name);
-          const {error:ie}=await db.from("trafo_form_arsivi").insert({yil:yf.yil,ay:af.ay,ilce:m.ilce,mahalle:null,tr:m.tr,lokasyon_id:null,trafo_id:null,dosya_adi:f.name,dosya_yolu:path,mime_type:f.mimeType,dosya_boyutu:buf.length,aciklama:`Google Drive otomatik senkronizasyon • Drive ID: ${f.id}`,yukleyen_id:actor.id,yukleyen_email:actor.email});
-          if(ie){await db.storage.from(BUCKET).remove([path]);throw new Error("Veritabanı: "+ie.message)}
-          aktarilan++;detaylar.push({yil:yf.yil,ay:af.ay,dosya:f.name,durum:"aktarildi"});
-        }catch(e:any){hatali++;detaylar.push({yil:yf.yil,ay:af.ay,dosya:f.name,durum:"hata",mesaj:e?.message||"Bilinmeyen hata"})}
-      }
+    for(const x of yi){
+      if(x.mimeType!==FOLDER)continue;
+      const ay=ayOku(x.name);
+      if(!ay)continue;
+      ayKlasorleri.push({yil:yf.yil as number,ay,id:x.id});
     }
   }
-  return {yilSayisi:yillar.length,ayKlasoruSayisi,bulunan,aktarilan,atlanan,hatali,detaylar};
+  ayKlasoruSayisi=ayKlasorleri.length;
+
+  // Ay klasörlerini küçük gruplar halinde paralel tara.
+  // Bu, 53 klasörü tek tek beklemekten çok daha hızlıdır.
+  const GRUP=8;
+  const adaylar:{yil:number;ay:string;file:DF}[]=[];
+
+  for(let i=0;i<ayKlasorleri.length;i+=GRUP){
+    const grup=ayKlasorleri.slice(i,i+GRUP);
+    const sonuclar=await Promise.all(
+      grup.map(async k=>({
+        klasor:k,
+        files:(await liste(token,k.id)).filter(x=>ALLOWED.has(x.mimeType))
+      }))
+    );
+
+    for(const s of sonuclar){
+      bulunan+=s.files.length;
+      for(const f of s.files)adaylar.push({yil:s.klasor.yil,ay:s.klasor.ay,file:f});
+    }
+  }
+
+  // Yalnızca YENİ dosyaları işle.
+  for(const item of adaylar){
+    const {yil,ay,file:f}=item;
+    try{
+      const path=`${yil}/${safe(ay)}/drive_${f.id}_${safe(f.name)||"dosya"}`;
+
+      if(mevcutYollar.has(path)){
+        atlanan++;
+        continue;
+      }
+
+      if(Number(f.size||0)>MAX){
+        atlanan++;
+        detaylar.push({yil,ay,dosya:f.name,durum:"atlandi",mesaj:"15 MB sınırı"});
+        continue;
+      }
+
+      const buf=await indir(token,f.id);
+      if(buf.length>MAX){
+        atlanan++;
+        detaylar.push({yil,ay,dosya:f.name,durum:"atlandi",mesaj:"15 MB sınırı"});
+        continue;
+      }
+
+      const {error:se}=await db.storage.from(BUCKET).upload(path,buf,{
+        contentType:f.mimeType,
+        upsert:false
+      });
+      if(se)throw new Error("Storage: "+se.message);
+
+      const m=meta(f.name);
+      const {error:ie}=await db.from("trafo_form_arsivi").insert({
+        yil,
+        ay,
+        ilce:m.ilce,
+        mahalle:null,
+        tr:m.tr,
+        lokasyon_id:null,
+        trafo_id:null,
+        dosya_adi:f.name,
+        dosya_yolu:path,
+        mime_type:f.mimeType,
+        dosya_boyutu:buf.length,
+        aciklama:`Google Drive otomatik senkronizasyon • Drive ID: ${f.id}`,
+        yukleyen_id:actor.id,
+        yukleyen_email:actor.email
+      });
+
+      if(ie){
+        await db.storage.from(BUCKET).remove([path]);
+        throw new Error("Veritabanı: "+ie.message);
+      }
+
+      mevcutYollar.add(path);
+      aktarilan++;
+      detaylar.push({yil,ay,dosya:f.name,durum:"aktarildi"});
+    }catch(e:any){
+      hatali++;
+      detaylar.push({
+        yil,
+        ay,
+        dosya:f.name,
+        durum:"hata",
+        mesaj:e?.message||"Bilinmeyen hata"
+      });
+    }
+  }
+
+  return {
+    yilSayisi:yillar.length,
+    ayKlasoruSayisi,
+    bulunan,
+    aktarilan,
+    atlanan,
+    hatali,
+    detaylar
+  };
 }
 
 export async function GET(req:NextRequest){
