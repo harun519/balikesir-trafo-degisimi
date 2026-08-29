@@ -800,6 +800,16 @@ async function kayitlariGetir(){
 
   
   function norm(v:string|null|undefined){return String(v||"").trim().toLocaleUpperCase("tr-TR").replace(/\s+/g," ");}
+  function eslemeAnahtari(v:string|null|undefined){
+    return String(v||"")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/ı/g,"I").replace(/İ/g,"I")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g," ")
+      .trim()
+      .replace(/\s+/g," ");
+  }
   function arsivGorunenAd(item:ArsivKaydi){
     const uzanti=(item.dosya_adi.match(/\.[^.]+$/)?.[0]||"").toLowerCase();
     if(item.ilce&&item.tr)return `${item.ilce} - ${item.tr}${uzanti}`;
@@ -807,16 +817,59 @@ async function kayitlariGetir(){
     return item.dosya_adi;
   }
   function kaydaAitFormlar(k:TrafoKaydi){
-    const y=String(k.yil||""), ay=norm(k.ay), tid=norm(k.trafo_id), lid=norm(k.lokasyon_id), tr=norm(k.tr);
-    return arsivKayitlari.filter(a=>{
+    const y=String(k.yil||"");
+    const ay=eslemeAnahtari(k.ay);
+    const tid=eslemeAnahtari(k.trafo_id);
+    const lid=eslemeAnahtari(k.lokasyon_id);
+    const tr=eslemeAnahtari(k.tr);
+    const ilce=eslemeAnahtari(k.ilce);
+    const mahalle=eslemeAnahtari(k.mahalle);
+
+    const ayniDonem=arsivKayitlari.filter(a=>{
       if(y&&String(a.yil)!==y)return false;
-      if(ay&&norm(a.ay)!==ay)return false;
-      if(tid&&norm(a.trafo_id)===tid)return true;
-      if(lid&&norm(a.lokasyon_id)===lid)return true;
-      if(tr&&norm(a.tr)===tr)return true;
-      const ad=norm(a.dosya_adi);
-      return !!((tid&&ad.includes(tid))||(lid&&ad.includes(lid))||(tr&&tr.length>=4&&ad.includes(tr)));
+      if(ay&&eslemeAnahtari(a.ay)!==ay)return false;
+      return true;
     });
+
+    // 1) En güvenilir eşleşmeler: Trafo ID, Lokasyon ID veya TR birebir.
+    const kesin=ayniDonem.filter(a=>{
+      const ad=eslemeAnahtari(a.dosya_adi);
+      const aTid=eslemeAnahtari(a.trafo_id);
+      const aLid=eslemeAnahtari(a.lokasyon_id);
+      const aTr=eslemeAnahtari(a.tr);
+
+      if(tid&&(aTid===tid||ad.split(" ").includes(tid)))return true;
+      if(lid&&(aLid===lid||ad.split(" ").includes(lid)))return true;
+      if(tr&&tr.length>=3&&(aTr===tr||ad.includes(tr)))return true;
+      return false;
+    });
+    if(kesin.length)return kesin;
+
+    // 2) Drive dosya adlarında ID olmayabiliyor.
+    // Aynı yıl/ay içinde İLÇE + MAHALLE birlikte geçiyorsa formu eşleştir.
+    // Örn: SINDIRGI + GÖLCÜK -> "SINDIRGI - TR-7 GOLCUK OVASI TRMSUL.pdf"
+    if(ilce&&mahalle){
+      const ilceMahalle=ayniDonem.filter(a=>{
+        const ad=eslemeAnahtari(a.dosya_adi);
+        const aIlce=eslemeAnahtari(a.ilce);
+        const aMahalle=eslemeAnahtari(a.mahalle);
+        const ilceEslesiyor=aIlce===ilce||ad.includes(ilce);
+        const mahalleEslesiyor=aMahalle===mahalle||ad.includes(mahalle);
+        return ilceEslesiyor&&mahalleEslesiyor;
+      });
+      if(ilceMahalle.length)return ilceMahalle;
+    }
+
+    // 3) Son güvenli yedek: metadata'da aynı ilçe + mahalle birebir.
+    if(ilce&&mahalle){
+      const metadata=ayniDonem.filter(a=>
+        eslemeAnahtari(a.ilce)===ilce&&
+        eslemeAnahtari(a.mahalle)===mahalle
+      );
+      if(metadata.length)return metadata;
+    }
+
+    return [];
   }
   function kaydinFormunuAc(k:TrafoKaydi){
     const f=kaydaAitFormlar(k)[0];
