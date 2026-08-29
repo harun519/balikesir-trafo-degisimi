@@ -824,6 +824,7 @@ async function kayitlariGetir(){
     const tr=eslemeAnahtari(k.tr);
     const ilce=eslemeAnahtari(k.ilce);
     const mahalle=eslemeAnahtari(k.mahalle);
+    const mahalleBitişik=mahalle.replace(/\s+/g,"");
 
     const ayniDonem=arsivKayitlari.filter(a=>{
       if(y&&String(a.yil)!==y)return false;
@@ -853,8 +854,10 @@ async function kayitlariGetir(){
         const ad=eslemeAnahtari(a.dosya_adi);
         const aIlce=eslemeAnahtari(a.ilce);
         const aMahalle=eslemeAnahtari(a.mahalle);
+        const adBitişik=ad.replace(/\s+/g,"");
+        const aMahalleBitişik=aMahalle.replace(/\s+/g,"");
         const ilceEslesiyor=aIlce===ilce||ad.includes(ilce);
-        const mahalleEslesiyor=aMahalle===mahalle||ad.includes(mahalle);
+        const mahalleEslesiyor=aMahalle===mahalle||aMahalleBitişik===mahalleBitişik||ad.includes(mahalle)||adBitişik.includes(mahalleBitişik);
         return ilceEslesiyor&&mahalleEslesiyor;
       });
       if(ilceMahalle.length)return ilceMahalle;
