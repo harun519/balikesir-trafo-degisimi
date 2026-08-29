@@ -202,16 +202,74 @@ async function sync(actor:{id:string|null;email:string|null}){
   };
 }
 
+async function logBaslat(kaynak:string,email:string|null){
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return null;
+  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+  const {data}=await db.from("drive_sync_logs").insert({
+    kaynak,
+    durum:"running",
+    kullanici_email:email,
+    baslangic:new Date().toISOString()
+  }).select("id").maybeSingle();
+  return data?.id||null;
+}
+
+async function logBitir(id:number|null,durum:"success"|"error",sonuc:any,mesaj:string|null=null){
+  if(!id)return;
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return;
+  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+  await db.from("drive_sync_logs").update({
+    bitis:new Date().toISOString(),
+    durum,
+    yil_sayisi:Number(sonuc?.yilSayisi||0),
+    ay_klasoru_sayisi:Number(sonuc?.ayKlasoruSayisi||0),
+    bulunan:Number(sonuc?.bulunan||0),
+    aktarilan:Number(sonuc?.aktarilan||0),
+    atlanan:Number(sonuc?.atlanan||0),
+    hatali:Number(sonuc?.hatali||0),
+    mesaj
+  }).eq("id",id);
+}
+
+async function metadataYedegiAl(){
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return;
+  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+  const [{data:kayitlar,error:e1},{data:arsiv,error:e2},{data:sync,error:e3}]=await Promise.all([
+    db.from("trafo_degisim").select("*").order("id"),
+    db.from("trafo_form_arsivi").select("*").order("created_at"),
+    db.from("drive_sync_logs").select("*").order("created_at",{ascending:false}).limit(500)
+  ]);
+  if(e1||e2||e3)throw new Error("Yedek verileri okunamadı.");
+  const now=new Date();
+  const pad=(n:number)=>String(n).padStart(2,"0");
+  const ad=`${now.getUTCFullYear()}-${pad(now.getUTCMonth()+1)}-${pad(now.getUTCDate())}_trafo_metadata.json`;
+  const body=Buffer.from(JSON.stringify({created_at:now.toISOString(),trafo_degisim:kayitlar||[],trafo_form_arsivi:arsiv||[],drive_sync_logs:sync||[]},null,2),"utf8");
+  const {error}=await db.storage.from("trafo-yedekler").upload(ad,body,{contentType:"application/json",upsert:true});
+  if(error)throw new Error("Yedek Storage hatası: "+error.message);
+}
+
 export async function GET(req:NextRequest){
+  let logId:number|null=null;
   try{
     const secret=process.env.CRON_SECRET;
     if(!secret)return NextResponse.json({error:"CRON_SECRET ortam değişkeni eksik."},{status:500});
     if(req.headers.get("authorization")!==`Bearer ${secret}`)return NextResponse.json({error:"Yetkisiz cron isteği."},{status:401});
-    return NextResponse.json({otomatik:true,...await sync({id:null,email:"vercel-cron@otomatik"})});
-  }catch(e:any){return NextResponse.json({error:e?.message||"Otomatik senkronizasyon hatası."},{status:500})}
+    logId=await logBaslat("cron","vercel-cron@otomatik");
+    const sonuc=await sync({id:null,email:"vercel-cron@otomatik"});
+    await metadataYedegiAl();
+    await logBitir(logId,"success",sonuc,null);
+    return NextResponse.json({otomatik:true,yedek:true,...sonuc});
+  }catch(e:any){
+    await logBitir(logId,"error",{},e?.message||"Otomatik senkronizasyon hatası.");
+    return NextResponse.json({error:e?.message||"Otomatik senkronizasyon hatası."},{status:500});
+  }
 }
 
 export async function POST(req:NextRequest){
+  let logId:number|null=null;
   try{
     const url=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
     if(!url||!anon||!key)return NextResponse.json({error:"Supabase sunucu ortam değişkenleri eksik."},{status:500});
@@ -223,6 +281,12 @@ export async function POST(req:NextRequest){
     const {data:r,error:re}=await db.from("app_users").select("role").eq("id",ud.user.id).maybeSingle();
     if(re)return NextResponse.json({error:"Kullanıcı yetkisi okunamadı: "+re.message},{status:500});
     if(!r||!["admin","editor"].includes(r.role))return NextResponse.json({error:"Admin veya Editor yetkisi gerekir."},{status:403});
-    return NextResponse.json({otomatik:false,...await sync({id:ud.user.id,email:ud.user.email||null})});
-  }catch(e:any){return NextResponse.json({error:e?.message||"Google Drive senkronizasyon hatası."},{status:500})}
+    logId=await logBaslat("manual",ud.user.email||null);
+    const sonuc=await sync({id:ud.user.id,email:ud.user.email||null});
+    await logBitir(logId,"success",sonuc,null);
+    return NextResponse.json({otomatik:false,...sonuc});
+  }catch(e:any){
+    await logBitir(logId,"error",{},e?.message||"Google Drive senkronizasyon hatası.");
+    return NextResponse.json({error:e?.message||"Google Drive senkronizasyon hatası."},{status:500});
+  }
 }
