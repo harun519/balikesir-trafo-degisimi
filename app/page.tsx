@@ -34,6 +34,7 @@ type ArsivKaydi = {
 type KullaniciRolu = "admin" | "editor" | "viewer";
 type AppUser = { id:string; email:string|null; role:KullaniciRolu; created_at?:string; updated_at?:string; };
 type AuditLog = { id:number; table_name:string; record_id:number|null; action:"INSERT"|"UPDATE"|"DELETE"; user_id:string|null; user_email:string|null; old_data:Record<string,unknown>|null; new_data:Record<string,unknown>|null; created_at:string; };
+type DriveSyncLog = { id:number; baslangic:string; bitis:string|null; kaynak:string; durum:"running"|"success"|"error"; yil_sayisi:number; ay_klasoru_sayisi:number; bulunan:number; aktarilan:number; atlanan:number; hatali:number; mesaj:string|null; kullanici_email:string|null; created_at:string; };
 type ListeFiltreleri = { yil?:string; ay?:string; ilce?:string; neden?:string; arama?:string; baslangic?:string; bitis?:string; };
 type TrafoKaydi = {
   id:number; sira_no:number|null; yil:number|null; ay:string|null; ilce:string|null; mahalle:string|null; tr:string|null;
@@ -93,11 +94,14 @@ export default function Home() {
   const [arsivFiltreYil,setArsivFiltreYil]=useState("");
   const [arsivFiltreAy,setArsivFiltreAy]=useState("");
   const [arsivFiltreIlce,setArsivFiltreIlce]=useState("");
+  const [arsivKlasorIlce,setArsivKlasorIlce]=useState("");
   const [arsivArama,setArsivArama]=useState("");
   const [arsivYukleme,setArsivYukleme]=useState(false);
   const [driveAktariliyor,setDriveAktariliyor]=useState(false);
   const [driveAktarimSonucu,setDriveAktarimSonucu]=useState("");
   const [driveIlerleme,setDriveIlerleme]=useState("");
+  const [driveSyncLoglar,setDriveSyncLoglar]=useState<DriveSyncLog[]>([]);
+  const [topluIndiriliyor,setTopluIndiriliyor]=useState(false);
   const [veriYukleniyor,setVeriYukleniyor]=useState(false); const [genelHata,setGenelHata]=useState(""); const [basariMesaji,setBasariMesaji]=useState("");
   const [mobilMenuAcik,setMobilMenuAcik]=useState(false); const [detayKayit,setDetayKayit]=useState<TrafoKaydi|null>(null);
   const [form,setForm]=useState<FormData>(BOS_FORM); const [duzenlenenId,setDuzenlenenId]=useState<number|null>(null); const [kaydediliyor,setKaydediliyor]=useState(false);
@@ -225,7 +229,7 @@ export default function Home() {
   },[supabase]);
 
   useEffect(()=>{ if(session||misafirModu) kayitlariGetir(); else setKayitlar([]); },[session,misafirModu]);
-  useEffect(()=>{ if(session||misafirModu) arsivKayitlariniGetir(); else setArsivKayitlari([]); },[session,misafirModu]);
+  useEffect(()=>{ if(session||misafirModu){arsivKayitlariniGetir();driveSyncLoglariniGetir();} else {setArsivKayitlari([]);setDriveSyncLoglar([]);} },[session,misafirModu]);
   useEffect(()=>{
     if(session){kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setKullanicilar([]);setAuditLoglar([]);}
   },[session]);
@@ -246,6 +250,11 @@ export default function Home() {
     if(!supabase)return;
     const {data}=await supabase.from("trafo_audit_log").select("*").order("created_at",{ascending:false}).limit(300);
     setAuditLoglar((data||[]) as AuditLog[]);
+  }
+  async function driveSyncLoglariniGetir(){
+    if(!supabase||!session)return;
+    const {data}=await supabase.from("drive_sync_logs").select("*").order("created_at",{ascending:false}).limit(20);
+    setDriveSyncLoglar((data||[]) as DriveSyncLog[]);
   }
   async function rolDegistir(id:string,role:KullaniciRolu){
     if(!supabase||!yonetici)return;
@@ -376,9 +385,28 @@ export default function Home() {
       if(!cevap.ok)throw new Error(sonuc?.error||"Senkronizasyon başarısız oldu.");
       setDriveIlerleme("Tamamlandı");
       setDriveAktarimSonucu(`${Number(sonuc.yilSayisi||0)} yıl • ${Number(sonuc.ayKlasoruSayisi||0)} ay klasörü tarandı • ${Number(sonuc.bulunan||0)} dosya bulundu • ${Number(sonuc.aktarilan||0)} yeni dosya aktarıldı • ${Number(sonuc.atlanan||0)} mevcut/uygun olmayan dosya atlandı • ${Number(sonuc.hatali||0)} hata.`);
-      setBasariMesaji("Google Drive senkronizasyonu tamamlandı."); await arsivKayitlariniGetir(); setTimeout(()=>setBasariMesaji(""),4000);
+      setBasariMesaji("Google Drive senkronizasyonu tamamlandı."); await Promise.all([arsivKayitlariniGetir(),driveSyncLoglariniGetir()]); setTimeout(()=>setBasariMesaji(""),4000);
     }catch(err:any){setDriveIlerleme("");setGenelHata("Google Drive senkronizasyon hatası: "+(err?.message||"Bilinmeyen hata"));}
     finally{setDriveAktariliyor(false);}
+  }
+
+
+  async function arsivTopluIndir(){
+    if(!session||!duzenleyebilir||!arsivFiltreYil)return;
+    setTopluIndiriliyor(true);setGenelHata("");
+    try{
+      const q=new URLSearchParams({yil:arsivFiltreYil});
+      if(arsivFiltreAy)q.set("ay",arsivFiltreAy);
+      if(arsivKlasorIlce)q.set("ilce",arsivKlasorIlce);
+      const r=await fetch(`/api/arsiv-toplu-indir?${q.toString()}`,{headers:{Authorization:`Bearer ${session.access_token}`}});
+      if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j?.error||"ZIP hazırlanamadı.");}
+      const blob=await r.blob();
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;
+      a.download=`trafo-arsiv-${arsivFiltreYil}${arsivFiltreAy?`-${arsivFiltreAy}`:""}${arsivKlasorIlce?`-${arsivKlasorIlce}`:""}.zip`;
+      document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    }catch(e:any){setGenelHata(e?.message||"Toplu indirme başarısız oldu.");}
+    finally{setTopluIndiriliyor(false);}
   }
 
   async function arsivDosyaSil(item:ArsivKaydi){
@@ -773,14 +801,47 @@ async function kayitlariGetir(){
   const arizaNedeni=nedenGucAnalizi.find(x=>x.neden==="ARIZA")||null;
 
   
+  function norm(v:string|null|undefined){return String(v||"").trim().toLocaleUpperCase("tr-TR").replace(/\s+/g," ");}
+  function arsivGorunenAd(item:ArsivKaydi){
+    const uzanti=(item.dosya_adi.match(/\.[^.]+$/)?.[0]||"").toLowerCase();
+    if(item.ilce&&item.tr)return `${item.ilce} - ${item.tr}${uzanti}`;
+    if(item.tr)return `${item.tr}${uzanti}`;
+    return item.dosya_adi;
+  }
+  function kaydaAitFormlar(k:TrafoKaydi){
+    const y=String(k.yil||""), ay=norm(k.ay), tid=norm(k.trafo_id), lid=norm(k.lokasyon_id), tr=norm(k.tr);
+    return arsivKayitlari.filter(a=>{
+      if(y&&String(a.yil)!==y)return false;
+      if(ay&&norm(a.ay)!==ay)return false;
+      if(tid&&norm(a.trafo_id)===tid)return true;
+      if(lid&&norm(a.lokasyon_id)===lid)return true;
+      if(tr&&norm(a.tr)===tr)return true;
+      const ad=norm(a.dosya_adi);
+      return !!((tid&&ad.includes(tid))||(lid&&ad.includes(lid))||(tr&&tr.length>=4&&ad.includes(tr)));
+    });
+  }
+  function kaydinFormunuAc(k:TrafoKaydi){
+    const f=kaydaAitFormlar(k)[0];
+    if(f?.signed_url)window.open(f.signed_url,"_blank");
+  }
+
   const arsivYillari=useMemo(()=>Array.from(new Set(arsivKayitlari.map(x=>String(x.yil)))).sort((a,b)=>Number(b)-Number(a)),[arsivKayitlari]);
   const arsivIlceler=useMemo(()=>Array.from(new Set(arsivKayitlari.map(x=>x.ilce).filter(Boolean) as string[])).sort((a,b)=>a.localeCompare(b,"tr")),[arsivKayitlari]);
+  const arsivKlasorIlceler=useMemo(()=>Array.from(new Set(arsivKayitlari.filter(x=>(!arsivFiltreYil||String(x.yil)===arsivFiltreYil)&&(!arsivFiltreAy||x.ay===arsivFiltreAy)).map(x=>x.ilce||"DİĞER"))).sort((a,b)=>a.localeCompare(b,"tr")),[arsivKayitlari,arsivFiltreYil,arsivFiltreAy]);
+  const dashboardFormDurumu=useMemo(()=>{
+    let varSayisi=0,eksik=0;
+    for(const k of dashboardKayitlari){if(kaydaAitFormlar(k).length)varSayisi++;else eksik++;}
+    return {varSayisi,eksik};
+  },[dashboardKayitlari,arsivKayitlari]);
+  const sonSync=driveSyncLoglar[0]||null;
+
   const filtrelenmisArsiv=useMemo(()=>{
     const q=arsivArama.trim().toLocaleUpperCase("tr-TR");
     return arsivKayitlari.filter(x=>{
       if(arsivFiltreYil&&String(x.yil)!==arsivFiltreYil)return false;
       if(arsivFiltreAy&&x.ay!==arsivFiltreAy)return false;
       if(arsivFiltreIlce&&x.ilce!==arsivFiltreIlce)return false;
+      if(arsivKlasorIlce&&(x.ilce||"DİĞER")!==arsivKlasorIlce)return false;
       if(q){
         const metin=[x.dosya_adi,x.ilce,x.mahalle,x.tr,x.lokasyon_id,x.trafo_id,x.aciklama]
           .map(v=>String(v||"").toLocaleUpperCase("tr-TR")).join(" ");
@@ -788,7 +849,7 @@ async function kayitlariGetir(){
       }
       return true;
     });
-  },[arsivKayitlari,arsivFiltreYil,arsivFiltreAy,arsivFiltreIlce,arsivArama]);
+  },[arsivKayitlari,arsivFiltreYil,arsivFiltreAy,arsivFiltreIlce,arsivKlasorIlce,arsivArama]);
 
 const filtrelenmisKayitlar=useMemo(()=>{
     const q=arama.trim().toLocaleUpperCase("tr-TR");
@@ -1277,7 +1338,12 @@ const filtrelenmisKayitlar=useMemo(()=>{
               </Panel>
             </div>
 
-            <div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="Sistemdeki son 8 kayıt" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800">Tüm Kayıtlar →</button>}><KayitTablosu kayitlar={kayitlar.slice(0,8)} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/></Panel></div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <OzetKart ikon="✅" baslik="FORMU BULUNAN" deger={String(dashboardFormDurumu.varSayisi)} alt="Seçili kayıtlarda arşiv formu var"/>
+              <OzetKart ikon="⚠️" baslik="FORM EKSİK" deger={String(dashboardFormDurumu.eksik)} alt="Arşiv formu eşleşmeyen kayıt" onClick={()=>{setSayfa("kayitlar");setArama("");}}/>
+              <OzetKart ikon={sonSync?.durum==="error"?"🔴":"☁️"} baslik="SON DRIVE SYNC" deger={sonSync?`${sonSync.aktarilan} yeni`:"—"} alt={sonSync?`${new Date(sonSync.created_at).toLocaleString("tr-TR")} • ${sonSync.durum==="success"?"Başarılı":"Hata"}`:"Henüz senkronizasyon kaydı yok"}/>
+            </div>
+            <div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="Sistemdeki son 8 kayıt" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800">Tüm Kayıtlar →</button>}><KayitTablosu kayitlar={kayitlar.slice(0,8)} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir} formBul={kaydaAitFormlar} formAc={kaydinFormunuAc}/></Panel></div>
             <div className="mt-5"><Panel baslik="Son İşlem Özeti" altBaslik={yonetici?"Son kayıt değişiklikleri ve yapan kullanıcı":"Sistemdeki son güncellenen kayıtlar"} sagIcerik={yonetici?<button onClick={()=>sayfayaGit("loglar")} className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold">Tüm Loglar →</button>:undefined}>{yonetici&&auditLoglar.length?<div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{auditLoglar.slice(0,6).map(l=><LogKart key={l.id} log={l}/>)}</div>:<div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{[...kayitlar].sort((a,b)=>(b.updated_at||b.created_at||"").localeCompare(a.updated_at||a.created_at||"")).slice(0,6).map(k=><button key={k.id} onClick={()=>setDetayKayit(k)} className="rounded-2xl border border-slate-800 bg-[#07111f] p-4 text-left hover:border-orange-500/40"><div className="text-xs font-black text-orange-300">{k.ilce||"-"} / {k.mahalle||"-"}</div><div className="mt-2 text-sm font-black">Trafo ID: {k.trafo_id||"-"}</div><div className="mt-2 text-[10px] text-slate-500">Son işlem: {tarihSaatGoster(k.updated_at||k.created_at)}</div></button>)}</div>}</Panel></div>
           </>}
 
@@ -1297,7 +1363,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
               <div className="mb-3 text-xs font-black uppercase tracking-wider text-slate-500">🔎 Gelişmiş Arama ve Filtre</div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><input value={arama} onChange={e=>setArama(e.target.value)} placeholder="Trafo ID, seri no, mahalle, firma, açıklama..." className={inputSinif}/><select value={filtreYil} onChange={e=>setFiltreYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{yillar.map(y=><option key={y}>{y}</option>)}</select><select value={filtreAy} onChange={e=>setFiltreAy(e.target.value)} className={inputSinif}><option value="">Tüm Aylar</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select><select value={filtreIlce} onChange={e=>setFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{ilceler.map(i=><option key={i}>{i}</option>)}</select><select value={filtreNeden} onChange={e=>setFiltreNeden(e.target.value)} className={inputSinif}><option value="">Tüm Nedenler</option>{NEDENLER.map(n=><option key={n.ad}>{n.ad}</option>)}</select><input type="date" value={filtreBaslangic} onChange={e=>setFiltreBaslangic(e.target.value)} className={inputSinif} title="Başlangıç tarihi"/><input type="date" value={filtreBitis} onChange={e=>setFiltreBitis(e.target.value)} className={inputSinif} title="Bitiş tarihi"/></div>
               <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-wrap items-center gap-3"><div className="text-sm text-slate-400"><b className="text-white">{filtrelenmisKayitlar.length}</b> kayıt görüntüleniyor.</div><button type="button" onClick={()=>{setArama("");setFiltreYil("");setFiltreAy("");setFiltreIlce("");setFiltreNeden("");setFiltreBaslangic("");setFiltreBitis("");}} className="rounded-xl border border-orange-500 bg-orange-500/15 px-4 py-2 text-sm font-black text-orange-300 transition hover:bg-orange-500 hover:text-white">🧹 Filtreyi Temizle</button></div><div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4"><button onClick={raporuYazdir} className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-black">🖨️ PDF / Yazdır</button><button onClick={excelAktar} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black">📥 Excel&apos;e Aktar</button><button onClick={csvYedekAl} className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-black">💾 CSV Yedek</button>{duzenleyebilir&&<label className="cursor-pointer rounded-xl bg-violet-700 px-4 py-3 text-center text-sm font-black">{csvYukleniyor?"Aktarılıyor...":"📤 CSV İçe Aktar"}<input type="file" accept=".csv,text/csv" className="hidden" disabled={csvYukleniyor} onChange={csvIceAktar}/></label>}</div></div></div>
-            <Panel baslik="Trafo Değişim Kayıtları" altBaslik="Detay, geçmiş, düzenleme ve yetkinize göre silme işlemleri">{veriYukleniyor?<BosAlan>Kayıtlar yükleniyor...</BosAlan>:<KayitTablosu kayitlar={filtrelenmisKayitlar} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/>}</Panel>
+            <Panel baslik="Trafo Değişim Kayıtları" altBaslik="Detay, geçmiş, düzenleme ve yetkinize göre silme işlemleri">{veriYukleniyor?<BosAlan>Kayıtlar yükleniyor...</BosAlan>:<KayitTablosu kayitlar={filtrelenmisKayitlar} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir} formBul={kaydaAitFormlar} formAc={kaydinFormunuAc}/>}</Panel>
           </>}
 
           
@@ -1332,70 +1398,54 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             <div className={`${duzenleyebilir?"mt-5":""} rounded-2xl border border-slate-800 bg-[#101d30] p-4`}>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div><div className="text-xs font-black uppercase tracking-wider text-slate-500">📁 TRAFO FORM ARŞİVİ</div><div className="mt-1 text-xs text-slate-500">Google Drive görünümü • Yıl → Ay → Dosyalar</div></div>
-                <button onClick={arsivKayitlariniGetir} className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-black">↻ Yenile</button>
+                <div><div className="text-xs font-black uppercase tracking-wider text-slate-500">📁 TRAFO FORM ARŞİVİ</div><div className="mt-1 text-xs text-slate-500">Yıl → Ay → İlçe → Dosyalar</div></div>
+                <div className="flex gap-2">
+                  {duzenleyebilir&&arsivFiltreYil&&<button type="button" disabled={topluIndiriliyor} onClick={arsivTopluIndir} className="rounded-xl border border-emerald-800 bg-emerald-950/30 px-3 py-2 text-xs font-black text-emerald-300 disabled:opacity-50">{topluIndiriliyor?"ZIP hazırlanıyor...":"⬇ ZIP İndir"}</button>}
+                  <button onClick={()=>{arsivKayitlariniGetir();driveSyncLoglariniGetir();}} className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-black">↻ Yenile</button>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3 text-xs font-bold">
-                <button type="button" onClick={()=>{setArsivFiltreYil("");setArsivFiltreAy("");}} className={`${!arsivFiltreYil?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 Arşiv</button>
-                {arsivFiltreYil&&<><span className="text-slate-700">›</span><button type="button" onClick={()=>setArsivFiltreAy("")} className={`${!arsivFiltreAy?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 {arsivFiltreYil}</button></>}
-                {arsivFiltreAy&&<><span className="text-slate-700">›</span><span className="text-orange-300">📁 {arsivFiltreAy}</span></>}
+                <button type="button" onClick={()=>{setArsivFiltreYil("");setArsivFiltreAy("");setArsivKlasorIlce("");}} className={`${!arsivFiltreYil?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 Arşiv</button>
+                {arsivFiltreYil&&<><span className="text-slate-700">›</span><button type="button" onClick={()=>{setArsivFiltreAy("");setArsivKlasorIlce("");}} className={`${!arsivFiltreAy?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 {arsivFiltreYil}</button></>}
+                {arsivFiltreAy&&<><span className="text-slate-700">›</span><button type="button" onClick={()=>setArsivKlasorIlce("")} className={`${!arsivKlasorIlce?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 {arsivFiltreAy}</button></>}
+                {arsivKlasorIlce&&<><span className="text-slate-700">›</span><span className="text-orange-300">📁 {arsivKlasorIlce}</span></>}
               </div>
 
-              {arsivFiltreYil&&arsivFiltreAy&&<div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <input value={arsivArama} onChange={e=>setArsivArama(e.target.value)} placeholder="Bu klasörde dosya, TR, mahalle ara..." className={inputSinif}/>
-                <select value={arsivFiltreIlce} onChange={e=>setArsivFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{arsivIlceler.map(i=><option key={i}>{i}</option>)}</select>
-              </div>}
+              {arsivKlasorIlce&&<div className="mt-3"><input value={arsivArama} onChange={e=>setArsivArama(e.target.value)} placeholder="Bu klasörde dosya veya TR ara..." className={inputSinif}/></div>}
             </div>
 
             <div className="mt-4">
               {arsivYukleniyor?<div className="rounded-2xl border border-slate-800 bg-[#101d30] p-8 text-center text-slate-400">Arşiv yükleniyor...</div>:
               !arsivFiltreYil?
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {arsivYillari.map(y=>{
-                    const adet=arsivKayitlari.filter(x=>String(x.yil)===y).length;
-                    return <button type="button" key={y} onClick={()=>{setArsivFiltreYil(y);setArsivFiltreAy("");setArsivArama("");setArsivFiltreIlce("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]">
-                      <div className="text-3xl">📁</div>
-                      <div className="mt-2 text-base font-black group-hover:text-orange-300">{y}</div>
-                      <div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div>
-                    </button>
-                  })}
+                  {arsivYillari.map(y=>{const adet=arsivKayitlari.filter(x=>String(x.yil)===y).length;return <button type="button" key={y} onClick={()=>{setArsivFiltreYil(y);setArsivFiltreAy("");setArsivKlasorIlce("");setArsivArama("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]"><div className="text-3xl">📁</div><div className="mt-2 text-base font-black group-hover:text-orange-300">{y}</div><div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div></button>})}
                 </div>
               :!arsivFiltreAy?
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {AYLAR.filter(a=>arsivKayitlari.some(x=>String(x.yil)===arsivFiltreYil&&x.ay===a)).map(a=>{
-                    const adet=arsivKayitlari.filter(x=>String(x.yil)===arsivFiltreYil&&x.ay===a).length;
-                    return <button type="button" key={a} onClick={()=>{setArsivFiltreAy(a);setArsivArama("");setArsivFiltreIlce("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]">
-                      <div className="text-3xl">📁</div>
-                      <div className="mt-2 truncate text-sm font-black group-hover:text-orange-300">{a}</div>
-                      <div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div>
-                    </button>
-                  })}
+                  {AYLAR.filter(a=>arsivKayitlari.some(x=>String(x.yil)===arsivFiltreYil&&x.ay===a)).map(a=>{const adet=arsivKayitlari.filter(x=>String(x.yil)===arsivFiltreYil&&x.ay===a).length;return <button type="button" key={a} onClick={()=>{setArsivFiltreAy(a);setArsivKlasorIlce("");setArsivArama("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]"><div className="text-3xl">📁</div><div className="mt-2 truncate text-sm font-black group-hover:text-orange-300">{a}</div><div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div></button>})}
+                </div>
+              :!arsivKlasorIlce?
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {arsivKlasorIlceler.map(i=>{const adet=arsivKayitlari.filter(x=>String(x.yil)===arsivFiltreYil&&x.ay===arsivFiltreAy&&(x.ilce||"DİĞER")===i).length;return <button type="button" key={i} onClick={()=>{setArsivKlasorIlce(i);setArsivArama("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]"><div className="text-3xl">📁</div><div className="mt-2 truncate text-sm font-black group-hover:text-orange-300">{i}</div><div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div></button>})}
                 </div>
               :filtrelenmisArsiv.length===0?<BosAlan>Bu klasörde dosya bulunmuyor.</BosAlan>:
                 <div className="overflow-hidden rounded-xl border border-slate-800 bg-[#101d30]">
-                  <div className="hidden grid-cols-[minmax(0,1fr)_120px_110px_110px] gap-3 border-b border-slate-800 bg-[#0b1728] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500 md:grid">
-                    <div>Dosya Adı</div><div>İlçe</div><div>Tür</div><div>İşlem</div>
-                  </div>
+                  <div className="hidden grid-cols-[minmax(0,1fr)_110px_110px] gap-3 border-b border-slate-800 bg-[#0b1728] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500 md:grid"><div>Dosya Adı</div><div>Tür</div><div>İşlem</div></div>
                   <div className="divide-y divide-slate-800">
-                    {filtrelenmisArsiv.map(item=>{
-                      const gorsel=item.mime_type.startsWith("image/");
-                      return <div key={item.id} className="grid gap-2 px-3 py-2.5 hover:bg-[#13233a] md:grid-cols-[minmax(0,1fr)_120px_110px_110px] md:items-center md:gap-3 md:px-4">
-                        <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="flex min-w-0 items-center gap-3 text-left disabled:opacity-50">
-                          <span className="shrink-0 text-2xl">{gorsel?"🖼️":"📄"}</span>
-                          <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-200 sm:text-sm" title={item.dosya_adi}>{item.dosya_adi}</span>{item.tr&&<span className="mt-0.5 block truncate text-[10px] text-slate-500">{item.tr}</span>}</span>
-                        </button>
-                        <div className="text-[10px] font-bold text-slate-400 md:text-xs">{item.ilce||"—"}</div>
-                        <div><span className="rounded-md border border-slate-700 px-2 py-1 text-[9px] font-black text-slate-400">{gorsel?"GÖRSEL":"PDF"}</span></div>
-                        <div className="flex gap-2">
-                          <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:opacity-40">Aç</button>
-                          {yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-md border border-red-900 px-2.5 py-1.5 text-[10px] font-black text-red-300">Sil</button>}
-                        </div>
-                      </div>
-                    })}
+                    {filtrelenmisArsiv.map(item=>{const gorsel=item.mime_type.startsWith("image/");return <div key={item.id} className="grid gap-2 px-3 py-2.5 hover:bg-[#13233a] md:grid-cols-[minmax(0,1fr)_110px_110px] md:items-center md:gap-3 md:px-4">
+                      <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="flex min-w-0 items-center gap-3 text-left disabled:opacity-50"><span className="shrink-0 text-2xl">{gorsel?"🖼️":"📄"}</span><span className="min-w-0"><span className="block truncate text-xs font-black text-slate-200 sm:text-sm" title={item.dosya_adi}>{arsivGorunenAd(item)}</span><span className="mt-0.5 block truncate text-[10px] text-slate-500">{item.dosya_adi}</span></span></button>
+                      <div><span className="rounded-md border border-slate-700 px-2 py-1 text-[9px] font-black text-slate-400">{gorsel?"GÖRSEL":"PDF"}</span></div>
+                      <div className="flex gap-2"><button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:opacity-40">Aç</button>{yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-md border border-red-900 px-2.5 py-1.5 text-[10px] font-black text-red-300">Sil</button>}</div>
+                    </div>})}
                   </div>
                 </div>}
             </div>
+
+            {session&&<div className="mt-5 rounded-2xl border border-slate-800 bg-[#101d30] p-4">
+              <div className="flex items-center justify-between gap-3"><div><div className="text-sm font-black">🕘 Senkronizasyon Geçmişi</div><div className="mt-1 text-xs text-slate-500">Son otomatik ve manuel Drive işlemleri</div></div><button onClick={driveSyncLoglariniGetir} className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-black">↻</button></div>
+              <div className="mt-3 space-y-2">{driveSyncLoglar.length?driveSyncLoglar.slice(0,8).map(l=><div key={l.id} className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-[#07111f] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"><div><div className={`text-xs font-black ${l.durum==="success"?"text-emerald-300":l.durum==="error"?"text-red-300":"text-blue-300"}`}>{l.durum==="success"?"✅ Başarılı":l.durum==="error"?"❌ Hata":"↻ Çalışıyor"} • {l.kaynak==="cron"?"Otomatik":"Manuel"}</div><div className="mt-1 text-[10px] text-slate-500">{new Date(l.created_at).toLocaleString("tr-TR")}{l.kullanici_email?` • ${l.kullanici_email}`:""}</div>{l.mesaj&&<div className="mt-1 text-[10px] text-red-300">{l.mesaj}</div>}</div><div className="text-[10px] font-bold text-slate-400">{l.aktarilan} yeni • {l.atlanan} atlandı • {l.hatali} hata</div></div>):<div className="text-xs text-slate-500">Henüz senkronizasyon kaydı yok.</div>}</div>
+            </div>}
           </>}
 
           {sayfa==="loglar"&&yonetici&&<>
@@ -1410,7 +1460,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
       </section>
     </div>
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500 text-xl font-black text-white shadow-2xl hover:bg-orange-400" title="Yukarı çık">↑</button>
-    {detayKayit&&<DetayModal kayit={detayKayit} kapat={()=>setDetayKayit(null)} duzenle={kaydiDuzenle} yazdir={tekKayitYazdir} gecmis={()=>setGecmisKayit(detayKayit)} duzenleyebilir={duzenleyebilir} onceki={detayOnceki?()=>setDetayKayit(detayOnceki):undefined} sonraki={detaySonraki?()=>setDetayKayit(detaySonraki):undefined}/>}
+    {detayKayit&&<DetayModal kayit={detayKayit} kapat={()=>setDetayKayit(null)} duzenle={kaydiDuzenle} yazdir={tekKayitYazdir} gecmis={()=>setGecmisKayit(detayKayit)} duzenleyebilir={duzenleyebilir} form={kaydaAitFormlar(detayKayit)[0]||null} formAc={()=>kaydinFormunuAc(detayKayit)} onceki={detayOnceki?()=>setDetayKayit(detayOnceki):undefined} sonraki={detaySonraki?()=>setDetayKayit(detaySonraki):undefined}/>}
     {gecmisKayit&&<TrafoGecmisModal anaKayit={gecmisKayit} kayitlar={gecmisKayitlari} kapat={()=>setGecmisKayit(null)} detay={k=>{setGecmisKayit(null);setDetayKayit(k);}}/>}
   </main>;
 }
@@ -1507,25 +1557,19 @@ function HataKutusu({children}:{children:ReactNode}){return <div className="mb-5
 function BosAlan({children}:{children:ReactNode}){return <div className="my-6 w-full rounded-xl border border-dashed border-slate-700 p-7 text-center text-sm text-slate-500 sm:p-10">{children}</div>}
 function NedenEtiketi({neden}:{neden:string|null}){const n=NEDENLER.find(x=>x.ad===neden);return neden?<span className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black text-white" style={{backgroundColor:n?.renk||"#475569"}}>{neden}</span>:<span className="text-slate-600">-</span>}
 
-function KayitTablosu({kayitlar,detay,duzenle,sil,gecmis,duzenleyebilir=false,silebilir=false}:{kayitlar:TrafoKaydi[];detay:(k:TrafoKaydi)=>void;duzenle:(k:TrafoKaydi)=>void;sil:(k:TrafoKaydi)=>void;gecmis:(k:TrafoKaydi)=>void;duzenleyebilir?:boolean;silebilir?:boolean}){
-  if(!kayitlar.length)return <BosAlan>Henüz kayıt bulunmuyor.</BosAlan>;
-  return <><div className="mt-5 space-y-3 md:hidden">{kayitlar.map(k=><div key={k.id} className="overflow-hidden rounded-2xl border border-slate-800 bg-[#07111f]"><div className="flex items-start justify-between gap-3 border-b border-slate-800 p-4"><div className="min-w-0"><div className="text-xs font-bold text-orange-400">{tarihGoster(k.tarih)}</div><div className="mt-1 text-base font-black">{k.ilce||"İlçe belirtilmemiş"}{k.mahalle?` / ${k.mahalle}`:""}</div></div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="grid grid-cols-2 gap-px bg-slate-800"><MobilBilgi baslik="Yıl / Ay" deger={`${k.yil||"-"} / ${k.ay||"-"}`}/><MobilBilgi baslik="Trafo ID" deger={k.trafo_id}/><MobilBilgi baslik="Lokasyon ID" deger={k.lokasyon_id}/><MobilBilgi baslik="TR" deger={k.tr}/></div><div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4"><IslemButon onClick={()=>detay(k)} cls="border-orange-700 text-orange-300">Detay</IslemButon><IslemButon onClick={()=>gecmis(k)} cls="border-violet-700 text-violet-300">Geçmiş</IslemButon>{duzenleyebilir&&<IslemButon onClick={()=>duzenle(k)} cls="border-blue-700 text-blue-300">Düzenle</IslemButon>}{silebilir&&<IslemButon onClick={()=>sil(k)} cls="border-red-800 text-red-300">Sil</IslemButon>}</div></div>)}</div>
-  <div className="mt-4 hidden overflow-x-auto md:block"><table className="min-w-full text-left text-sm"><thead><tr className="border-b border-slate-700 text-[10px] uppercase text-slate-500">{["Tarih","Yıl","Ay","İlçe","Mahalle","Konum","Trafo ID","Değişim Nedeni","İşlem"].map(h=><th key={h} className="px-3 py-3">{h}</th>)}</tr></thead><tbody>{kayitlar.map(k=><tr key={k.id} className="border-b border-slate-800/80 hover:bg-slate-800/30"><td className="px-3 py-3.5 font-semibold">{tarihGoster(k.tarih)}</td><td className="px-3 py-3.5">{k.yil||"-"}</td><td className="px-3 py-3.5">{k.ay||"-"}</td><td className="px-3 py-3.5">{k.ilce||"-"}</td><td className="px-3 py-3.5">{k.mahalle||"-"}</td><td className="px-3 py-3.5">{k.lokasyon_id||"-"}</td><td className="px-3 py-3.5">{k.trafo_id||"-"}</td><td className="px-3 py-3.5"><NedenEtiketi neden={k.degisim_nedeni}/></td><td className="whitespace-nowrap px-3 py-3.5 text-right"><button onClick={()=>detay(k)} className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300">Detay</button><button onClick={()=>gecmis(k)} className="mr-2 rounded-lg border border-violet-700 px-3 py-2 text-xs font-bold text-violet-300">Geçmiş</button>{duzenleyebilir&&<button onClick={()=>duzenle(k)} className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300">Düzenle</button>}{silebilir&&<button onClick={()=>sil(k)} className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300">Sil</button>}</td></tr>)}</tbody></table></div></>;
+function KayitTablosu({kayitlar,detay,duzenle,sil,gecmis,duzenleyebilir=false,silebilir=false,formBul,formAc}:{kayitlar:TrafoKaydi[];detay:(k:TrafoKaydi)=>void;duzenle:(k:TrafoKaydi)=>void;sil:(k:TrafoKaydi)=>void;gecmis:(k:TrafoKaydi)=>void;duzenleyebilir?:boolean;silebilir?:boolean;formBul:(k:TrafoKaydi)=>ArsivKaydi[];formAc:(k:TrafoKaydi)=>void}){
+  if(!kayitlar.length)return <BosAlan>Bu filtrelerde kayıt bulunamadı.</BosAlan>;
+  return <><div className="mt-5 space-y-3 md:hidden">{kayitlar.map(k=>{const formlar=formBul(k);return <div key={k.id} className="overflow-hidden rounded-2xl border border-slate-800 bg-[#07111f]"><div className="flex items-start justify-between gap-3 border-b border-slate-800 p-4"><div className="min-w-0"><div className="text-xs font-bold text-orange-400">{tarihGoster(k.tarih)}</div><div className="mt-1 text-base font-black">{k.ilce||"İlçe belirtilmemiş"}{k.mahalle?` / ${k.mahalle}`:""}</div><div className={`mt-2 inline-flex rounded-full px-2 py-1 text-[9px] font-black ${formlar.length?"bg-emerald-500/15 text-emerald-300":"bg-amber-500/15 text-amber-300"}`}>{formlar.length?`✅ FORM VAR (${formlar.length})`:"⚠️ FORM EKSİK"}</div></div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="grid grid-cols-2 gap-px bg-slate-800"><MobilBilgi baslik="Yıl / Ay" deger={`${k.yil||"-"} / ${k.ay||"-"}`}/><MobilBilgi baslik="Trafo ID" deger={k.trafo_id}/><MobilBilgi baslik="Lokasyon ID" deger={k.lokasyon_id}/><MobilBilgi baslik="TR" deger={k.tr}/></div><div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5"><IslemButon onClick={()=>detay(k)} cls="border-orange-700 text-orange-300">Detay</IslemButon>{formlar.length>0&&<IslemButon onClick={()=>formAc(k)} cls="border-emerald-700 text-emerald-300">📄 Formu Aç</IslemButon>}<IslemButon onClick={()=>gecmis(k)} cls="border-violet-700 text-violet-300">Geçmiş</IslemButon>{duzenleyebilir&&<IslemButon onClick={()=>duzenle(k)} cls="border-blue-700 text-blue-300">Düzenle</IslemButon>}{silebilir&&<IslemButon onClick={()=>sil(k)} cls="border-red-800 text-red-300">Sil</IslemButon>}</div></div>})}</div>
+  <div className="mt-4 hidden overflow-x-auto md:block"><table className="min-w-full text-left text-sm"><thead><tr className="border-b border-slate-700 text-[10px] uppercase text-slate-500">{["Tarih","Yıl","Ay","İlçe","Mahalle","Konum","Trafo ID","Form","Değişim Nedeni","İşlem"].map(h=><th key={h} className="px-3 py-3">{h}</th>)}</tr></thead><tbody>{kayitlar.map(k=>{const formlar=formBul(k);return <tr key={k.id} className="border-b border-slate-800/80 hover:bg-slate-800/30"><td className="px-3 py-3.5 font-semibold">{tarihGoster(k.tarih)}</td><td className="px-3 py-3.5">{k.yil||"-"}</td><td className="px-3 py-3.5">{k.ay||"-"}</td><td className="px-3 py-3.5">{k.ilce||"-"}</td><td className="px-3 py-3.5">{k.mahalle||"-"}</td><td className="px-3 py-3.5">{k.lokasyon_id||"-"}</td><td className="px-3 py-3.5">{k.trafo_id||"-"}</td><td className="px-3 py-3.5">{formlar.length?<button onClick={()=>formAc(k)} className="rounded-lg border border-emerald-800 bg-emerald-950/30 px-2 py-1 text-[10px] font-black text-emerald-300">✅ VAR ({formlar.length})</button>:<span className="rounded-lg border border-amber-900 bg-amber-950/30 px-2 py-1 text-[10px] font-black text-amber-300">⚠ EKSİK</span>}</td><td className="px-3 py-3.5"><NedenEtiketi neden={k.degisim_nedeni}/></td><td className="whitespace-nowrap px-3 py-3.5 text-right"><button onClick={()=>detay(k)} className="mr-2 rounded-lg border border-orange-700 px-3 py-2 text-xs font-bold text-orange-300">Detay</button><button onClick={()=>gecmis(k)} className="mr-2 rounded-lg border border-violet-700 px-3 py-2 text-xs font-bold text-violet-300">Geçmiş</button>{duzenleyebilir&&<button onClick={()=>duzenle(k)} className="mr-2 rounded-lg border border-blue-700 px-3 py-2 text-xs font-bold text-blue-300">Düzenle</button>}{silebilir&&<button onClick={()=>sil(k)} className="rounded-lg border border-red-800 px-3 py-2 text-xs font-bold text-red-300">Sil</button>}</td></tr>})}</tbody></table></div></>;
 }
-function tarihSaatGoster(v:string|undefined|null){if(!v)return "-";const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString("tr-TR");}
-function LogKart({log}:{log:AuditLog}){const etiket=log.action==="INSERT"?"EKLENDİ":log.action==="UPDATE"?"DÜZENLENDİ":"SİLİNDİ";return <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${log.action==="INSERT"?"bg-emerald-500/15 text-emerald-300":log.action==="UPDATE"?"bg-blue-500/15 text-blue-300":"bg-red-500/15 text-red-300"}`}>{etiket}</span><span className="text-[10px] text-slate-500">#{log.record_id||"-"}</span></div><div className="mt-3 truncate text-xs font-black">{log.user_email||"Sistem"}</div><div className="mt-1 text-[10px] text-slate-500">{tarihSaatGoster(log.created_at)}</div></div>}
-function farkAlanlari(oldData:Record<string,unknown>|null,newData:Record<string,unknown>|null){const a=oldData||{},b=newData||{};return Array.from(new Set([...Object.keys(a),...Object.keys(b)])).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));}
-function LogSatiri({log,kayitAc}:{log:AuditLog;kayitAc:(id:number)=>void}){const fark=farkAlanlari(log.old_data,log.new_data);return <div className="rounded-2xl border border-slate-800 bg-[#07111f] p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${log.action==="INSERT"?"bg-emerald-500/15 text-emerald-300":log.action==="UPDATE"?"bg-blue-500/15 text-blue-300":"bg-red-500/15 text-red-300"}`}>{log.action}</span><span className="text-sm font-black">Kayıt #{log.record_id||"-"}</span></div><div className="mt-2 text-xs text-slate-400">{log.user_email||"Sistem"} • {tarihSaatGoster(log.created_at)}</div></div>{log.record_id&&log.action!=="DELETE"&&<button onClick={()=>kayitAc(log.record_id!)} className="rounded-xl border border-orange-700 px-3 py-2 text-xs font-black text-orange-300">Kaydı Aç</button>}</div>{fark.length>0&&<div className="mt-4 flex flex-wrap gap-2">{fark.slice(0,12).map(k=><span key={k} className="rounded-lg border border-slate-800 bg-[#101d30] px-2.5 py-1.5 text-[10px] text-slate-300">{k}: <b>{String(log.old_data?.[k]??"-")}</b> → <b className="text-orange-300">{String(log.new_data?.[k]??"-")}</b></span>)}</div>}</div>}
-function TrafoGecmisModal({anaKayit,kayitlar,kapat,detay}:{anaKayit:TrafoKaydi;kayitlar:TrafoKaydi[];kapat:()=>void;detay:(k:TrafoKaydi)=>void}){return <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center sm:p-5"><div className="flex h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border border-slate-700 bg-[#0b1628] shadow-2xl sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"><div className="flex items-start justify-between gap-4 border-b border-slate-800 p-5"><div><div className="text-xs font-black uppercase tracking-wider text-violet-300">🕘 Trafo Geçmişi</div><h2 className="mt-2 text-xl font-black">{anaKayit.trafo_id?`Trafo ID: ${anaKayit.trafo_id}`:anaKayit.lokasyon_id?`Lokasyon ID: ${anaKayit.lokasyon_id}`:`TR: ${anaKayit.tr||"-"}`}</h2><div className="mt-1 text-xs text-slate-500">{kayitlar.length} geçmiş kayıt bulundu</div></div><button onClick={kapat} className="h-10 w-10 rounded-xl border border-slate-700 text-xl">×</button></div><div className="overflow-y-auto p-4 sm:p-5"><div className="relative ml-3 border-l border-slate-700 pl-6">{kayitlar.map((k,i)=><button type="button" onClick={()=>detay(k)} key={k.id} className="relative mb-4 block w-full rounded-2xl border border-slate-800 bg-[#07111f] p-4 text-left transition hover:border-violet-500/50"><span className="absolute -left-[31px] top-5 h-3 w-3 rounded-full bg-violet-500 ring-4 ring-[#0b1628]"/><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{tarihGoster(k.tarih)} • {k.ilce||"-"} / {k.mahalle||"-"}</div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><div><span className="text-slate-500">Sökülen</span><div className="font-black">{k.sokulen_gucu||"-"} kVA</div></div><div><span className="text-slate-500">Takılan</span><div className="font-black">{k.takilan_gucu||"-"} kVA</div></div><div><span className="text-slate-500">Lokasyon</span><div className="font-black">{k.lokasyon_id||"-"}</div></div><div><span className="text-slate-500">Sıra</span><div className="font-black">#{k.sira_no||k.id}</div></div></div>{i===0&&<div className="mt-3 text-[10px] font-black uppercase text-violet-300">En güncel kayıt</div>}</button>)}</div></div></div></div>}
-function IslemButon({onClick,cls,children}:{onClick:()=>void;cls:string;children:ReactNode}){return <button onClick={onClick} className={`rounded-xl border px-2 py-2.5 text-xs font-bold ${cls}`}>{children}</button>}
 function MobilBilgi({baslik,deger}:{baslik:string;deger:string|number|null|undefined}){return <div className="bg-[#101d30] p-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div><div className="mt-1 break-words text-xs font-bold text-slate-200">{deger===null||deger===undefined||String(deger).trim()===""?"-":String(deger)}</div></div>}
 
-function DetayModal({kayit,kapat,duzenle,yazdir,gecmis,duzenleyebilir=false,onceki,sonraki}:{kayit:TrafoKaydi;kapat:()=>void;duzenle:(k:TrafoKaydi)=>void;yazdir:(k:TrafoKaydi)=>void;gecmis:()=>void;duzenleyebilir?:boolean;onceki?:()=>void;sonraki?:()=>void}){
+function DetayModal({kayit,kapat,duzenle,yazdir,gecmis,duzenleyebilir=false,form,formAc,onceki,sonraki}:{kayit:TrafoKaydi;kapat:()=>void;duzenle:(k:TrafoKaydi)=>void;yazdir:(k:TrafoKaydi)=>void;gecmis:()=>void;duzenleyebilir?:boolean;form:ArsivKaydi|null;formAc:()=>void;onceki?:()=>void;sonraki?:()=>void}){
   return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-0 backdrop-blur-sm sm:p-4" onMouseDown={kapat}><div onMouseDown={e=>e.stopPropagation()} className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0b1628] shadow-2xl sm:h-[92vh] sm:max-w-6xl sm:rounded-3xl sm:border sm:border-slate-700"><div className="flex shrink-0 items-start justify-between border-b border-slate-800 bg-[#101d30] px-4 py-4 sm:px-7 sm:py-5"><div><div className="text-[10px] font-black tracking-[.18em] text-orange-400">TRAFO DEĞİŞİM KAYDI</div><h2 className="mt-1 text-lg font-black sm:text-2xl">{kayit.ilce||"İlçe Belirtilmemiş"}{kayit.mahalle&&<span className="text-slate-400"> / {kayit.mahalle}</span>}</h2><div className="mt-3 flex flex-wrap gap-2"><Etiket>📅 {tarihGoster(kayit.tarih)}</Etiket><NedenEtiketi neden={kayit.degisim_nedeni}/></div></div><button onClick={kapat} className="h-10 w-10 rounded-xl border border-slate-700 text-xl">×</button></div>
     <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-7"><DetayBolumu baslik="📍 KONUM BİLGİLERİ"><DetayGrid><D b="Yıl" v={kayit.yil}/><D b="Ay" v={kayit.ay}/><D b="İlçe" v={kayit.ilce}/><D b="Mahalle" v={kayit.mahalle}/><D b="TR" v={kayit.tr}/><D b="Lokasyon ID" v={kayit.lokasyon_id}/><D b="Trafo ID" v={kayit.trafo_id}/><D b="Trafo Tipi" v={kayit.trafo_tipi}/></DetayGrid></DetayBolumu>
     <div className="mt-4 grid gap-4 xl:grid-cols-2"><DetayBolumu baslik="🔴 SÖKÜLEN TRAFO"><DetayGrid iki><D b="Gücü" v={kayit.sokulen_gucu}/><D b="Gerilim" v={kayit.sokulen_gerilim}/><D b="Markası" v={kayit.sokulen_markasi}/><D b="Seri No" v={kayit.sokulen_seri_no}/><D b="İmal Yılı" v={kayit.sokulen_imal_yili}/><D b="Trafo Tipi" v={kayit.sokulen_trafo_tipi}/><D b="Tamir Yılı" v={kayit.sokulen_tamir_yili}/><D b="Tamir Firması" v={kayit.sokulen_tamir_firmasi}/><D b="Yüklenici" v={kayit.sokulen_yuklenici}/></DetayGrid></DetayBolumu><DetayBolumu baslik="🟢 TAKILAN TRAFO"><DetayGrid iki><D b="Gücü" v={kayit.takilan_gucu}/><D b="Gerilim" v={kayit.takilan_gerilim}/><D b="Markası" v={kayit.takilan_markasi}/><D b="Seri No" v={kayit.takilan_seri_no}/><D b="İmal Yılı" v={kayit.takilan_imal_yili}/><D b="Trafo Tipi" v={kayit.takilan_trafo_tipi}/><D b="Tamir Yılı" v={kayit.takilan_tamir_yili}/><D b="Tamir Firması" v={kayit.takilan_tamir_firmasi}/></DetayGrid></DetayBolumu></div>
     <div className="mt-4"><DetayBolumu baslik="📅 İŞLEM BİLGİLERİ"><DetayGrid><D b="Tarih" v={tarihGoster(kayit.tarih)}/><D b="Değişim Nedeni" v={kayit.degisim_nedeni}/><D b="Kayıt No" v={kayit.sira_no||kayit.id}/></DetayGrid><div className="mt-4 rounded-xl border border-slate-800 bg-[#07111f] p-4"><div className="mb-2 text-[10px] font-black text-slate-500">AÇIKLAMA</div><div className="whitespace-pre-wrap text-sm">{kayit.aciklama||"Açıklama girilmemiş."}</div></div></DetayBolumu></div></div>
-    <div className="shrink-0 border-t border-slate-800 bg-[#101d30] px-3 py-3 sm:px-7"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="grid grid-cols-2 gap-2"><button disabled={!onceki} onClick={onceki} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-30">← Önceki</button><button disabled={!sonraki} onClick={sonraki} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-30">Sonraki →</button></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><button onClick={()=>yazdir(kayit)} className="rounded-xl bg-slate-700 px-3 py-2.5 text-xs font-black">🖨️ PDF</button><button onClick={gecmis} className="rounded-xl bg-violet-700 px-3 py-2.5 text-xs font-black">🕘 Geçmiş</button><button onClick={kapat} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold">Kapat</button>{duzenleyebilir&&<button onClick={()=>duzenle(kayit)} className="rounded-xl bg-blue-600 px-3 py-2.5 text-xs font-black">✏️ Düzenle</button>}</div></div></div></div></div>;
+    <div className="shrink-0 border-t border-slate-800 bg-[#101d30] px-3 py-3 sm:px-7"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="grid grid-cols-2 gap-2"><button disabled={!onceki} onClick={onceki} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-30">← Önceki</button><button disabled={!sonraki} onClick={sonraki} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-30">Sonraki →</button></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-5"><button onClick={()=>yazdir(kayit)} className="rounded-xl bg-slate-700 px-3 py-2.5 text-xs font-black">🖨️ PDF</button>{form?<button onClick={formAc} className="rounded-xl bg-emerald-700 px-3 py-2.5 text-xs font-black">📄 Formu Aç</button>:<div className="flex items-center justify-center rounded-xl border border-amber-900 bg-amber-950/30 px-3 py-2.5 text-center text-[10px] font-black text-amber-300">⚠ Form Eksik</div>}<button onClick={gecmis} className="rounded-xl bg-violet-700 px-3 py-2.5 text-xs font-black">🕘 Geçmiş</button><button onClick={kapat} className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-bold">Kapat</button>{duzenleyebilir&&<button onClick={()=>duzenle(kayit)} className="rounded-xl bg-blue-600 px-3 py-2.5 text-xs font-black">✏️ Düzenle</button>}</div></div></div></div></div>;
 }
 function DetayBolumu({baslik,children}:{baslik:string;children:ReactNode}){return <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30]"><div className="border-b border-slate-800 bg-[#07111f] px-4 py-3 text-sm font-black">{baslik}</div><div className="p-3 sm:p-5">{children}</div></section>}
 function DetayGrid({children,iki=false}:{children:ReactNode;iki?:boolean}){return <div className={iki?"grid gap-3 sm:grid-cols-2":"grid gap-3 sm:grid-cols-2 lg:grid-cols-4"}>{children}</div>}
