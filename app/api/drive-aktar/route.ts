@@ -5,29 +5,11 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// TEST: Doğrudan paylaşılan 2026 / AĞUSTOS klasörü.
-// Böylece TUTANAKLAR ve 2026 üst klasörlerine servis hesabı yetkisi gerekmiyor.
-const DRIVE_AGUSTOS_FOLDER_ID = "1w6rqCwijt-PA8KXbm8VEbbjWK5YTYchF";
+const DRIVE_AGUSTOS_2026_FOLDER_ID = process.env.GOOGLE_DRIVE_AGUSTOS_2026_FOLDER_ID || "1w6rqCwijt-PA8KXbm8VEbbjWK5YTYchF";
 const STORAGE_BUCKET = "trafo-form-arsivi";
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
-const ALLOWED_MIME = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
-const ILCE_LIST = [
-  "BALYA",
-  "İVRİNDİ",
-  "SAVAŞTEPE",
-  "SINDIRGI",
-  "BİGADİÇ",
-  "DURSUNBEY",
-  "KEPSUT",
-  "SUSURLUK",
-  "ALTIEYLÜL",
-  "KARESİ",
-];
+const ALLOWED_MIME = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
+const ILCE_LIST = ["BALYA","İVRİNDİ","SAVAŞTEPE","SINDIRGI","BİGADİÇ","DURSUNBEY","KEPSUT","SUSURLUK","ALTIEYLÜL","KARESİ"];
 
 type DriveFile = {
   id: string;
@@ -36,85 +18,42 @@ type DriveFile = {
   size?: string;
 };
 
-type GoogleServiceAccount = {
-  client_email: string;
-  private_key: string;
-};
-
 function base64Url(input: string | Buffer) {
-  return Buffer.from(input)
-    .toString("base64")
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-}
-
-function getGoogleCredentials(): GoogleServiceAccount {
-  // ÖNERİLEN: Google JSON dosyasının tamamını Base64 olarak tek env değişkeninde tut.
-  const jsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
-
-  if (jsonBase64) {
-    try {
-      const rawJson = Buffer.from(jsonBase64.trim(), "base64").toString("utf8");
-      const parsed = JSON.parse(rawJson);
-      const client_email = String(parsed?.client_email || "").trim();
-      const private_key = String(parsed?.private_key || "");
-
-      if (!client_email || !private_key) {
-        throw new Error("JSON içinde client_email/private_key bulunamadı.");
-      }
-
-      return { client_email, private_key };
-    } catch (error: any) {
-      throw new Error(
-        "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 okunamadı: " +
-          (error?.message || "geçersiz Base64/JSON")
-      );
-    }
-  }
-
-  // Eski yöntem için geriye dönük destek.
-  const client_email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
-  const rawKey = String(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || "");
-  if (!client_email || !rawKey) {
-    throw new Error(
-      "Google servis hesabı eksik. GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 ekleyin."
-    );
-  }
-
-  // Hem literal \\n hem gerçek satır sonu biçimini destekler.
-  const private_key = rawKey.replace(/\\n/g, "\n").trim() + "\n";
-  return { client_email, private_key };
+  return Buffer.from(input).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
 async function getGoogleAccessToken() {
-  const { client_email, private_key } = getGoogleCredentials();
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!rawJson) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON ortam değişkeni eksik.");
 
-  // PEM'i önce açıkça doğrula; biçim hatasını anlaşılır mesajla döndür.
-  let keyObject: crypto.KeyObject;
+  let serviceAccount: { client_email?: string; private_key?: string };
   try {
-    keyObject = crypto.createPrivateKey({ key: private_key, format: "pem" });
-  } catch (error: any) {
-    throw new Error(
-      "Google private key PEM olarak okunamadı: " +
-        (error?.message || "anahtar biçimi hatalı")
-    );
+    serviceAccount = JSON.parse(rawJson);
+  } catch {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON geçerli JSON değil.");
+  }
+
+  const email = serviceAccount.client_email;
+  const privateKey = serviceAccount.private_key;
+
+  if (!email || !privateKey) {
+    throw new Error("Google servis hesabı JSON içinde client_email veya private_key eksik.");
   }
 
   const now = Math.floor(Date.now() / 1000);
   const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = base64Url(
-    JSON.stringify({
-      iss: client_email,
-      scope: "https://www.googleapis.com/auth/drive.readonly",
-      aud: "https://oauth2.googleapis.com/token",
-      iat: now,
-      exp: now + 3600,
-    })
-  );
-
+  const payload = base64Url(JSON.stringify({
+    iss: email,
+    scope: "https://www.googleapis.com/auth/drive.readonly",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  }));
   const unsigned = `${header}.${payload}`;
-  const signature = crypto.sign("RSA-SHA256", Buffer.from(unsigned), keyObject);
+  const signer = crypto.createSign("RSA-SHA256");
+  signer.update(unsigned);
+  signer.end();
+  const signature = signer.sign(privateKey);
   const assertion = `${unsigned}.${base64Url(signature)}`;
 
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -129,20 +68,14 @@ async function getGoogleAccessToken() {
 
   const tokenJson = await tokenResponse.json();
   if (!tokenResponse.ok || !tokenJson.access_token) {
-    throw new Error(
-      tokenJson?.error_description ||
-        tokenJson?.error ||
-        "Google Drive erişim anahtarı alınamadı."
-    );
+    throw new Error(tokenJson?.error_description || "Google Drive erişim anahtarı alınamadı.");
   }
-
   return tokenJson.access_token as string;
 }
 
 async function listFolder(accessToken: string, folderId: string): Promise<DriveFile[]> {
   const files: DriveFile[] = [];
   let pageToken = "";
-
   do {
     const params = new URLSearchParams({
       q: `'${folderId}' in parents and trashed = false`,
@@ -152,24 +85,15 @@ async function listFolder(accessToken: string, folderId: string): Promise<DriveF
       includeItemsFromAllDrives: "true",
     });
     if (pageToken) params.set("pageToken", pageToken);
-
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files?${params.toString()}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      }
-    );
-
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
     const json = await response.json();
-    if (!response.ok) {
-      throw new Error(json?.error?.message || "Google Drive klasörü okunamadı.");
-    }
-
+    if (!response.ok) throw new Error(json?.error?.message || "Google Drive klasörü okunamadı.");
     files.push(...(json.files || []));
     pageToken = json.nextPageToken || "";
   } while (pageToken);
-
   return files;
 }
 
@@ -181,18 +105,12 @@ function safeAscii(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i")
-    .replace(/İ/g, "I")
-    .replace(/ş/g, "s")
-    .replace(/Ş/g, "S")
-    .replace(/ğ/g, "g")
-    .replace(/Ğ/g, "G")
-    .replace(/ü/g, "u")
-    .replace(/Ü/g, "U")
-    .replace(/ö/g, "o")
-    .replace(/Ö/g, "O")
-    .replace(/ç/g, "c")
-    .replace(/Ç/g, "C")
+    .replace(/ı/g, "i").replace(/İ/g, "I")
+    .replace(/ş/g, "s").replace(/Ş/g, "S")
+    .replace(/ğ/g, "g").replace(/Ğ/g, "G")
+    .replace(/ü/g, "u").replace(/Ü/g, "U")
+    .replace(/ö/g, "o").replace(/Ö/g, "O")
+    .replace(/ç/g, "c").replace(/Ç/g, "C")
     .replace(/[^a-zA-Z0-9._-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "");
@@ -200,49 +118,23 @@ function safeAscii(value: string) {
 
 function inferMetadata(fileName: string) {
   const upper = normalizeTr(fileName.replace(/\.(pdf|jpe?g|png|webp)$/i, ""));
-  const ilce =
-    ILCE_LIST.find(
-      (x) =>
-        upper.startsWith(x) ||
-        upper.includes(`${x} -`) ||
-        upper.includes(`${x}-`)
-    ) || null;
-
+  const ilce = ILCE_LIST.find((x) => upper.startsWith(x) || upper.includes(`${x} -`) || upper.includes(`${x}-`)) || null;
   let tr: string | null = upper;
   if (ilce) {
-    tr =
-      upper
-        .replace(
-          new RegExp(
-            `^${ilce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[-–—]?\\s*`,
-            "i"
-          ),
-          ""
-        )
-        .trim() || upper;
+    tr = upper.replace(new RegExp(`^${ilce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[-–—]?\\s*`, "i"), "").trim() || upper;
   }
-
   return { ilce, tr };
 }
 
 async function downloadDriveFile(accessToken: string, fileId: string) {
-  const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(
-      fileId
-    )}?alt=media&supportsAllDrives=true`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    }
-  );
-
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media&supportsAllDrives=true`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
   if (!response.ok) {
     const msg = await response.text().catch(() => "");
-    throw new Error(
-      `Drive dosyası indirilemedi (${response.status}) ${msg.slice(0, 180)}`
-    );
+    throw new Error(`Drive dosyası indirilemedi (${response.status}) ${msg.slice(0, 180)}`);
   }
-
   return Buffer.from(await response.arrayBuffer());
 }
 
@@ -251,173 +143,90 @@ export async function POST(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
     if (!supabaseUrl || !anonKey || !serviceKey) {
-      return NextResponse.json(
-        { error: "Supabase sunucu ortam değişkenleri eksik." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Supabase sunucu ortam değişkenleri eksik." }, { status: 500 });
     }
 
     const authorization = req.headers.get("authorization") || "";
-    const token = authorization.startsWith("Bearer ")
-      ? authorization.slice(7)
-      : "";
+    const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+    if (!token) return NextResponse.json({ error: "Oturum bulunamadı." }, { status: 401 });
 
-    if (!token) {
-      return NextResponse.json({ error: "Oturum bulunamadı." }, { status: 401 });
-    }
-
-    const authClient = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
+    const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: userData, error: userError } = await authClient.auth.getUser(token);
     const user = userData.user;
+    if (userError || !user) return NextResponse.json({ error: "Oturum doğrulanamadı." }, { status: 401 });
 
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Oturum doğrulanamadı." },
-        { status: 401 }
-      );
-    }
-
-    const adminClient = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const { data: roleRow, error: roleError } = await adminClient
-      .from("app_users")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (roleError) {
-      return NextResponse.json(
-        { error: "Kullanıcı yetkisi okunamadı: " + roleError.message },
-        { status: 500 }
-      );
-    }
-
+    const adminClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: roleRow, error: roleError } = await adminClient.from("app_users").select("role").eq("id", user.id).maybeSingle();
+    if (roleError) return NextResponse.json({ error: "Kullanıcı yetkisi okunamadı: " + roleError.message }, { status: 500 });
     if (!roleRow || !["admin", "editor"].includes(roleRow.role)) {
-      return NextResponse.json(
-        { error: "Bu işlem için Admin veya Editor yetkisi gerekir." },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bu işlem için Admin veya Editor yetkisi gerekir." }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
     const yil = Number(body?.yil);
     const ay = normalizeTr(String(body?.ay || ""));
-
     if (yil !== 2026 || ay !== "AĞUSTOS") {
-      return NextResponse.json(
-        { error: "Bu test sürümü yalnızca 2026 AĞUSTOS aktarımına izin veriyor." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Bu test sürümü yalnızca 2026 AĞUSTOS aktarımına izin veriyor." }, { status: 400 });
     }
 
     const accessToken = await getGoogleAccessToken();
-
-    // Doğrudan paylaşılan AĞUSTOS klasörünü okuyoruz.
-    const monthItems = await listFolder(accessToken, DRIVE_AGUSTOS_FOLDER_ID);
+    const monthItems = await listFolder(accessToken, DRIVE_AGUSTOS_2026_FOLDER_ID);
     const candidates = monthItems.filter((x) => ALLOWED_MIME.has(x.mimeType));
-
-    if (candidates.length === 0) {
-      return NextResponse.json(
-        {
-          error:
-            "AĞUSTOS klasörü okunabildi ancak desteklenen PDF/JPG/PNG/WEBP dosyası bulunamadı. Klasörün doğru servis hesabıyla paylaşıldığını kontrol edin.",
-        },
-        { status: 404 }
-      );
-    }
 
     let aktarilan = 0;
     let atlanan = 0;
     let hatali = 0;
-    const detaylar: Array<{
-      dosya: string;
-      durum: string;
-      mesaj?: string;
-    }> = [];
+    const detaylar: Array<{ dosya: string; durum: string; mesaj?: string }> = [];
 
     for (const item of candidates) {
       try {
         const declaredSize = Number(item.size || 0);
         if (declaredSize > MAX_FILE_SIZE) {
           atlanan++;
-          detaylar.push({
-            dosya: item.name,
-            durum: "atlandi",
-            mesaj: "15 MB sınırını aşıyor.",
-          });
+          detaylar.push({ dosya: item.name, durum: "atlandi", mesaj: "15 MB sınırını aşıyor." });
           continue;
         }
 
         const safeName = safeAscii(item.name) || `drive_${item.id}`;
-        const path = `2026/AGUSTOS/drive_${item.id}_${safeName}`;
-
-        const { data: existing } = await adminClient
-          .from("trafo_form_arsivi")
-          .select("id")
-          .eq("dosya_yolu", path)
-          .maybeSingle();
-
+        const path = `${yil}/${safeAscii(ay)}/drive_${item.id}_${safeName}`;
+        const { data: existing } = await adminClient.from("trafo_form_arsivi").select("id").eq("dosya_yolu", path).maybeSingle();
         if (existing) {
           atlanan++;
-          detaylar.push({
-            dosya: item.name,
-            durum: "atlandi",
-            mesaj: "Daha önce aktarılmış.",
-          });
+          detaylar.push({ dosya: item.name, durum: "atlandi", mesaj: "Daha önce aktarılmış." });
           continue;
         }
 
         const fileBuffer = await downloadDriveFile(accessToken, item.id);
-
         if (fileBuffer.length > MAX_FILE_SIZE) {
           atlanan++;
-          detaylar.push({
-            dosya: item.name,
-            durum: "atlandi",
-            mesaj: "İndirilen dosya 15 MB sınırını aşıyor.",
-          });
+          detaylar.push({ dosya: item.name, durum: "atlandi", mesaj: "İndirilen dosya 15 MB sınırını aşıyor." });
           continue;
         }
 
-        const { error: storageError } = await adminClient.storage
-          .from(STORAGE_BUCKET)
-          .upload(path, fileBuffer, {
-            contentType: item.mimeType,
-            upsert: false,
-          });
-
-        if (storageError) {
-          throw new Error("Storage: " + storageError.message);
-        }
+        const { error: storageError } = await adminClient.storage.from(STORAGE_BUCKET).upload(path, fileBuffer, {
+          contentType: item.mimeType,
+          upsert: false,
+        });
+        if (storageError) throw new Error("Storage: " + storageError.message);
 
         const meta = inferMetadata(item.name);
-
-        const { error: insertError } = await adminClient
-          .from("trafo_form_arsivi")
-          .insert({
-            yil: 2026,
-            ay: "AĞUSTOS",
-            ilce: meta.ilce,
-            mahalle: null,
-            tr: meta.tr,
-            lokasyon_id: null,
-            trafo_id: null,
-            dosya_adi: item.name,
-            dosya_yolu: path,
-            mime_type: item.mimeType,
-            dosya_boyutu: fileBuffer.length,
-            aciklama: `Google Drive toplu aktarım • Drive ID: ${item.id}`,
-            yukleyen_id: user.id,
-            yukleyen_email: user.email || null,
-          });
-
+        const { error: insertError } = await adminClient.from("trafo_form_arsivi").insert({
+          yil,
+          ay,
+          ilce: meta.ilce,
+          mahalle: null,
+          tr: meta.tr,
+          lokasyon_id: null,
+          trafo_id: null,
+          dosya_adi: item.name,
+          dosya_yolu: path,
+          mime_type: item.mimeType,
+          dosya_boyutu: fileBuffer.length,
+          aciklama: `Google Drive toplu aktarım • Drive ID: ${item.id}`,
+          yukleyen_id: user.id,
+          yukleyen_email: user.email || null,
+        });
         if (insertError) {
           await adminClient.storage.from(STORAGE_BUCKET).remove([path]);
           throw new Error("Veritabanı: " + insertError.message);
@@ -427,31 +236,12 @@ export async function POST(req: NextRequest) {
         detaylar.push({ dosya: item.name, durum: "aktarildi" });
       } catch (error: any) {
         hatali++;
-        detaylar.push({
-          dosya: item.name,
-          durum: "hata",
-          mesaj: error?.message || "Bilinmeyen hata",
-        });
+        detaylar.push({ dosya: item.name, durum: "hata", mesaj: error?.message || "Bilinmeyen hata" });
       }
     }
 
-    return NextResponse.json({
-      yil: 2026,
-      ay: "AĞUSTOS",
-      bulunan: candidates.length,
-      aktarilan,
-      atlanan,
-      hatali,
-      detaylar,
-    });
+    return NextResponse.json({ yil, ay, bulunan: candidates.length, aktarilan, atlanan, hatali, detaylar });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        error:
-          error?.message ||
-          "Google Drive aktarımında bilinmeyen hata oluştu.",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error?.message || "Google Drive aktarımında bilinmeyen hata oluştu." }, { status: 500 });
   }
 }
