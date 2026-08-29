@@ -1331,36 +1331,70 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </Panel>}
 
             <div className={`${duzenleyebilir?"mt-5":""} rounded-2xl border border-slate-800 bg-[#101d30] p-4`}>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-black uppercase tracking-wider text-slate-500">📁 TRAFO FORM ARŞİVİ</div><div className="mt-1 text-xs text-slate-500">Yıl • Ay • İlçe bazında PDF ve görsel arşivi</div></div><button onClick={arsivKayitlariniGetir} className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-black">↻ Yenile</button></div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <input value={arsivArama} onChange={e=>setArsivArama(e.target.value)} placeholder="Dosya, mahalle, TR, Trafo ID ara..." className={inputSinif}/>
-                <select value={arsivFiltreYil} onChange={e=>setArsivFiltreYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{arsivYillari.map(y=><option key={y}>{y}</option>)}</select>
-                <select value={arsivFiltreAy} onChange={e=>setArsivFiltreAy(e.target.value)} className={inputSinif}><option value="">Tüm Aylar</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select>
-                <select value={arsivFiltreIlce} onChange={e=>setArsivFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{arsivIlceler.map(i=><option key={i}>{i}</option>)}</select>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div><div className="text-xs font-black uppercase tracking-wider text-slate-500">📁 TRAFO FORM ARŞİVİ</div><div className="mt-1 text-xs text-slate-500">Google Drive görünümü • Yıl → Ay → Dosyalar</div></div>
+                <button onClick={arsivKayitlariniGetir} className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-black">↻ Yenile</button>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500"><span><b className="text-white">{filtrelenmisArsiv.length}</b> dosya</span><button type="button" onClick={()=>{setArsivArama("");setArsivFiltreYil("");setArsivFiltreAy("");setArsivFiltreIlce("");}} className="font-black hover:text-white">🧹 Filtreyi Temizle</button></div>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3 text-xs font-bold">
+                <button type="button" onClick={()=>{setArsivFiltreYil("");setArsivFiltreAy("");}} className={`${!arsivFiltreYil?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 Arşiv</button>
+                {arsivFiltreYil&&<><span className="text-slate-700">›</span><button type="button" onClick={()=>setArsivFiltreAy("")} className={`${!arsivFiltreAy?"text-orange-300":"text-slate-400 hover:text-white"}`}>📁 {arsivFiltreYil}</button></>}
+                {arsivFiltreAy&&<><span className="text-slate-700">›</span><span className="text-orange-300">📁 {arsivFiltreAy}</span></>}
+              </div>
+
+              {arsivFiltreYil&&arsivFiltreAy&&<div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <input value={arsivArama} onChange={e=>setArsivArama(e.target.value)} placeholder="Bu klasörde dosya, TR, mahalle ara..." className={inputSinif}/>
+                <select value={arsivFiltreIlce} onChange={e=>setArsivFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{arsivIlceler.map(i=><option key={i}>{i}</option>)}</select>
+              </div>}
             </div>
 
-            <div className="mt-5">
+            <div className="mt-4">
               {arsivYukleniyor?<div className="rounded-2xl border border-slate-800 bg-[#101d30] p-8 text-center text-slate-400">Arşiv yükleniyor...</div>:
-              filtrelenmisArsiv.length===0?<BosAlan>Seçili filtrelerde arşiv dosyası bulunmuyor.</BosAlan>:
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {filtrelenmisArsiv.map(item=>{
-                  const gorsel=item.mime_type.startsWith("image/");
-                  return <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-800 bg-[#101d30] shadow-xl">
-                    <button type="button" onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="block w-full text-left">
-                      {gorsel&&item.signed_url?
-                        <img src={item.signed_url} alt={item.dosya_adi} className="h-44 w-full bg-[#07111f] object-contain"/>:
-                        <div className="flex h-44 items-center justify-center bg-[#07111f]"><div className="text-center"><div className="text-5xl">📄</div><div className="mt-2 text-xs font-black text-red-300">PDF BELGESİ</div></div></div>}
+              !arsivFiltreYil?
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {arsivYillari.map(y=>{
+                    const adet=arsivKayitlari.filter(x=>String(x.yil)===y).length;
+                    return <button type="button" key={y} onClick={()=>{setArsivFiltreYil(y);setArsivFiltreAy("");setArsivArama("");setArsivFiltreIlce("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]">
+                      <div className="text-3xl">📁</div>
+                      <div className="mt-2 text-base font-black group-hover:text-orange-300">{y}</div>
+                      <div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div>
                     </button>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="truncate text-sm font-black" title={item.dosya_adi}>{item.dosya_adi}</div><div className="mt-1 text-[10px] font-bold text-orange-300">{item.yil} • {item.ay}{item.ilce?` • ${item.ilce}`:""}</div></div><div className="shrink-0 rounded-lg border border-slate-700 px-2 py-1 text-[9px] font-black">{gorsel?"GÖRSEL":"PDF"}</div></div>
-                      <div className="mt-3 space-y-1 text-xs text-slate-400">{item.mahalle&&<div>📍 {item.mahalle}</div>}{item.tr&&<div>⚡ {item.tr}</div>}{item.trafo_id&&<div>Trafo ID: <b className="text-slate-200">{item.trafo_id}</b></div>}{item.lokasyon_id&&<div>Lokasyon: <b className="text-slate-200">{item.lokasyon_id}</b></div>}{item.aciklama&&<div className="pt-1 text-slate-500">{item.aciklama}</div>}</div>
-                      <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-black disabled:opacity-40">👁 Görüntüle</button>{yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-lg border border-red-900 bg-red-950/30 px-3 py-2 text-xs font-black text-red-300">Sil</button>}</div>
-                    </div>
+                  })}
+                </div>
+              :!arsivFiltreAy?
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {AYLAR.filter(a=>arsivKayitlari.some(x=>String(x.yil)===arsivFiltreYil&&x.ay===a)).map(a=>{
+                    const adet=arsivKayitlari.filter(x=>String(x.yil)===arsivFiltreYil&&x.ay===a).length;
+                    return <button type="button" key={a} onClick={()=>{setArsivFiltreAy(a);setArsivArama("");setArsivFiltreIlce("");}} className="group rounded-xl border border-slate-800 bg-[#101d30] p-4 text-left transition hover:border-orange-500/60 hover:bg-[#13233a]">
+                      <div className="text-3xl">📁</div>
+                      <div className="mt-2 truncate text-sm font-black group-hover:text-orange-300">{a}</div>
+                      <div className="mt-1 text-[10px] font-bold text-slate-500">{adet} dosya</div>
+                    </button>
+                  })}
+                </div>
+              :filtrelenmisArsiv.length===0?<BosAlan>Bu klasörde dosya bulunmuyor.</BosAlan>:
+                <div className="overflow-hidden rounded-xl border border-slate-800 bg-[#101d30]">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_120px_110px_110px] gap-3 border-b border-slate-800 bg-[#0b1728] px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500 md:grid">
+                    <div>Dosya Adı</div><div>İlçe</div><div>Tür</div><div>İşlem</div>
                   </div>
-                })}
-              </div>}
+                  <div className="divide-y divide-slate-800">
+                    {filtrelenmisArsiv.map(item=>{
+                      const gorsel=item.mime_type.startsWith("image/");
+                      return <div key={item.id} className="grid gap-2 px-3 py-2.5 hover:bg-[#13233a] md:grid-cols-[minmax(0,1fr)_120px_110px_110px] md:items-center md:gap-3 md:px-4">
+                        <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="flex min-w-0 items-center gap-3 text-left disabled:opacity-50">
+                          <span className="shrink-0 text-2xl">{gorsel?"🖼️":"📄"}</span>
+                          <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-200 sm:text-sm" title={item.dosya_adi}>{item.dosya_adi}</span>{item.tr&&<span className="mt-0.5 block truncate text-[10px] text-slate-500">{item.tr}</span>}</span>
+                        </button>
+                        <div className="text-[10px] font-bold text-slate-400 md:text-xs">{item.ilce||"—"}</div>
+                        <div><span className="rounded-md border border-slate-700 px-2 py-1 text-[9px] font-black text-slate-400">{gorsel?"GÖRSEL":"PDF"}</span></div>
+                        <div className="flex gap-2">
+                          <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:opacity-40">Aç</button>
+                          {yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-md border border-red-900 px-2.5 py-1.5 text-[10px] font-black text-red-300">Sil</button>}
+                        </div>
+                      </div>
+                    })}
+                  </div>
+                </div>}
             </div>
           </>}
 
