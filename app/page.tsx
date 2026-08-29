@@ -6,13 +6,6 @@ import ExcelJS from "exceljs";
 
 const AYLAR = ["OCAK","ŞUBAT","MART","NİSAN","MAYIS","HAZİRAN","TEMMUZ","AĞUSTOS","EYLÜL","EKİM","KASIM","ARALIK"];
 
-const DRIVE_AKTARIM_AYLARI = [
-  {yil:2022,ay:"OCAK"},{yil:2022,ay:"ŞUBAT"},{yil:2022,ay:"MART"},{yil:2022,ay:"MAYIS"},{yil:2022,ay:"HAZİRAN"},{yil:2022,ay:"TEMMUZ"},{yil:2022,ay:"AĞUSTOS"},{yil:2022,ay:"EYLÜL"},{yil:2022,ay:"EKİM"},{yil:2022,ay:"KASIM"},
-  {yil:2023,ay:"OCAK"},{yil:2023,ay:"ŞUBAT"},{yil:2023,ay:"MART"},{yil:2023,ay:"NİSAN"},{yil:2023,ay:"MAYIS"},{yil:2023,ay:"HAZİRAN"},{yil:2023,ay:"TEMMUZ"},{yil:2023,ay:"AĞUSTOS"},{yil:2023,ay:"EYLÜL"},{yil:2023,ay:"EKİM"},{yil:2023,ay:"KASIM"},{yil:2023,ay:"ARALIK"},
-  {yil:2024,ay:"ŞUBAT"},{yil:2024,ay:"MART"},{yil:2024,ay:"NİSAN"},{yil:2024,ay:"MAYIS"},{yil:2024,ay:"HAZİRAN"},{yil:2024,ay:"TEMMUZ"},{yil:2024,ay:"AĞUSTOS"},{yil:2024,ay:"EYLÜL"},{yil:2024,ay:"EKİM"},{yil:2024,ay:"KASIM"},{yil:2024,ay:"ARALIK"},
-  {yil:2025,ay:"OCAK"},{yil:2025,ay:"ŞUBAT"},{yil:2025,ay:"MART"},{yil:2025,ay:"NİSAN"},{yil:2025,ay:"MAYIS"},{yil:2025,ay:"HAZİRAN"},{yil:2025,ay:"TEMMUZ"},{yil:2025,ay:"AĞUSTOS"},{yil:2025,ay:"EYLÜL"},{yil:2025,ay:"EKİM"},{yil:2025,ay:"KASIM"},{yil:2025,ay:"ARALIK"},
-  {yil:2026,ay:"OCAK"},{yil:2026,ay:"ŞUBAT"},{yil:2026,ay:"MART"},{yil:2026,ay:"NİSAN"},{yil:2026,ay:"MAYIS"},{yil:2026,ay:"HAZİRAN"},{yil:2026,ay:"TEMMUZ"},{yil:2026,ay:"AĞUSTOS"}
-] as const;
 const ILCE_SECENEKLERI = ["BALYA","İVRİNDİ","SAVAŞTEPE","SINDIRGI","BİGADİÇ","DURSUNBEY","KEPSUT","SUSURLUK","ALTIEYLÜL","KARESİ"];
 const KONUM_TRAFO_TIPLERI = ["DİREK","BİNA"];
 const GUC_SECENEKLERI = ["25","40","50","63","80","100","125","160","200","250","315","400","500","630","800","1000","1250","1600","2500","5000","6300","10000"];
@@ -375,65 +368,17 @@ export default function Home() {
 
   async function googleDriveTumunuAktar(){
     if(!session||!duzenleyebilir)return;
-    if(!confirm("Google Drive TUTANAKLAR arşivindeki 2022–2026 ay klasörleri toplu olarak Trafo Form Arşivine aktarılsın mı? Daha önce aktarılan Drive dosyaları otomatik atlanacaktır."))return;
-
-    setDriveAktariliyor(true);
-    setDriveAktarimSonucu("");
-    setDriveIlerleme("");
-    setGenelHata("");
-
-    let toplamBulunan=0;
-    let toplamAktarilan=0;
-    let toplamAtlanan=0;
-    let toplamHatali=0;
-    const hataAylari:string[]=[];
-
+    if(!confirm("Google Drive TUTANAKLAR klasörü şimdi senkronize edilsin mi? Yeni yıl/ay klasörleri otomatik bulunacak ve daha önce aktarılan dosyalar tekrar yüklenmeyecektir."))return;
+    setDriveAktariliyor(true); setDriveAktarimSonucu(""); setDriveIlerleme("TUTANAKLAR klasörü taranıyor..."); setGenelHata("");
     try{
-      for(let i=0;i<DRIVE_AKTARIM_AYLARI.length;i++){
-        const is=DRIVE_AKTARIM_AYLARI[i];
-        setDriveIlerleme(`${i+1}/${DRIVE_AKTARIM_AYLARI.length} • ${is.yil} ${is.ay} aktarılıyor...`);
-
-        try{
-          const cevap=await fetch("/api/drive-aktar",{
-            method:"POST",
-            headers:{
-              "Content-Type":"application/json",
-              Authorization:`Bearer ${session.access_token}`
-            },
-            body:JSON.stringify(is)
-          });
-
-          const sonuc=await cevap.json().catch(()=>({}));
-          if(!cevap.ok)throw new Error(sonuc?.error||"Aktarım başarısız oldu.");
-
-          toplamBulunan+=Number(sonuc.bulunan||0);
-          toplamAktarilan+=Number(sonuc.aktarilan||0);
-          toplamAtlanan+=Number(sonuc.atlanan||0);
-          toplamHatali+=Number(sonuc.hatali||0);
-
-          setDriveAktarimSonucu(
-            `Şu ana kadar: ${toplamAktarilan} aktarıldı • ${toplamAtlanan} atlandı • ${toplamHatali} hata`
-          );
-        }catch(err:any){
-          toplamHatali++;
-          hataAylari.push(`${is.yil} ${is.ay}: ${err?.message||"Bilinmeyen hata"}`);
-        }
-      }
-
-      const finalMesaj=
-        `${DRIVE_AKTARIM_AYLARI.length} ay klasörü tarandı • ${toplamBulunan} dosya bulundu • ${toplamAktarilan} aktarıldı • ${toplamAtlanan} daha önce aktarıldığı/uygun olmadığı için atlandı • ${toplamHatali} hata.`+
-        (hataAylari.length?` Sorunlu aylar: ${hataAylari.join(" | ")}`:"");
-
-      setDriveAktarimSonucu(finalMesaj);
+      const cevap=await fetch("/api/drive-aktar",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({mode:"sync"})});
+      const sonuc=await cevap.json().catch(()=>({}));
+      if(!cevap.ok)throw new Error(sonuc?.error||"Senkronizasyon başarısız oldu.");
       setDriveIlerleme("Tamamlandı");
-      setBasariMesaji("Google Drive 2022–2026 toplu aktarımı tamamlandı.");
-      await arsivKayitlariniGetir();
-      setTimeout(()=>setBasariMesaji(""),4000);
-    }catch(err:any){
-      setGenelHata("Google Drive aktarım hatası: "+(err?.message||"Bilinmeyen hata"));
-    }finally{
-      setDriveAktariliyor(false);
-    }
+      setDriveAktarimSonucu(`${Number(sonuc.yilSayisi||0)} yıl • ${Number(sonuc.ayKlasoruSayisi||0)} ay klasörü tarandı • ${Number(sonuc.bulunan||0)} dosya bulundu • ${Number(sonuc.aktarilan||0)} yeni dosya aktarıldı • ${Number(sonuc.atlanan||0)} mevcut/uygun olmayan dosya atlandı • ${Number(sonuc.hatali||0)} hata.`);
+      setBasariMesaji("Google Drive senkronizasyonu tamamlandı."); await arsivKayitlariniGetir(); setTimeout(()=>setBasariMesaji(""),4000);
+    }catch(err:any){setDriveIlerleme("");setGenelHata("Google Drive senkronizasyon hatası: "+(err?.message||"Bilinmeyen hata"));}
+    finally{setDriveAktariliyor(false);}
   }
 
   async function arsivDosyaSil(item:ArsivKaydi){
@@ -1375,13 +1320,13 @@ const filtrelenmisKayitlar=useMemo(()=>{
               <div className="mt-4 flex justify-end"><button type="button" disabled={arsivYukleme||!arsivDosya} onClick={arsiveYukle} className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">{arsivYukleme?"Yükleniyor...":"📁 Arşive Yükle"}</button></div>
             </Panel>}
 
-            {duzenleyebilir&&<Panel baslik="☁️ Google Drive'dan Toplu Aktar" altBaslik="TUTANAKLAR → 2022–2026 • 53 ay klasörü • PDF/JPG/JPEG/PNG/WEBP">
+            {duzenleyebilir&&<Panel baslik="☁️ Google Drive Senkronizasyonu" altBaslik="TUTANAKLAR • Her gün otomatik + istediğinde manuel senkronizasyon">
               <div className="mt-5 rounded-2xl border border-blue-900/60 bg-blue-950/20 p-4">
-                <div className="text-sm font-black text-blue-200">2022–2026 Trafo Form Arşivi toplu aktarımı</div>
-                <div className="mt-2 text-xs leading-5 text-slate-400">Google Drive'daki tanımlı 53 ay klasörü sırayla taranır. Dosyalar Supabase Trafo Form Arşivine kopyalanır. Aynı Drive dosyası daha önce aktarıldıysa tekrar yüklenmez. Drive'daki orijinal dosyalara dokunulmaz.</div>
+                <div className="text-sm font-black text-blue-200">Otomatik Trafo Form Arşivi senkronizasyonu</div>
+                <div className="mt-2 text-xs leading-5 text-slate-400">TUTANAKLAR altındaki yıl ve ay klasörleri otomatik bulunur. Yeni PDF/JPG/JPEG/PNG/WEBP dosyaları arşive kopyalanır; daha önce aktarılan Drive dosyaları tekrar yüklenmez. Otomatik görev günde 1 kez çalışır. Beklemek istemezsen aşağıdaki butonu kullanabilirsin.</div>
                 {driveIlerleme&&<div className="mt-3 rounded-xl border border-blue-900 bg-blue-950/30 px-4 py-3 text-sm font-bold text-blue-200">↻ {driveIlerleme}</div>}
                 {driveAktarimSonucu&&<div className="mt-3 rounded-xl border border-emerald-900 bg-emerald-950/25 px-4 py-3 text-sm font-bold text-emerald-300">✓ {driveAktarimSonucu}</div>}
-                <div className="mt-4 flex justify-end"><button type="button" disabled={driveAktariliyor} onClick={googleDriveTumunuAktar} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{driveAktariliyor?"Drive arşivi aktarılıyor...":"☁️ 2022–2026 Tümünü Drive'dan Aktar"}</button></div>
+                <div className="mt-4 flex justify-end"><button type="button" disabled={driveAktariliyor} onClick={googleDriveTumunuAktar} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{driveAktariliyor?"Senkronize ediliyor...":"☁️ Şimdi Senkronize Et"}</button></div>
               </div>
             </Panel>}
 
