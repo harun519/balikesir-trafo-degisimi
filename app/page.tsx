@@ -1428,7 +1428,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 {driveAktarimSonucu&&<div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">✓ {driveAktarimSonucu}</div>}
                 <div className="mt-4 flex justify-end"><button type="button" disabled={driveAktariliyor} onClick={googleDriveTumunuAktar} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50">{driveAktariliyor?"Senkronize ediliyor...":"☁️ Şimdi Senkronize Et"}</button></div>
               </div>
-            </Panel>}
+            </Panel>
 
             <div className={`${duzenleyebilir?"mt-5":""} rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4`}>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
