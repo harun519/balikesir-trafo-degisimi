@@ -829,8 +829,6 @@ async function kayitlariGetir(){
     return item.dosya_adi;
   }
   function kaydaAitFormlar(k:TrafoKaydi){
-    const yil=String(k.yil||"");
-    const ay=eslemeAnahtari(k.ay);
     const trafoId=eslemeAnahtari(k.trafo_id);
     const lokasyonId=eslemeAnahtari(k.lokasyon_id);
     const tr=eslemeAnahtari(k.tr);
@@ -843,37 +841,40 @@ async function kayitlariGetir(){
       return (` ${ad} `).includes(` ${deger} `);
     };
 
-    // Eşleşme artık yalnızca DOSYA ADINDAN yapılır.
-    // Arşiv metadata alanları eşleştirmeye dahil edilmez.
+    // Eşleşme SADECE DOSYA ADINDAN yapılır.
+    // Yıl / ay / arşiv metadata'sı eşleştirmeyi engellemez.
     return arsivKayitlari.filter(a=>{
-      if(yil&&String(a.yil)!==yil)return false;
-      if(ay&&eslemeAnahtari(a.ay)!==ay)return false;
-
       const ad=eslemeAnahtari(a.dosya_adi);
       const adKompakt=kompakt(ad);
 
-      // 1) Dosya adında Trafo ID varsa en güçlü eşleşme.
+      // 1) Trafo ID
       if(trafoId){
         if(tamKelimeVar(ad,trafoId)||adKompakt.includes(kompakt(trafoId)))return true;
       }
 
-      // 2) Dosya adında Lokasyon ID varsa eşleştir.
+      // 2) Lokasyon ID
       if(lokasyonId){
         if(tamKelimeVar(ad,lokasyonId)||adKompakt.includes(kompakt(lokasyonId)))return true;
       }
 
-      // 3) TR / Trafo Bölge Adı dosya adında geçiyorsa eşleştir.
+      // 3) TR / Trafo Bölge Adı
       if(tr&&tr.length>=3){
         if(ad.includes(tr)||adKompakt.includes(kompakt(tr)))return true;
       }
 
-      // 4) En sık kullanılan Drive adlandırması:
-      // AYNI YIL + AY içinde İLÇE ve MAHALLE dosya adında birlikte geçmeli.
-      // Türkçe karakter, tire, alt çizgi ve boşluk farkları önemsenmez.
+      // 4) İlçe + Mahalle birlikte dosya adında geçiyorsa eşleştir.
+      // GÖLCÜK/GOLCUK, AŞAĞI YAĞCILAR/AŞAĞIYAĞCILAR,
+      // tire, alt çizgi ve boşluk farkları göz ardı edilir.
       if(ilce&&mahalle){
         const ilceVar=ad.includes(ilce)||adKompakt.includes(kompakt(ilce));
         const mahalleVar=ad.includes(mahalle)||adKompakt.includes(kompakt(mahalle));
         if(ilceVar&&mahalleVar)return true;
+      }
+
+      // 5) Sadece mahalle çok ayırt ediciyse ve dosya adında birebir/kompakt geçiyorsa eşleştir.
+      // Kısa ve genel isimlerde yanlış eşleşmeyi önlemek için en az 5 karakter.
+      if(mahalle&&kompakt(mahalle).length>=5){
+        if(ad.includes(mahalle)||adKompakt.includes(kompakt(mahalle)))return true;
       }
 
       return false;
