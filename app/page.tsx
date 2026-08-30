@@ -36,6 +36,9 @@ type AppUser = { id:string; email:string|null; role:KullaniciRolu; created_at?:s
 type AuditLog = { id:number; table_name:string; record_id:number|null; action:"INSERT"|"UPDATE"|"DELETE"; user_id:string|null; user_email:string|null; old_data:Record<string,unknown>|null; new_data:Record<string,unknown>|null; created_at:string; };
 type DriveSyncLog = { id:number; baslangic:string; bitis:string|null; kaynak:string; durum:"running"|"success"|"error"; yil_sayisi:number; ay_klasoru_sayisi:number; bulunan:number; aktarilan:number; atlanan:number; hatali:number; mesaj:string|null; kullanici_email:string|null; created_at:string; };
 type ListeFiltreleri = { yil?:string; ay?:string; ilce?:string; neden?:string; arama?:string; baslangic?:string; bitis?:string; };
+type FavoriFiltre = { id:string; ad:string; filtre:ListeFiltreleri; };
+type ExcelOnizleme = { dosyaAdi:string; kayitlar:Record<string,unknown>[]; hatalar:string[]; };
+
 type TrafoKaydi = {
   id:number; sira_no:number|null; yil:number|null; ay:string|null; ilce:string|null; mahalle:string|null; tr:string|null;
   lokasyon_id:string|null; trafo_id:string|null; trafo_tipi:string|null;
@@ -123,6 +126,16 @@ export default function Home() {
   const [bildirimAcik,setBildirimAcik]=useState(false);
   const [okunanBildirimler,setOkunanBildirimler]=useState<string[]>([]);
   const [yedekHazirlaniyor,setYedekHazirlaniyor]=useState(false);
+  const [taslakVar,setTaslakVar]=useState(false);
+  const [favoriFiltreler,setFavoriFiltreler]=useState<FavoriFiltre[]>([]);
+  const [seciliKayitlar,setSeciliKayitlar]=useState<number[]>([]);
+  const [topluAlan,setTopluAlan]=useState<"ilce"|"degisim_nedeni"|"ay"|"yil">("ilce");
+  const [topluDeger,setTopluDeger]=useState("");
+  const [topluGuncelleniyor,setTopluGuncelleniyor]=useState(false);
+  const [arsivSecili,setArsivSecili]=useState<ArsivKaydi|null>(null);
+  const [excelOnizleme,setExcelOnizleme]=useState<ExcelOnizleme|null>(null);
+  const [excelIceAktariliyor,setExcelIceAktariliyor]=useState(false);
+
   const [acikAnalizler,setAcikAnalizler]=useState<Record<string,boolean>>({
     "degisim-nedenleri":true,
     "zaman-analizi":true,
@@ -139,6 +152,40 @@ export default function Home() {
     const fn=(e:KeyboardEvent)=>{ if(e.key==="Escape"){ if(gecmisKayit) setGecmisKayit(null); else if(detayKayit) setDetayKayit(null); else setMobilMenuAcik(false); } };
     window.addEventListener("keydown",fn); return()=>window.removeEventListener("keydown",fn);
   },[detayKayit,gecmisKayit]);
+
+  useEffect(()=>{
+    try{
+      const t=localStorage.getItem("trafo_yeni_kayit_taslak");
+      setTaslakVar(!!t);
+      const f=localStorage.getItem("trafo_favori_filtreler");
+      if(f){
+        const arr=JSON.parse(f);
+        if(Array.isArray(arr))setFavoriFiltreler(arr);
+      }
+    }catch{}
+  },[]);
+
+  useEffect(()=>{
+    if(sayfa!=="yeni"||duzenlenenId)return;
+    const dolu=Object.values(form).some(v=>String(v||"").trim());
+    try{
+      if(dolu){localStorage.setItem("trafo_yeni_kayit_taslak",JSON.stringify({form,formAdim,updatedAt:new Date().toISOString()}));setTaslakVar(true);}
+    }catch{}
+  },[form,formAdim,sayfa,duzenlenenId]);
+
+  useEffect(()=>{
+    const fn=(e:KeyboardEvent)=>{
+      const el=e.target as HTMLElement|null;
+      const yaziyor=!!el&&(["INPUT","TEXTAREA","SELECT"].includes(el.tagName)||el.isContentEditable);
+      if(yaziyor)return;
+      if(e.key==="/"){e.preventDefault();setGenelAramaAcik(true);setTimeout(()=>document.querySelector<HTMLInputElement>('input[placeholder*="Kayıt, trafo"]')?.focus(),0);}
+      if(e.key.toLowerCase()==="n"&&duzenleyebilir){e.preventDefault();formTemizle();sayfayaGit("yeni");}
+      if(e.key.toLowerCase()==="a"){e.preventDefault();sayfayaGit("arsiv");}
+      if(e.key.toLowerCase()==="k"){e.preventDefault();sayfayaGit("kayitlar");}
+    };
+    window.addEventListener("keydown",fn);
+    return ()=>window.removeEventListener("keydown",fn);
+  },[duzenleyebilir]);
 
   useEffect(()=>{
     try{
@@ -541,6 +588,61 @@ async function kayitlariGetir(){
     if(formHatalari.length)setFormHatalari([]);
   }
   function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);setFormHatalari([]);setFormAdim(1);}
+  function taslakYukle(){
+    try{
+      const raw=localStorage.getItem("trafo_yeni_kayit_taslak");
+      if(!raw)return;
+      const x=JSON.parse(raw);
+      if(x?.form){setForm({...BOS_FORM,...x.form});setFormAdim(Number(x.formAdim)||1);setTaslakVar(true);setBasariMesaji("Taslak geri yüklendi.");setTimeout(()=>setBasariMesaji(""),2500);}
+    }catch{setGenelHata("Taslak okunamadı.");}
+  }
+  function taslakSil(){
+    try{localStorage.removeItem("trafo_yeni_kayit_taslak");}catch{}
+    setTaslakVar(false);
+  }
+
+  function kaydiKopyala(k:TrafoKaydi){
+    if(!duzenleyebilir)return;
+    setDetayKayit(null);
+    setForm({
+      yil:k.yil?String(k.yil):"",ay:k.ay||"",ilce:k.ilce||"",mahalle:k.mahalle||"",tr:k.tr||"",lokasyon_id:k.lokasyon_id||"",trafo_id:k.trafo_id||"",trafo_tipi:k.trafo_tipi||"",
+      sokulen_gucu:k.sokulen_gucu||"",sokulen_gerilim:k.sokulen_gerilim||"",sokulen_markasi:k.sokulen_markasi||"",sokulen_seri_no:"",sokulen_imal_yili:k.sokulen_imal_yili||"",sokulen_trafo_tipi:k.sokulen_trafo_tipi||"",sokulen_tamir_yili:k.sokulen_tamir_yili||"",sokulen_tamir_firmasi:k.sokulen_tamir_firmasi||"",sokulen_yuklenici:k.sokulen_yuklenici||"",
+      takilan_gucu:k.takilan_gucu||"",takilan_gerilim:k.takilan_gerilim||"",takilan_markasi:k.takilan_markasi||"",takilan_seri_no:"",takilan_imal_yili:k.takilan_imal_yili||"",takilan_trafo_tipi:k.takilan_trafo_tipi||"",takilan_tamir_yili:k.takilan_tamir_yili||"",takilan_tamir_firmasi:k.takilan_tamir_firmasi||"",
+      tarih:"",degisim_nedeni:k.degisim_nedeni||"",aciklama:k.aciklama||"",
+    });
+    setDuzenlenenId(null);setFormAdim(1);sayfayaGit("yeni");
+    setBasariMesaji("Kayıt kopyalandı. Tarih ve seri numaralarını kontrol edin.");setTimeout(()=>setBasariMesaji(""),3500);
+  }
+
+  function favoriFiltreKaydet(){
+    const ad=window.prompt("Bu filtreye bir isim verin:");
+    if(!ad?.trim())return;
+    const item:FavoriFiltre={id:`f-${Date.now()}`,ad:ad.trim(),filtre:{yil:filtreYil,ay:filtreAy,ilce:filtreIlce,neden:filtreNeden,arama,baslangic:filtreBaslangic,bitis:filtreBitis}};
+    const next=[...favoriFiltreler,item].slice(-12);
+    setFavoriFiltreler(next);
+    try{localStorage.setItem("trafo_favori_filtreler",JSON.stringify(next));}catch{}
+  }
+  function favoriFiltreUygula(f:FavoriFiltre){
+    setFiltreYil(f.filtre.yil||"");setFiltreAy(f.filtre.ay||"");setFiltreIlce(f.filtre.ilce||"");setFiltreNeden(f.filtre.neden||"");setArama(f.filtre.arama||"");setFiltreBaslangic(f.filtre.baslangic||"");setFiltreBitis(f.filtre.bitis||"");
+  }
+  function favoriFiltreSil(id:string){
+    const next=favoriFiltreler.filter(x=>x.id!==id);setFavoriFiltreler(next);
+    try{localStorage.setItem("trafo_favori_filtreler",JSON.stringify(next));}catch{}
+  }
+
+  async function topluKayitGuncelle(){
+    if(!supabase||!duzenleyebilir||!seciliKayitlar.length||!topluDeger.trim())return;
+    setTopluGuncelleniyor(true);setGenelHata("");
+    try{
+      const veri:Record<string,unknown>={[topluAlan]:topluAlan==="yil"?Number(topluDeger):topluDeger};
+      const {error}=await supabase.from("trafo_degisim").update(veri).in("id",seciliKayitlar);
+      if(error)throw error;
+      setBasariMesaji(`${seciliKayitlar.length} kayıt toplu güncellendi.`);setSeciliKayitlar([]);setTopluDeger("");
+      await kayitlariGetir();if(yonetici)await auditLoglariGetir();setTimeout(()=>setBasariMesaji(""),3000);
+    }catch(e:any){setGenelHata(e?.message||"Toplu güncelleme başarısız.");}
+    finally{setTopluGuncelleniyor(false);}
+  }
+
 
   async function kaydet(e:FormEvent<HTMLFormElement>){
     e.preventDefault(); if(!supabase)return;
@@ -572,6 +674,7 @@ async function kayitlariGetir(){
       : await supabase.from("trafo_degisim").insert(veri);
     if(sonuc.error){setGenelHata(sonuc.error.message);setKaydediliyor(false);return;}
     setBasariMesaji(duzenlenenId?"Kayıt başarıyla güncellendi.":"Yeni trafo değişim kaydı başarıyla eklendi.");
+    try{localStorage.removeItem("trafo_yeni_kayit_taslak");setTaslakVar(false);}catch{}
     formTemizle();await kayitlariGetir();if(yonetici)await auditLoglariGetir();setKaydediliyor(false);setSayfa("kayitlar");window.scrollTo({top:0,behavior:"smooth"});
     setTimeout(()=>setBasariMesaji(""),3000);
   }
@@ -600,6 +703,33 @@ async function kayitlariGetir(){
 
   const yillar=useMemo(()=>Array.from(new Set(kayitlar.map(k=>k.yil).filter(Boolean) as number[])).sort((a,b)=>b-a),[kayitlar]);
   const ilceler=useMemo(()=>Array.from(new Set([...ILCE_SECENEKLERI,...kayitlar.map(x=>x.ilce?.trim()).filter(Boolean) as string[]])).sort((a,b)=>a.localeCompare(b,"tr")),[kayitlar]);
+  const sonKullanilanlar=useMemo(()=>{
+    const son=[...kayitlar].sort((a,b)=>(b.updated_at||b.created_at||"").localeCompare(a.updated_at||a.created_at||"")).slice(0,80);
+    const uniq=(arr:(string|null)[])=>Array.from(new Set(arr.filter(Boolean) as string[])).slice(0,6);
+    return {
+      ilce:uniq(son.map(x=>x.ilce)), marka:uniq(son.flatMap(x=>[x.sokulen_markasi,x.takilan_markasi])),
+      guc:uniq(son.flatMap(x=>[x.sokulen_gucu,x.takilan_gucu])), gerilim:uniq(son.flatMap(x=>[x.sokulen_gerilim,x.takilan_gerilim]))
+    };
+  },[kayitlar]);
+
+  const veriKaliteUyarilari=useMemo(()=>{
+    const u:string[]=[];
+    if(form.tarih&&new Date(form.tarih+"T00:00:00").getTime()>Date.now())u.push("Değişim tarihi gelecekte görünüyor.");
+    if(form.tarih&&form.yil&&form.tarih.slice(0,4)!==form.yil)u.push("Tarih ile seçilen yıl uyuşmuyor.");
+    if(form.sokulen_seri_no&&form.takilan_seri_no&&norm(form.sokulen_seri_no)===norm(form.takilan_seri_no))u.push("Sökülen ve takılan seri numarası aynı.");
+    const diger=kayitlar.filter(k=>k.id!==duzenlenenId);
+    if(form.trafo_id&&diger.some(k=>norm(k.trafo_id)===norm(form.trafo_id)&&k.tarih===form.tarih))u.push("Aynı Trafo ID ve tarihte başka kayıt var.");
+    if(form.takilan_seri_no&&diger.some(k=>norm(k.takilan_seri_no)===norm(form.takilan_seri_no)))u.push("Takılan seri numarası daha önce kullanılmış.");
+    return u;
+  },[form,kayitlar,duzenlenenId]);
+
+  const yilKarsilastirma=useMemo(()=>{
+    const y=Number(dashboardYil||new Date().getFullYear());
+    const simdi=kayitlar.filter(k=>k.yil===y).length, once=kayitlar.filter(k=>k.yil===y-1).length;
+    const oran=once?((simdi-once)/once)*100:null;
+    return {y,simdi,once,oran};
+  },[kayitlar,dashboardYil]);
+
   const dashboardKayitlari=useMemo(()=>{
     const bugun=new Date();
     const bugunUtc=Date.UTC(bugun.getFullYear(),bugun.getMonth(),bugun.getDate());
@@ -1013,6 +1143,43 @@ const filtrelenmisKayitlar=useMemo(()=>{
     }catch(err){setGenelHata(`CSV içe aktarma hatası: ${err instanceof Error?err.message:String(err)}`);}finally{setCsvYukleniyor(false);}
   }
 
+
+  async function excelIceAktarOnizle(e:ChangeEvent<HTMLInputElement>){
+    const file=e.target.files?.[0];e.target.value="";if(!file)return;
+    if(!duzenleyebilir){alert("Excel içe aktarma için düzenleme yetkisi gerekir.");return;}
+    try{
+      const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
+      const ws=wb.worksheets[0];if(!ws)throw new Error("Çalışma sayfası bulunamadı.");
+      const baslikSatiri=ws.getRow(1).values as unknown[];
+      const headers=baslikSatiri.slice(1).map(x=>csvBaslikNormalize(String(x??"")));
+      const aliases:Record<string,string>={
+        "SIRA NO":"sira_no","YIL":"yil","AY":"ay","İLÇE":"ilce","MAHALLE":"mahalle","TR":"tr","LOKASYON ID":"lokasyon_id","TRAFO ID":"trafo_id","TRAFO TİPİ":"trafo_tipi",
+        "SÖKÜLEN GÜCÜ":"sokulen_gucu","SÖKÜLEN GERİLİM":"sokulen_gerilim","SÖKÜLEN MARKASI":"sokulen_markasi","SÖKÜLEN SERİ NO":"sokulen_seri_no","SÖKÜLEN İMAL YILI":"sokulen_imal_yili","SÖKÜLEN TRAFO TİPİ":"sokulen_trafo_tipi","SÖKÜLEN TAMİR YILI":"sokulen_tamir_yili","SÖKÜLEN TAMİR FİRMASI":"sokulen_tamir_firmasi","SÖKÜLEN YÜKLENİCİ":"sokulen_yuklenici",
+        "TAKILAN GÜCÜ":"takilan_gucu","TAKILAN GERİLİM":"takilan_gerilim","TAKILAN MARKASI":"takilan_markasi","TAKILAN SERİ NO":"takilan_seri_no","TAKILAN İMAL YILI":"takilan_imal_yili","TAKILAN TRAFO TİPİ":"takilan_trafo_tipi","TAKILAN TAMİR YILI":"takilan_tamir_yili","TAKILAN TAMİR FİRMASI":"takilan_tamir_firmasi","TARİH":"tarih","DEĞİŞİM NEDENİ":"degisim_nedeni","AÇIKLAMA":"aciklama"
+      };
+      const kayitlarOnizleme:Record<string,unknown>[]=[];const hatalar:string[]=[];
+      ws.eachRow((row,rowNo)=>{
+        if(rowNo===1)return;
+        const vals=(row.values as unknown[]).slice(1);if(!vals.some(v=>String(v??"").trim()))return;
+        const obj:Record<string,unknown>={};
+        headers.forEach((h,i)=>{const key=aliases[h];if(!key)return;let v=vals[i]??null;if(key==="yil"||key==="sira_no")v=Number(v)||null;if(key==="tarih"&&v instanceof Date)v=v.toISOString().slice(0,10);obj[key]=v===null?null:String(v).trim();});
+        if(!obj.yil||!obj.ay||!obj.ilce)hatalar.push(`Satır ${rowNo}: Yıl, Ay veya İlçe eksik.`);
+        kayitlarOnizleme.push(obj);
+      });
+      if(!kayitlarOnizleme.length)throw new Error("Aktarılabilir satır bulunamadı.");
+      setExcelOnizleme({dosyaAdi:file.name,kayitlar:kayitlarOnizleme,hatalar:hatalar.slice(0,30)});
+    }catch(e:any){setGenelHata(e?.message||"Excel okunamadı.");}
+  }
+  async function excelOnizlemeyiAktar(){
+    if(!supabase||!excelOnizleme||!duzenleyebilir)return;
+    setExcelIceAktariliyor(true);setGenelHata("");
+    try{
+      for(let i=0;i<excelOnizleme.kayitlar.length;i+=100){const {error}=await supabase.from("trafo_degisim").insert(excelOnizleme.kayitlar.slice(i,i+100));if(error)throw error;}
+      setBasariMesaji(`${excelOnizleme.kayitlar.length} kayıt Excel'den aktarıldı.`);setExcelOnizleme(null);await kayitlariGetir();if(yonetici)await auditLoglariGetir();setTimeout(()=>setBasariMesaji(""),3500);
+    }catch(e:any){setGenelHata(e?.message||"Excel aktarımı başarısız.");}
+    finally{setExcelIceAktariliyor(false);}
+  }
+
   function dashboardYazdir(){
     const w=window.open("","_blank","width=1200,height=900");if(!w){alert("Rapor penceresi açılamadı.");return;}
     const nedenSatir=NEDENLER.map(n=>`<tr><td>${n.ad}</td><td>${nedenSayilari[n.ad]||0}</td></tr>`).join("");
@@ -1159,11 +1326,12 @@ const filtrelenmisKayitlar=useMemo(()=>{
           {genelHata&&<HataKutusu>{genelHata}</HataKutusu>}{basariMesaji&&<div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">{basariMesaji}</div>}
 
           {sayfa==="dashboard"&&<>
-            <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <OzetKart ikon="⚡" baslik="TOPLAM DEĞİŞİM" deger={String(kayitlar.length)} alt="Tüm zamanlar"/>
               <OzetKart ikon="📅" baslik="BU AY" deger={String(buAyKayitSayisi)} alt={`${AYLAR[new Date().getMonth()]} ${new Date().getFullYear()}`}/>
               <OzetKart ikon="🚨" baslik="ARIZA" deger={String(kayitlar.filter(k=>norm(k.degisim_nedeni)==="ARIZA").length)} alt="Toplam arıza kaydı"/>
               <OzetKart ikon="📁" baslik="ARŞİV" deger={String(arsivKayitlari.length)} alt={arsivBoyutGoster(arsivToplamBoyut)}/>
+              <OzetKart ikon={yilKarsilastirma.oran===null?"↔":yilKarsilastirma.oran>=0?"↗":"↘"} baslik="GEÇEN YILA GÖRE" deger={yilKarsilastirma.oran===null?"—":`${yilKarsilastirma.oran>=0?"+":""}${yilKarsilastirma.oran.toFixed(1)}%`} alt={`${yilKarsilastirma.y-1}: ${yilKarsilastirma.once} • ${yilKarsilastirma.y}: ${yilKarsilastirma.simdi}`}/>
             </div>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,.07)] ring-1 ring-slate-100">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto] 2xl:items-end">
@@ -1494,8 +1662,9 @@ const filtrelenmisKayitlar=useMemo(()=>{
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <OzetKart ikon={sonSync?.durum==="error"?"🔴":"☁️"} baslik="SON DRIVE SYNC" deger={sonSync?`${sonSync.aktarilan} yeni`:"—"} alt={sonSync?`${new Date(sonSync.created_at).toLocaleString("tr-TR")} • ${sonSync.durum==="success"?"Başarılı":"Hata"}`:"Henüz senkronizasyon kaydı yok"}/>
             </div>
-            <div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="Sistemdeki son 8 kayıt" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200">Tüm Kayıtlar →</button>}><KayitTablosu kayitlar={kayitlar.slice(0,8)} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/></Panel></div>
+            <div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="Sistemdeki son 8 kayıt" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200">Tüm Kayıtlar →</button>}><KayitTablosu kayitlar={kayitlar.slice(0,8)} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} kopyala={kaydiKopyala} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/></Panel></div>
             <div className="mt-5"><Panel baslik="Son İşlem Özeti" altBaslik={yonetici?"Son kayıt değişiklikleri ve yapan kullanıcı":"Sistemdeki son güncellenen kayıtlar"} sagIcerik={yonetici?<button onClick={()=>sayfayaGit("loglar")} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold">Tüm Loglar →</button>:undefined}>{yonetici&&auditLoglar.length?<div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{auditLoglar.slice(0,6).map(l=><LogKart key={l.id} log={l}/>)}</div>:<div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{[...kayitlar].sort((a,b)=>(b.updated_at||b.created_at||"").localeCompare(a.updated_at||a.created_at||"")).slice(0,6).map(k=><button key={k.id} onClick={()=>setDetayKayit(k)} className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 text-left hover:border-orange-500/40"><div className="text-xs font-black text-orange-300">{k.ilce||"-"} / {k.mahalle||"-"}</div><div className="mt-2 text-sm font-black">Trafo ID: {k.trafo_id||"-"}</div><div className="mt-2 text-[10px] text-slate-500">Son işlem: {tarihSaatGoster(k.updated_at||k.created_at)}</div></button>)}</div>}</Panel></div>
+            <div className="mt-5"><Panel baslik="☁️ Drive Senkronizasyon Sağlığı" altBaslik="Son çalışma, hata durumu ve aktarım özeti"><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><div className={`rounded-2xl border p-4 ${sonSync?.durum==="error"?"border-red-200 bg-red-50":sonSync?.durum==="running"?"border-blue-200 bg-blue-50":"border-emerald-200 bg-emerald-50"}`}><div className="text-[10px] font-black uppercase text-slate-500">Durum</div><div className="mt-2 text-lg font-black">{!sonSync?"Kayıt Yok":sonSync.durum==="error"?"❌ Hata":sonSync.durum==="running"?"↻ Çalışıyor":"✅ Sağlıklı"}</div></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="text-[10px] font-black uppercase text-slate-500">Son Çalışma</div><div className="mt-2 text-sm font-black">{sonSync?new Date(sonSync.created_at).toLocaleString("tr-TR"):"—"}</div></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="text-[10px] font-black uppercase text-slate-500">Son Aktarım</div><div className="mt-2 text-xl font-black">{sonSync?.aktarilan??0}</div><div className="text-[10px] text-slate-400">yeni dosya</div></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="text-[10px] font-black uppercase text-slate-500">Hata</div><div className="mt-2 text-xl font-black">{sonSync?.hatali??0}</div><div className="text-[10px] text-slate-400">{sonSync?.mesaj||"Son işlem mesajı yok"}</div></div></div></Panel></div>
             <div className="mt-5"><Panel baslik="⚡ Son Sistem Hareketleri" altBaslik="Kayıt işlemleri ve Drive senkronizasyonları tek akışta"><div className="mt-4 grid gap-3 lg:grid-cols-2">{[...(yonetici?auditLoglar.slice(0,4).map(l=>({id:`a-${l.id}`,tarih:l.created_at,ikon:l.action==="INSERT"?"➕":l.action==="UPDATE"?"✏️":"🗑️",baslik:`Kayıt ${l.action==="INSERT"?"eklendi":l.action==="UPDATE"?"güncellendi":"silindi"}`,alt:`#${l.record_id||"-"} • ${l.user_email||"Kullanıcı"}`})):[]),...driveSyncLoglar.slice(0,4).map(l=>({id:`s-${l.id}`,tarih:l.created_at,ikon:l.durum==="error"?"❌":"☁️",baslik:l.durum==="error"?"Drive senkronizasyon hatası":"Drive senkronizasyonu tamamlandı",alt:`${l.aktarilan} yeni • ${l.atlanan} atlandı`}))].sort((a,b)=>b.tarih.localeCompare(a.tarih)).slice(0,6).map(x=><div key={x.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">{x.ikon}</div><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{x.baslik}</div><div className="mt-1 truncate text-[10px] text-slate-400">{x.alt}</div></div><div className="ml-auto shrink-0 text-[9px] text-slate-400">{new Date(x.tarih).toLocaleDateString("tr-TR")}</div></div>)}</div></Panel></div>
 
           </>}
@@ -1507,7 +1676,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"}</h1>
                   <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-700">{duzenlenenId?"Düzenleniyor":"Taslak"}</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-500">Bilgileri 5 kısa adımda tamamlayın. Girdiğiniz değerler adımlar arasında korunur.</p>
+                <p className="mt-2 text-sm text-slate-500">Bilgileri 5 kısa adımda tamamlayın. Girdiğiniz değerler adımlar arasında korunur.</p>{taslakVar&&!duzenlenenId&&<div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-black text-blue-700">💾 Kaydedilmiş taslak var</span><button type="button" onClick={taslakYukle} className="rounded-lg border border-blue-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-blue-700">Taslağı Yükle</button><button type="button" onClick={taslakSil} className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-red-600">Sil</button></div>}
               </div>
               <div className="flex flex-wrap gap-2">
                 {duzenlenenId&&<button type="button" onClick={()=>{formTemizle();sayfayaGit("kayitlar");}} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-600 shadow-sm hover:bg-slate-50">Vazgeç</button>}
@@ -1545,12 +1714,14 @@ const filtrelenmisKayitlar=useMemo(()=>{
                     <div><h2 className="text-lg font-black text-slate-900">Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Trafo değişiminin gerçekleştiği konum ve sistem bilgilerini girin.</p></div>
                   </div>
                   <div className="mt-6"><FormGrid><ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/><SelectAlan baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} gerekli/><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><MetinAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)}/><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son kullanılan ilçeler</span>{sonKullanilanlar.ilce.map(x=><button type="button" key={x} onClick={()=>formDegistir("ilce",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-blue-50">{x}</button>)}</div>
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
 
                 {formAdim===2&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">🔴</div><div><h2 className="text-lg font-black text-slate-900">Sökülen Trafo</h2><p className="mt-1 text-xs text-slate-500">Sahadan sökülen mevcut trafonun bilgilerini girin.</p></div></div>
                   <div className="mt-6"><FormGrid><ComboAlani baslik="Gücü" deger={form.sokulen_gucu} degistir={v=>formDegistir("sokulen_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="sguc"/><ComboAlani baslik="Gerilim" deger={form.sokulen_gerilim} degistir={v=>formDegistir("sokulen_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="sger"/><ComboAlani baslik="Markası" deger={form.sokulen_markasi} degistir={v=>formDegistir("sokulen_markasi",v)} secenekler={MARKA_SECENEKLERI} listeId="smarka"/><MetinAlani baslik="Seri No" deger={form.sokulen_seri_no} degistir={v=>formDegistir("sokulen_seri_no",v)}/><MetinAlani baslik="İmal Yılı" deger={form.sokulen_imal_yili} degistir={v=>formDegistir("sokulen_imal_yili",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.sokulen_trafo_tipi} degistir={v=>formDegistir("sokulen_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="stip"/><MetinAlani baslik="Tamir Yılı" deger={form.sokulen_tamir_yili} degistir={v=>formDegistir("sokulen_tamir_yili",v)}/><MetinAlani baslik="Tamir Firması" deger={form.sokulen_tamir_firmasi} degistir={v=>formDegistir("sokulen_tamir_firmasi",v)}/><MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/></FormGrid></div>
+                  <div className="mt-4 space-y-2"><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son güçler</span>{sonKullanilanlar.guc.map(x=><button type="button" key={x} onClick={()=>formDegistir("sokulen_gucu",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600">{x}</button>)}</div><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son markalar</span>{sonKullanilanlar.marka.map(x=><button type="button" key={x} onClick={()=>formDegistir("sokulen_markasi",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600">{x}</button>)}</div></div>
                 </div>}
 
                 {formAdim===3&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
@@ -1606,6 +1777,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
               </aside>
             </div>
 
+            {veriKaliteUyarilari.length>0&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><div className="text-sm font-black text-amber-800">🛡️ Veri Kalite Kontrolü</div><div className="mt-2 grid gap-2 sm:grid-cols-2">{veriKaliteUyarilari.map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700">⚠ {x}</div>)}</div></div>}
+
             <div className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
               <button type="button" disabled={formAdim===1} onClick={()=>setFormAdim(x=>Math.max(1,x-1))} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
               <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 5</div>
@@ -1616,9 +1789,12 @@ const filtrelenmisKayitlar=useMemo(()=>{
           {sayfa==="kayitlar"&&<>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4">
               <div className="mb-3 text-xs font-black uppercase tracking-wider text-slate-500">🔎 Gelişmiş Arama ve Filtre</div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><input value={arama} onChange={e=>setArama(e.target.value)} placeholder="Trafo ID, seri no, mahalle, firma, açıklama..." className={inputSinif}/><select value={filtreYil} onChange={e=>setFiltreYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{yillar.map(y=><option key={y}>{y}</option>)}</select><select value={filtreAy} onChange={e=>setFiltreAy(e.target.value)} className={inputSinif}><option value="">Tüm Aylar</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select><select value={filtreIlce} onChange={e=>setFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{ilceler.map(i=><option key={i}>{i}</option>)}</select><select value={filtreNeden} onChange={e=>setFiltreNeden(e.target.value)} className={inputSinif}><option value="">Tüm Nedenler</option>{NEDENLER.map(n=><option key={n.ad}>{n.ad}</option>)}</select><input type="date" value={filtreBaslangic} onChange={e=>setFiltreBaslangic(e.target.value)} className={inputSinif} title="Başlangıç tarihi"/><input type="date" value={filtreBitis} onChange={e=>setFiltreBitis(e.target.value)} className={inputSinif} title="Bitiş tarihi"/></div>
-              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-wrap items-center gap-3"><div className="text-sm text-slate-400"><b className="text-white">{filtrelenmisKayitlar.length}</b> kayıt görüntüleniyor.</div><button type="button" onClick={()=>{setArama("");setFiltreYil("");setFiltreAy("");setFiltreIlce("");setFiltreNeden("");setFiltreBaslangic("");setFiltreBitis("");}} className="rounded-xl border border-orange-500 bg-orange-500/15 px-4 py-2 text-sm font-black text-orange-300 transition hover:bg-orange-500 hover:text-white">🧹 Filtreyi Temizle</button></div><div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4"><button onClick={raporuYazdir} className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-black">🖨️ PDF / Yazdır</button><button onClick={excelAktar} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black">📥 Excel&apos;e Aktar</button><button onClick={csvYedekAl} className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-black">💾 CSV Yedek</button>{duzenleyebilir&&<label className="cursor-pointer rounded-xl bg-violet-700 px-4 py-3 text-center text-sm font-black">{csvYukleniyor?"Aktarılıyor...":"📤 CSV İçe Aktar"}<input type="file" accept=".csv,text/csv" className="hidden" disabled={csvYukleniyor} onChange={csvIceAktar}/></label>}</div></div></div>
-            <Panel baslik="Trafo Değişim Kayıtları" altBaslik="Detay, geçmiş, düzenleme ve yetkinize göre silme işlemleri">{veriYukleniyor?<BosAlan>Kayıtlar yükleniyor...</BosAlan>:<KayitTablosu kayitlar={filtrelenmisKayitlar} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/>}</Panel>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><input value={arama} onChange={e=>setArama(e.target.value)} placeholder="Trafo ID, seri no, mahalle, firma, açıklama..." className={inputSinif}/><select value={filtreYil} onChange={e=>setFiltreYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{yillar.map(y=><option key={y}>{y}</option>)}</select><select value={filtreAy} onChange={e=>setFiltreAy(e.target.value)} className={inputSinif}><option value="">Tüm Aylar</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select><select value={filtreIlce} onChange={e=>setFiltreIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{ilceler.map(i=><option key={i}>{i}</option>)}</select><select value={filtreNeden} onChange={e=>setFiltreNeden(e.target.value)} className={inputSinif}><option value="">Tüm Nedenler</option>{NEDENLER.map(n=><option key={n.ad}>{n.ad}</option>)}</select><input type="date" value={filtreBaslangic} onChange={e=>setFiltreBaslangic(e.target.value)} className={inputSinif} title="Başlangıç tarihi"/><input type="date" value={filtreBitis} onChange={e=>setFiltreBitis(e.target.value)} className={inputSinif} title="Bitiş tarihi"/></div><div className="mt-3 flex flex-wrap items-center gap-2"><button type="button" onClick={favoriFiltreKaydet} className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700">⭐ Filtreyi Kaydet</button>{favoriFiltreler.map(f=><div key={f.id} className="flex overflow-hidden rounded-xl border border-slate-200 bg-white"><button type="button" onClick={()=>favoriFiltreUygula(f)} className="px-3 py-2 text-xs font-bold text-slate-600 hover:bg-blue-50">{f.ad}</button><button type="button" onClick={()=>favoriFiltreSil(f.id)} className="border-l border-slate-200 px-2 text-xs text-red-500">×</button></div>)}</div>
+              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-wrap items-center gap-3"><div className="text-sm text-slate-400"><b className="text-white">{filtrelenmisKayitlar.length}</b> kayıt görüntüleniyor.</div><button type="button" onClick={()=>{setArama("");setFiltreYil("");setFiltreAy("");setFiltreIlce("");setFiltreNeden("");setFiltreBaslangic("");setFiltreBitis("");}} className="rounded-xl border border-orange-500 bg-orange-500/15 px-4 py-2 text-sm font-black text-orange-300 transition hover:bg-orange-500 hover:text-white">🧹 Filtreyi Temizle</button></div><div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5"><button onClick={raporuYazdir} className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-black">🖨️ PDF / Yazdır</button><button onClick={excelAktar} className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black">📥 Excel&apos;e Aktar</button><button onClick={csvYedekAl} className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-black">💾 CSV Yedek</button>{duzenleyebilir&&<label className="cursor-pointer rounded-xl bg-violet-700 px-4 py-3 text-center text-sm font-black">{csvYukleniyor?"Aktarılıyor...":"📤 CSV İçe Aktar"}<input type="file" accept=".csv,text/csv" className="hidden" disabled={csvYukleniyor} onChange={csvIceAktar}/></label>}{duzenleyebilir&&<label className="cursor-pointer rounded-xl bg-cyan-600 px-4 py-3 text-center text-sm font-black text-white">👁 Excel Önizle<input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="hidden" onChange={excelIceAktarOnizle}/></label>}</div></div></div>
+            <Panel baslik="Trafo Değişim Kayıtları" altBaslik="Detay, geçmiş, kopyalama, seçim ve toplu düzenleme">
+              {duzenleyebilir&&<div className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 lg:flex-row lg:items-center"><div className="text-xs font-black text-slate-600">{seciliKayitlar.length} kayıt seçili</div><select value={topluAlan} onChange={e=>{setTopluAlan(e.target.value as typeof topluAlan);setTopluDeger("");}} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"><option value="ilce">İlçe</option><option value="degisim_nedeni">Değişim Nedeni</option><option value="ay">Ay</option><option value="yil">Yıl</option></select>{topluAlan==="ilce"?<select value={topluDeger} onChange={e=>setTopluDeger(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"><option value="">Seçiniz</option>{ilceler.map(x=><option key={x}>{x}</option>)}</select>:topluAlan==="degisim_nedeni"?<select value={topluDeger} onChange={e=>setTopluDeger(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"><option value="">Seçiniz</option>{NEDENLER.map(x=><option key={x.ad}>{x.ad}</option>)}</select>:topluAlan==="ay"?<select value={topluDeger} onChange={e=>setTopluDeger(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"><option value="">Seçiniz</option>{AYLAR.map(x=><option key={x}>{x}</option>)}</select>:<select value={topluDeger} onChange={e=>setTopluDeger(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"><option value="">Seçiniz</option>{YIL_SECENEKLERI.map(x=><option key={x}>{x}</option>)}</select>}<button type="button" disabled={!seciliKayitlar.length||!topluDeger||topluGuncelleniyor} onClick={topluKayitGuncelle} className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white disabled:opacity-40">{topluGuncelleniyor?"Güncelleniyor...":"Toplu Güncelle"}</button>{seciliKayitlar.length>0&&<button type="button" onClick={()=>setSeciliKayitlar([])} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500">Seçimi Temizle</button>}</div>}
+              {veriYukleniyor?<BosAlan>Kayıtlar yükleniyor...</BosAlan>:<KayitTablosu kayitlar={filtrelenmisKayitlar} detay={setDetayKayit} duzenle={kaydiDuzenle} sil={kaydiSil} gecmis={setGecmisKayit} kopyala={kaydiKopyala} secili={seciliKayitlar} secimDegistir={(id)=>setSeciliKayitlar(x=>x.includes(id)?x.filter(y=>y!==id):[...x,id])} duzenleyebilir={duzenleyebilir} silebilir={silebilir}/>}
+            </Panel>
           </>}
 
           
@@ -1683,7 +1859,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                       <button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="flex min-w-0 items-center gap-3 text-left disabled:opacity-50"><span className="shrink-0 text-2xl">{gorsel?"🖼️":"📄"}</span><span className="min-w-0"><span className="block truncate text-xs font-black text-slate-800 sm:text-sm" title={item.dosya_adi}>{arsivGorunenAd(item)}</span><span className="mt-0.5 block truncate text-[10px] text-slate-500">{item.dosya_adi}</span></span></button>
                       <div className="text-[10px] font-bold text-slate-500 md:text-xs">{item.ilce||"—"}</div>
                       <div><span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black text-slate-600">{gorsel?"GÖRSEL":"PDF"}</span></div>
-                      <div className="flex gap-2"><button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:opacity-40">Aç</button>{yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-[10px] font-black text-red-600">Sil</button>}</div>
+                      <div className="flex gap-2"><button type="button" onClick={()=>setArsivSecili(item)} className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[10px] font-black text-blue-700">Bilgi</button><button type="button" disabled={!item.signed_url} onClick={()=>item.signed_url&&window.open(item.signed_url,"_blank")} className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:opacity-40">Aç</button>{yonetici&&<button type="button" onClick={()=>arsivDosyaSil(item)} className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-[10px] font-black text-red-600">Sil</button>}</div>
                     </div>})}
                   </div>
                 </div>}
@@ -1709,6 +1885,10 @@ const filtrelenmisKayitlar=useMemo(()=>{
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500 text-xl font-black text-white shadow-2xl hover:bg-orange-400" title="Yukarı çık">↑</button>
     
     {gecmisKayit&&<TrafoGecmisModal anaKayit={gecmisKayit} kayitlar={gecmisKayitlari} kapat={()=>setGecmisKayit(null)} detay={k=>{setGecmisKayit(null);setDetayKayit(k);}}/>}
+    {arsivSecili&&<div className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-5" onMouseDown={()=>setArsivSecili(null)}><div onMouseDown={e=>e.stopPropagation()} className="w-full max-w-lg rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><div className="text-[10px] font-black uppercase tracking-wider text-blue-600">📁 Arşiv Dosyası</div><div className="mt-2 break-words text-lg font-black text-slate-900">{arsivSecili.dosya_adi}</div></div><button onClick={()=>setArsivSecili(null)} className="h-9 w-9 rounded-xl border border-slate-200">×</button></div><div className="mt-5 grid grid-cols-2 gap-3">{[["Yıl",arsivSecili.yil],["Ay",arsivSecili.ay],["İlçe",arsivSecili.ilce||"—"],["Mahalle",arsivSecili.mahalle||"—"],["Boyut",arsivBoyutGoster(Number(arsivSecili.dosya_boyutu||0))],["Eklenme",new Date(arsivSecili.created_at).toLocaleString("tr-TR")]].map(([a,b])=><div key={String(a)} className="rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="text-[9px] font-black uppercase text-slate-400">{a}</div><div className="mt-1 text-xs font-black text-slate-700">{String(b)}</div></div>)}</div><div className="mt-5 flex justify-end gap-2">{arsivSecili.signed_url&&<button onClick={()=>window.open(arsivSecili.signed_url!,"_blank")} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white">Dosyayı Aç</button>}<button onClick={()=>setArsivSecili(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-600">Kapat</button></div></div></div>}
+
+    {excelOnizleme&&<div className="fixed inset-0 z-[96] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onMouseDown={()=>!excelIceAktariliyor&&setExcelOnizleme(null)}><div onMouseDown={e=>e.stopPropagation()} className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"><div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5"><div><div className="text-[10px] font-black uppercase text-cyan-600">👁 Excel İçe Aktarma Önizlemesi</div><div className="mt-1 text-lg font-black text-slate-900">{excelOnizleme.dosyaAdi}</div><div className="mt-1 text-xs text-slate-500">{excelOnizleme.kayitlar.length} satır bulundu • {excelOnizleme.hatalar.length} uyarı</div></div><button disabled={excelIceAktariliyor} onClick={()=>setExcelOnizleme(null)} className="h-9 w-9 rounded-xl border border-slate-200">×</button></div><div className="overflow-auto p-5">{excelOnizleme.hatalar.length>0&&<div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3"><div className="text-xs font-black text-amber-800">Uyarılar</div>{excelOnizleme.hatalar.slice(0,8).map(x=><div key={x} className="mt-1 text-[10px] text-amber-700">• {x}</div>)}</div>}<div className="overflow-x-auto rounded-xl border border-slate-200"><table className="min-w-full text-left text-xs"><thead className="bg-slate-50"><tr>{["YIL","AY","İLÇE","MAHALLE","TRAFO ID","TARİH","NEDEN"].map(x=><th key={x} className="px-3 py-2">{x}</th>)}</tr></thead><tbody>{excelOnizleme.kayitlar.slice(0,20).map((r,i)=><tr key={i} className="border-t border-slate-100"><td className="px-3 py-2">{String(r.yil??"")}</td><td className="px-3 py-2">{String(r.ay??"")}</td><td className="px-3 py-2">{String(r.ilce??"")}</td><td className="px-3 py-2">{String(r.mahalle??"")}</td><td className="px-3 py-2">{String(r.trafo_id??"")}</td><td className="px-3 py-2">{String(r.tarih??"")}</td><td className="px-3 py-2">{String(r.degisim_nedeni??"")}</td></tr>)}</tbody></table></div>{excelOnizleme.kayitlar.length>20&&<div className="mt-2 text-[10px] text-slate-400">İlk 20 satır gösteriliyor.</div>}</div><div className="flex justify-end gap-2 border-t border-slate-200 p-4"><button disabled={excelIceAktariliyor} onClick={()=>setExcelOnizleme(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-600">Vazgeç</button><button disabled={excelIceAktariliyor||excelOnizleme.hatalar.length>0} onClick={excelOnizlemeyiAktar} className="rounded-xl bg-cyan-600 px-5 py-2.5 text-xs font-black text-white disabled:opacity-40">{excelIceAktariliyor?"Aktarılıyor...":`${excelOnizleme.kayitlar.length} Kaydı Aktar`}</button></div></div></div>}
+
   </main>;
 }
 
@@ -1803,20 +1983,20 @@ function HataKutusu({children}:{children:ReactNode}){return <div className="mb-5
 function BosAlan({children}:{children:ReactNode}){return <div className="my-6 w-full rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-7 text-center text-sm text-slate-500 sm:p-10">{children}</div>}
 function NedenEtiketi({neden}:{neden:string|null}){const n=NEDENLER.find(x=>x.ad===neden);return neden?<span className="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black text-white" style={{backgroundColor:n?.renk||"#475569"}}>{neden}</span>:<span className="text-slate-600">-</span>}
 
-function KayitTablosu({kayitlar,detay,duzenle,sil,gecmis,duzenleyebilir=false,silebilir=false}:{kayitlar:TrafoKaydi[];detay:(k:TrafoKaydi)=>void;duzenle:(k:TrafoKaydi)=>void;sil:(k:TrafoKaydi)=>void;gecmis:(k:TrafoKaydi)=>void;duzenleyebilir?:boolean;silebilir?:boolean}){
+function KayitTablosu({kayitlar,detay,duzenle,sil,gecmis,kopyala,secili=[],secimDegistir,duzenleyebilir=false,silebilir=false}:{kayitlar:TrafoKaydi[];detay:(k:TrafoKaydi)=>void;duzenle:(k:TrafoKaydi)=>void;sil:(k:TrafoKaydi)=>void;gecmis:(k:TrafoKaydi)=>void;kopyala?:(k:TrafoKaydi)=>void;secili?:number[];secimDegistir?:(id:number)=>void;duzenleyebilir?:boolean;silebilir?:boolean}){
   if(!kayitlar.length)return <BosAlan>Bu filtrelerde kayıt bulunamadı.</BosAlan>;
   return <>
-    <div className="mt-5 space-y-3 md:hidden">{kayitlar.map(k=><div key={k.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="flex items-start justify-between gap-3 border-b border-slate-100 p-4"><div className="min-w-0"><div className="text-xs font-bold text-orange-500">{tarihGoster(k.tarih)}</div><div className="mt-1 text-base font-black text-slate-900">{k.ilce||"İlçe belirtilmemiş"}{k.mahalle?` / ${k.mahalle}`:""}</div></div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="grid grid-cols-2 gap-px bg-slate-100"><MobilBilgi baslik="Yıl / Ay" deger={`${k.yil||"-"} / ${k.ay||"-"}`}/><MobilBilgi baslik="Trafo ID" deger={k.trafo_id}/><MobilBilgi baslik="Lokasyon ID" deger={k.lokasyon_id}/><MobilBilgi baslik="TR" deger={k.tr}/></div><div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4"><IslemButon onClick={()=>detay(k)} cls="border-orange-300 text-orange-600">Detay</IslemButon><IslemButon onClick={()=>gecmis(k)} cls="border-violet-300 text-violet-600">Geçmiş</IslemButon>{duzenleyebilir&&<IslemButon onClick={()=>duzenle(k)} cls="border-blue-300 text-blue-600">Düzenle</IslemButon>}{silebilir&&<IslemButon onClick={()=>sil(k)} cls="border-red-300 text-red-600">Sil</IslemButon>}</div></div>)}</div>
+    <div className="mt-5 space-y-3 md:hidden">{kayitlar.map(k=><div key={k.id} className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${secili.includes(k.id)?"border-blue-300 ring-2 ring-blue-100":"border-slate-200"}`}><div className="flex items-start justify-between gap-3 border-b border-slate-100 p-4"><div className="flex min-w-0 items-start gap-3">{secimDegistir&&<input type="checkbox" checked={secili.includes(k.id)} onChange={()=>secimDegistir(k.id)} className="mt-1 h-4 w-4"/>}<div><div className="text-xs font-bold text-orange-500">{tarihGoster(k.tarih)}</div><div className="mt-1 text-base font-black text-slate-900">{k.ilce||"İlçe belirtilmemiş"}{k.mahalle?` / ${k.mahalle}`:""}</div></div></div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="grid grid-cols-2 gap-px bg-slate-100"><MobilBilgi baslik="Yıl / Ay" deger={`${k.yil||"-"} / ${k.ay||"-"}`}/><MobilBilgi baslik="Trafo ID" deger={k.trafo_id}/><MobilBilgi baslik="Lokasyon ID" deger={k.lokasyon_id}/><MobilBilgi baslik="TR" deger={k.tr}/></div><div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-5"><IslemButon onClick={()=>detay(k)} cls="border-orange-300 text-orange-600">Detay</IslemButon><IslemButon onClick={()=>gecmis(k)} cls="border-violet-300 text-violet-600">Geçmiş</IslemButon>{duzenleyebilir&&kopyala&&<IslemButon onClick={()=>kopyala(k)} cls="border-cyan-300 text-cyan-700">Kopyala</IslemButon>}{duzenleyebilir&&<IslemButon onClick={()=>duzenle(k)} cls="border-blue-300 text-blue-600">Düzenle</IslemButon>}{silebilir&&<IslemButon onClick={()=>sil(k)} cls="border-red-300 text-red-600">Sil</IslemButon>}</div></div>)}</div>
 
-    <div className="mt-4 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50"><tr className="border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-500">{["Tarih","Yıl","Ay","İlçe","Mahalle","Konum","Trafo ID","Değişim Nedeni","İşlem"].map(h=><th key={h} className="px-3 py-3">{h}</th>)}</tr></thead><tbody>{kayitlar.map(k=><tr key={k.id} className="border-b border-slate-100 transition hover:bg-blue-50/60"><td className="px-3 py-3.5 font-semibold">{tarihGoster(k.tarih)}</td><td className="px-3 py-3.5">{k.yil||"-"}</td><td className="px-3 py-3.5">{k.ay||"-"}</td><td className="px-3 py-3.5">{k.ilce||"-"}</td><td className="px-3 py-3.5">{k.mahalle||"-"}</td><td className="px-3 py-3.5">{k.lokasyon_id||"-"}</td><td className="px-3 py-3.5">{k.trafo_id||"-"}</td><td className="px-3 py-3.5"><NedenEtiketi neden={k.degisim_nedeni}/></td><td className="whitespace-nowrap px-3 py-3.5 text-right"><button onClick={()=>detay(k)} className="mr-2 rounded-lg border border-orange-300 px-3 py-2 text-xs font-bold text-orange-600">Detay</button><button onClick={()=>gecmis(k)} className="mr-2 rounded-lg border border-violet-300 px-3 py-2 text-xs font-bold text-violet-600">Geçmiş</button>{duzenleyebilir&&<button onClick={()=>duzenle(k)} className="mr-2 rounded-lg border border-blue-300 px-3 py-2 text-xs font-bold text-blue-600">Düzenle</button>}{silebilir&&<button onClick={()=>sil(k)} className="rounded-lg border border-red-300 px-3 py-2 text-xs font-bold text-red-600">Sil</button>}</td></tr>)}</tbody></table></div>
+    <div className="mt-4 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50"><tr className="border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-500">{secimDegistir&&<th className="px-3 py-3">Seç</th>}{["Tarih","Yıl","Ay","İlçe","Mahalle","Konum","Trafo ID","Değişim Nedeni","İşlem"].map(h=><th key={h} className="px-3 py-3">{h}</th>)}</tr></thead><tbody>{kayitlar.map(k=><tr key={k.id} className={`border-b border-slate-100 transition hover:bg-blue-50/60 ${secili.includes(k.id)?"bg-blue-50/60":""}`}>{secimDegistir&&<td className="px-3 py-3.5"><input type="checkbox" checked={secili.includes(k.id)} onChange={()=>secimDegistir(k.id)} className="h-4 w-4"/></td>}<td className="px-3 py-3.5 font-semibold">{tarihGoster(k.tarih)}</td><td className="px-3 py-3.5">{k.yil||"-"}</td><td className="px-3 py-3.5">{k.ay||"-"}</td><td className="px-3 py-3.5">{k.ilce||"-"}</td><td className="px-3 py-3.5">{k.mahalle||"-"}</td><td className="px-3 py-3.5">{k.lokasyon_id||"-"}</td><td className="px-3 py-3.5">{k.trafo_id||"-"}</td><td className="px-3 py-3.5"><NedenEtiketi neden={k.degisim_nedeni}/></td><td className="whitespace-nowrap px-3 py-3.5 text-right"><button onClick={()=>detay(k)} className="mr-1 rounded-lg border border-orange-300 px-2.5 py-2 text-xs font-bold text-orange-600">Detay</button><button onClick={()=>gecmis(k)} className="mr-1 rounded-lg border border-violet-300 px-2.5 py-2 text-xs font-bold text-violet-600">Geçmiş</button>{duzenleyebilir&&kopyala&&<button onClick={()=>kopyala(k)} className="mr-1 rounded-lg border border-cyan-300 px-2.5 py-2 text-xs font-bold text-cyan-700">Kopyala</button>}{duzenleyebilir&&<button onClick={()=>duzenle(k)} className="mr-1 rounded-lg border border-blue-300 px-2.5 py-2 text-xs font-bold text-blue-600">Düzenle</button>}{silebilir&&<button onClick={()=>sil(k)} className="rounded-lg border border-red-300 px-2.5 py-2 text-xs font-bold text-red-600">Sil</button>}</td></tr>)}</tbody></table></div>
   </>;
 }
-function LogKart({log}:{log:AuditLog}){const etiket=log.action==="INSERT"?"EKLENDİ":log.action==="UPDATE"?"DÜZENLENDİ":"SİLİNDİ";return <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${log.action==="INSERT"?"bg-emerald-500/15 text-emerald-300":log.action==="UPDATE"?"bg-blue-500/15 text-blue-300":"bg-red-500/15 text-red-300"}`}>{etiket}</span><span className="text-[10px] text-slate-500">#{log.record_id||"-"}</span></div><div className="mt-3 truncate text-xs font-black">{log.user_email||"Sistem"}</div><div className="mt-1 text-[10px] text-slate-500">{tarihSaatGoster(log.created_at)}</div></div>}
+function LogKart({log}:{log:AuditLog}){const etiket=log.action==="INSERT"?"EKLENDİ":log.action==="UPDATE"?"DÜZENLENDİ":"SİLİNDİ";const fark=farkAlanlari(log.old_data,log.new_data).slice(0,5);return <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${log.action==="INSERT"?"bg-emerald-100 text-emerald-700":log.action==="UPDATE"?"bg-blue-100 text-blue-700":"bg-red-100 text-red-700"}`}>{etiket}</span><span className="text-[10px] text-slate-500">#{log.record_id||"-"}</span></div><div className="mt-3 truncate text-xs font-black text-slate-800">{log.user_email||"Sistem"}</div><div className="mt-1 text-[10px] text-slate-500">{tarihSaatGoster(log.created_at)}</div>{fark.length>0&&<div className="mt-3 space-y-2">{fark.map(k=><div key={k} className="rounded-xl border border-slate-200 bg-slate-50 p-2"><div className="text-[9px] font-black uppercase text-slate-400">{k}</div><div className="mt-1 grid grid-cols-2 gap-2 text-[10px]"><div className="rounded-lg bg-red-50 px-2 py-1.5 text-red-700"><span className="block text-[8px] font-black">ESKİ</span>{String(log.old_data?.[k]??"—")}</div><div className="rounded-lg bg-emerald-50 px-2 py-1.5 text-emerald-700"><span className="block text-[8px] font-black">YENİ</span>{String(log.new_data?.[k]??"—")}</div></div></div>)}</div>}</div>}
 function farkAlanlari(oldData:Record<string,unknown>|null,newData:Record<string,unknown>|null){const a=oldData||{},b=newData||{};return Array.from(new Set([...Object.keys(a),...Object.keys(b)])).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));}
 function LogSatiri({log,kayitAc}:{log:AuditLog;kayitAc:(id:number)=>void}){const fark=farkAlanlari(log.old_data,log.new_data);return <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${log.action==="INSERT"?"bg-emerald-500/15 text-emerald-300":log.action==="UPDATE"?"bg-blue-500/15 text-blue-300":"bg-red-500/15 text-red-300"}`}>{log.action}</span><span className="text-sm font-black">Kayıt #{log.record_id||"-"}</span></div><div className="mt-2 text-xs text-slate-400">{log.user_email||"Sistem"} • {tarihSaatGoster(log.created_at)}</div></div>{log.record_id&&log.action!=="DELETE"&&<button onClick={()=>kayitAc(log.record_id!)} className="rounded-xl border border-orange-700 px-3 py-2 text-xs font-black text-orange-300">Kaydı Aç</button>}</div>{fark.length>0&&<div className="mt-4 flex flex-wrap gap-2">{fark.slice(0,12).map(k=><span key={k} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] text-slate-600">{k}: <b>{String(log.old_data?.[k]??"-")}</b> → <b className="text-orange-300">{String(log.new_data?.[k]??"-")}</b></span>)}</div>}</div>}
 function TrafoGecmisModal({anaKayit,kayitlar,kapat,detay}:{anaKayit:TrafoKaydi;kayitlar:TrafoKaydi[];kapat:()=>void;detay:(k:TrafoKaydi)=>void}){return <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center sm:p-5"><div className="flex h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border border-slate-300 bg-blue-50 shadow-2xl sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"><div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5"><div><div className="text-xs font-black uppercase tracking-wider text-violet-300">🕘 Trafo Geçmişi</div><h2 className="mt-2 text-xl font-black">{anaKayit.trafo_id?`Trafo ID: ${anaKayit.trafo_id}`:anaKayit.lokasyon_id?`Lokasyon ID: ${anaKayit.lokasyon_id}`:`TR: ${anaKayit.tr||"-"}`}</h2><div className="mt-1 text-xs text-slate-500">{kayitlar.length} geçmiş kayıt bulundu</div></div><button onClick={kapat} className="h-10 w-10 rounded-xl border border-slate-300 text-xl">×</button></div><div className="overflow-y-auto p-4 sm:p-5"><div className="relative ml-3 border-l border-slate-300 pl-6">{kayitlar.map((k,i)=><button type="button" onClick={()=>detay(k)} key={k.id} className="relative mb-4 block w-full rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 text-left transition hover:border-violet-500/50"><span className="absolute -left-[31px] top-5 h-3 w-3 rounded-full bg-violet-500 ring-4 ring-white"/><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{tarihGoster(k.tarih)} • {k.ilce||"-"} / {k.mahalle||"-"}</div><NedenEtiketi neden={k.degisim_nedeni}/></div><div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><div><span className="text-slate-500">Sökülen</span><div className="font-black">{k.sokulen_gucu||"-"} kVA</div></div><div><span className="text-slate-500">Takılan</span><div className="font-black">{k.takilan_gucu||"-"} kVA</div></div><div><span className="text-slate-500">Lokasyon</span><div className="font-black">{k.lokasyon_id||"-"}</div></div><div><span className="text-slate-500">Sıra</span><div className="font-black">#{k.sira_no||k.id}</div></div></div>{i===0&&<div className="mt-3 text-[10px] font-black uppercase text-violet-300">En güncel kayıt</div>}</button>)}</div></div></div></div>}
 function IslemButon({onClick,cls,children}:{onClick:()=>void;cls:string;children:ReactNode}){return <button onClick={onClick} className={`rounded-xl border px-2 py-2.5 text-xs font-bold ${cls}`}>{children}</button>}
-function MobilBilgi({baslik,deger}:{baslik:string;deger:string|number|null|undefined}){return <div className="bg-white p-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div><div className="mt-1 break-words text-xs font-bold text-slate-200">{deger===null||deger===undefined||String(deger).trim()===""?"-":String(deger)}</div></div>}
+function MobilBilgi({baslik,deger}:{baslik:string;deger:string|number|null|undefined}){return <div className="bg-white p-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div><div className="mt-1 break-words text-xs font-bold text-slate-700">{deger===null||deger===undefined||String(deger).trim()===""?"-":String(deger)}</div></div>}
 
 function DetayModal({kayit,kapat,duzenle,yazdir,gecmis,duzenleyebilir=false,onceki,sonraki}:{kayit:TrafoKaydi;kapat:()=>void;duzenle:(k:TrafoKaydi)=>void;yazdir:(k:TrafoKaydi)=>void;gecmis:()=>void;duzenleyebilir?:boolean;onceki?:()=>void;sonraki?:()=>void}){
   return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-0 backdrop-blur-sm sm:p-4" onMouseDown={kapat}><div onMouseDown={e=>e.stopPropagation()} className="flex h-[100dvh] w-full flex-col overflow-hidden bg-blue-50 shadow-2xl sm:h-[92vh] sm:max-w-6xl sm:rounded-3xl sm:border sm:border-slate-300"><div className="flex shrink-0 items-start justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-7 sm:py-5"><div><div className="text-[10px] font-black tracking-[.18em] text-orange-400">TRAFO DEĞİŞİM KAYDI</div><h2 className="mt-1 text-lg font-black sm:text-2xl">{kayit.ilce||"İlçe Belirtilmemiş"}{kayit.mahalle&&<span className="text-slate-400"> / {kayit.mahalle}</span>}</h2><div className="mt-3 flex flex-wrap gap-2"><Etiket>📅 {tarihGoster(kayit.tarih)}</Etiket><NedenEtiketi neden={kayit.degisim_nedeni}/></div></div><button onClick={kapat} className="h-10 w-10 rounded-xl border border-slate-300 text-xl">×</button></div>
