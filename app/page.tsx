@@ -1420,25 +1420,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
           
           {sayfa==="arsiv"&&<>
-            {duzenleyebilir&&<Panel baslik="📤 Arşive Dosya Yükle" altBaslik="PDF, JPG/JPEG, PNG veya WEBP • En fazla 15 MB">
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="sm:col-span-2 xl:col-span-4">
-                  <input id="arsiv-dosya-input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={arsivDosyaSec} className="block w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-orange-500 file:px-4 file:py-2 file:font-black file:text-white"/>
-                  {arsivDosya&&<div className="mt-2 text-xs text-slate-400">Seçilen: <b className="text-white">{arsivDosya.name}</b> • {(arsivDosya.size/1024/1024).toFixed(2)} MB</div>}
-                </div>
-                <select value={arsivYil} onChange={e=>setArsivYil(e.target.value)} className={inputSinif}><option value="">Yıl *</option>{YIL_SECENEKLERI.map(y=><option key={y}>{y}</option>)}</select>
-                <select value={arsivAy} onChange={e=>setArsivAy(e.target.value)} className={inputSinif}><option value="">Ay *</option>{AYLAR.map(a=><option key={a}>{a}</option>)}</select>
-                <select value={arsivIlce} onChange={e=>setArsivIlce(e.target.value)} className={inputSinif}><option value="">İlçe</option>{ILCE_SECENEKLERI.map(i=><option key={i}>{i}</option>)}</select>
-                <input value={arsivMahalle} onChange={e=>setArsivMahalle(e.target.value.toLocaleUpperCase("tr-TR"))} placeholder="Mahalle" className={inputSinif}/>
-                <input value={arsivTr} onChange={e=>setArsivTr(e.target.value)} placeholder="TR / Trafo Bölge Adı" className={inputSinif}/>
-                <input value={arsivLokasyon} onChange={e=>setArsivLokasyon(e.target.value)} placeholder="Lokasyon ID" className={inputSinif}/>
-                <input value={arsivTrafo} onChange={e=>setArsivTrafo(e.target.value)} placeholder="Trafo ID" className={inputSinif}/>
-                <input value={arsivAciklama} onChange={e=>setArsivAciklama(e.target.value)} placeholder="Açıklama (isteğe bağlı)" className={inputSinif}/>
-              </div>
-              <div className="mt-4 flex justify-end"><button type="button" disabled={arsivYukleme||!arsivDosya} onClick={arsiveYukle} className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50">{arsivYukleme?"Yükleniyor...":"📁 Arşive Yükle"}</button></div>
-            </Panel>}
-
-            {duzenleyebilir&&<Panel baslik="☁️ Google Drive Senkronizasyonu" altBaslik="TUTANAKLAR • Her gün otomatik + istediğinde manuel senkronizasyon">
+            <Panel baslik="☁️ Google Drive Senkronizasyonu" altBaslik="TUTANAKLAR • Her gün otomatik + istediğinde manuel senkronizasyon">
               <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50/70 p-4 shadow-inner">
                 <div className="text-sm font-black text-blue-800">Otomatik Trafo Form Arşivi senkronizasyonu</div>
                 <div className="mt-2 text-xs leading-5 text-slate-600">TUTANAKLAR altındaki yıl ve ay klasörleri otomatik bulunur. Yeni PDF/JPG/JPEG/PNG/WEBP dosyaları arşive kopyalanır; daha önce aktarılan Drive dosyaları tekrar yüklenmez. Otomatik görev günde 1 kez çalışır. Beklemek istemezsen aşağıdaki butonu kullanabilirsin.</div>
