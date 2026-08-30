@@ -1041,16 +1041,98 @@ const filtrelenmisKayitlar=useMemo(()=>{
     </div>
   </main>;
 
-  if(!session&&!misafirModu)return <main className="min-h-screen bg-slate-950 text-white"><div className="flex min-h-screen">
-    <section className="hidden w-1/2 flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-orange-950 p-14 lg:flex"><div><div className="inline-flex rounded-2xl bg-orange-500 px-4 py-3 font-bold">⚡ BALIKESİR TRAFO</div><h1 className="mt-10 text-5xl font-black">Trafo Değişim<span className="block text-orange-400">Yönetim Sistemi</span></h1><p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">Trafo değişim kayıtlarını yönetin, istatistikleri takip edin ve değişim nedenlerini tek ekrandan analiz edin.</p></div></section>
-    <section className="flex w-full items-center justify-center p-5 lg:w-1/2"><div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl"><div className="text-sm font-bold uppercase tracking-widest text-orange-400">Yönetim Paneli</div><h2 className="mt-2 mb-8 text-3xl font-black">Giriş Yap</h2>
-      <form onSubmit={girisYap} autoComplete="on" className="space-y-5"><Alan baslik="E-posta"><input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} className={inputSinif}/></Alan><Alan baslik="Şifre"><input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} className={inputSinif}/></Alan>{authHata&&<HataKutusu>{authHata}</HataKutusu>}<button disabled={girisYukleniyor} className="w-full rounded-xl bg-orange-500 px-4 py-3 font-black hover:bg-orange-400">{girisYukleniyor?"Giriş Yapılıyor...":"Sisteme Giriş Yap"}</button>
-      <button type="button" disabled={sifreIslem} onClick={sifremiUnuttum} className="w-full text-center text-sm font-bold text-orange-300 hover:text-orange-200 disabled:opacity-50">{sifreIslem?"Gönderiliyor...":"Şifremi Unuttum"}</button>
-      {sifreMesaj&&<div className="rounded-xl border border-emerald-900/70 bg-emerald-950/30 px-3 py-2 text-xs leading-5 text-emerald-300">{sifreMesaj}</div>}
-      <div className="flex items-center gap-3 py-1"><div className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-black uppercase tracking-wider text-slate-600">veya</span><div className="h-px flex-1 bg-slate-200"/></div>
-      <button type="button" onClick={misafirGirisi} className="w-full rounded-xl border border-slate-700 bg-[#07111f] px-4 py-3 font-black text-slate-200 hover:bg-slate-200">👁 Misafir Olarak Görüntüle</button>
-      <p className="text-center text-[11px] leading-5 text-slate-500">Misafir modunda kayıtlar görüntülenebilir; ekleme, düzenleme ve silme işlemleri kapalıdır.</p></form>
-    </div></section></div></main>;
+  if(!session&&!misafirModu)return <main className="min-h-screen bg-[#f7f9fc] text-slate-900">
+    <div className="grid min-h-screen lg:grid-cols-[1.02fr_.98fr]">
+      <section className="relative hidden min-h-screen overflow-hidden bg-[radial-gradient(circle_at_80%_75%,rgba(249,115,22,.28),transparent_28%),radial-gradient(circle_at_15%_15%,rgba(59,130,246,.16),transparent_28%),linear-gradient(145deg,#071a34_0%,#102744_55%,#1a263d_100%)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="pointer-events-none absolute inset-0 opacity-20" style={{backgroundImage:"linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)",backgroundSize:"38px 38px"}}/>
+        <div className="pointer-events-none absolute bottom-[-100px] right-[-70px] h-[420px] w-[420px] rounded-full border border-orange-400/20"/>
+        <div className="pointer-events-none absolute bottom-[-40px] right-[-10px] h-[300px] w-[300px] rounded-full border border-orange-400/20"/>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="text-[48px] leading-none text-orange-500">⚡</div>
+            <div><div className="text-[23px] font-black tracking-tight">BALIKESİR</div><div className="mt-0.5 text-sm font-bold tracking-[.1em] text-slate-300">TRAFO DEĞİŞİMİ</div></div>
+          </div>
+
+          <div className="mt-24 max-w-[610px]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-black text-orange-300 backdrop-blur"><span>⚡</span> TRAFO DEĞİŞİMİ YÖNETİM SİSTEMİ</div>
+            <h1 className="mt-7 text-5xl font-black leading-[1.05] tracking-tight xl:text-6xl">Trafo Değişim<span className="block text-orange-400">Yönetim Sistemi</span></h1>
+            <p className="mt-6 max-w-xl text-base leading-8 text-slate-300 xl:text-lg">Trafo değişim kayıtlarını yönetin, istatistikleri takip edin ve değişim nedenlerini tek ekrandan analiz edin.</p>
+
+            <div className="mt-10 grid gap-4">
+              {[
+                ["📋","Kayıt Yönetimi","Trafo değişim kayıtlarını kolayca oluşturun ve yönetin."],
+                ["📊","İstatistik & Analiz","Yıllık, aylık ve neden bazlı analizlerle içgörü elde edin."],
+                ["⚡","Güç Değişimi Takibi","Eski ve yeni güç değerlerini otomatik karşılaştırın."],
+                ["☁️","Drive Senkronizasyonu","Trafo formlarınızı Google Drive ile otomatik eşitleyin."],
+              ].map(([i,b,a])=><div key={b} className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-2xl shadow-lg shadow-black/10 backdrop-blur">{i}</div>
+                <div><div className="text-sm font-black">{b}</div><div className="mt-1 text-xs leading-5 text-slate-400">{a}</div></div>
+              </div>)}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-10">
+          <div className="relative overflow-hidden rounded-3xl border border-orange-400/20 bg-[linear-gradient(135deg,rgba(249,115,22,.14),rgba(15,23,42,.35))] p-6 backdrop-blur">
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-orange-500/15 to-transparent"/>
+            <div className="flex items-end justify-between gap-6">
+              <div><div className="text-[10px] font-black uppercase tracking-[.18em] text-orange-300">Enerji Altyapısı</div><div className="mt-2 max-w-sm text-sm leading-6 text-slate-300">Saha kayıtları, trafo formları ve değişim geçmişi tek güvenli sistemde.</div></div>
+              <div className="flex items-end gap-2 opacity-80">
+                <div className="h-16 w-6 rounded-t-md bg-orange-400/30"/><div className="h-24 w-8 rounded-t-md bg-orange-400/45"/><div className="h-12 w-5 rounded-t-md bg-orange-400/25"/><div className="mb-1 text-5xl">⚡</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,.07),transparent_28%),#f7f9fc] px-5 py-10 sm:px-8 lg:px-12">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-100/40 blur-3xl"/>
+        <div className="w-full max-w-[520px]">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <div className="text-4xl text-orange-500">⚡</div>
+            <div><div className="text-lg font-black text-[#12315b]">BALIKESİR</div><div className="text-xs font-bold tracking-[.08em] text-[#12315b]">TRAFO DEĞİŞİMİ</div></div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,.10)] sm:p-9">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-3xl shadow-inner">🛡️</div>
+            <div className="mt-6 text-center">
+              <h2 className="text-3xl font-black tracking-tight text-slate-900">Sisteme Giriş Yap</h2>
+              <p className="mt-2 text-sm text-slate-500">Hesabınıza giriş yaparak devam edin.</p>
+            </div>
+
+            <form onSubmit={girisYap} autoComplete="on" className="mt-8 space-y-5">
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-slate-700">E-posta</span>
+                <div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">👤</span><input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@email.com" className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"/></div>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-slate-700">Şifre</span>
+                <div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔒</span><input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Şifrenizi girin" className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"/></div>
+              </label>
+
+              {authHata&&<div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{authHata}</div>}
+              {sifreMesaj&&<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-5 text-emerald-700">{sifreMesaj}</div>}
+
+              <div className="flex justify-end">
+                <button type="button" disabled={sifreIslem} onClick={sifremiUnuttum} className="text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:opacity-50">{sifreIslem?"Gönderiliyor...":"Şifremi Unuttum"}</button>
+              </div>
+
+              <button disabled={girisYukleniyor} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-200 transition hover:from-orange-600 hover:to-orange-500 disabled:cursor-not-allowed disabled:opacity-50">{girisYukleniyor?"Giriş Yapılıyor...":<>Sisteme Giriş Yap <span>→</span></>}</button>
+
+              <div className="flex items-center gap-3 py-1"><div className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">veya</span><div className="h-px flex-1 bg-slate-200"/></div>
+
+              <button type="button" onClick={misafirGirisi} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-black text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">👁 Misafir Olarak Görüntüle</button>
+
+              <div className="flex items-center justify-center gap-2 pt-1 text-[11px] text-slate-400"><span>🔒</span><span>Tüm verileriniz güvenle korunmaktadır.</span></div>
+            </form>
+          </div>
+
+          <div className="mt-7 text-center text-[11px] leading-5 text-slate-400">© {new Date().getFullYear()} Balıkesir Trafo Değişim Sistemi<br/>Tüm hakları saklıdır.</div>
+        </div>
+      </section>
+    </div>
+  </main>;
 
   return <main className="min-h-screen w-screen max-w-[100vw] overflow-x-hidden bg-[#f4f7fb] text-[#12213a]">
     {mobilMenuAcik&&<div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden" onClick={()=>setMobilMenuAcik(false)}/>}
