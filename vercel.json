@@ -3,6 +3,10 @@
     {
       "path": "/api/drive-aktar",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/sunucu-yedek",
+      "schedule": "0 0 * * 0"
     }
   ]
 }
