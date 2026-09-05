@@ -1,0 +1,7 @@
+BALIKESİR TRAFO DEĞİŞİMİ Sunucu Yedek v3
+- Sunucu Yedekleri ekranı eklendi.
+- Son 12 yedekten seçilen tarihe geri dönüş eklendi.
+- Geri yükleme iki aşamalı Admin onayı ister.
+- Geri yükleme başlamadan önce mevcut veriler otomatik GUVENLIK yedeğine alınır.
+- Trafo kayıtları, form arşiv metadata, Drive sync logları ve audit logları geri yüklenir.
+- Storage içindeki gerçek form dosyaları silinmez/değiştirilmez.

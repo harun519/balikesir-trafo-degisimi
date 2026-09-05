@@ -127,6 +127,9 @@ export default function Home() {
   const [okunanBildirimler,setOkunanBildirimler]=useState<string[]>([]);
   const [yedekHazirlaniyor,setYedekHazirlaniyor]=useState(false);
   const [sunucuYedekDurum,setSunucuYedekDurum]=useState("");
+  const [sunucuYedekler,setSunucuYedekler]=useState<any[]>([]);
+  const [sunucuYedekListeAcik,setSunucuYedekListeAcik]=useState(false);
+  const [sunucuGeriYukleniyor,setSunucuGeriYukleniyor]=useState(false);
   const [taslakVar,setTaslakVar]=useState(false);
   const [favoriFiltreler,setFavoriFiltreler]=useState<FavoriFiltre[]>([]);
   const [seciliKayitlar,setSeciliKayitlar]=useState<number[]>([]);
@@ -1026,13 +1029,37 @@ async function kayitlariGetir(){
     if(!session||!yonetici)return;
     setYedekHazirlaniyor(true);setSunucuYedekDurum("Yedekleniyor...");
     try{
-      const r=await fetch("/api/sunucu-yedek",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`}});
+      const r=await fetch("/api/sunucu-yedek",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:"{}"});
       const j=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(j?.error||"Sunucu yedeği alınamadı.");
       setSunucuYedekDurum(`Başarılı • ${j.count||1}/12 yedek saklanıyor`);
       window.alert("Sunucu yedeği başarıyla alındı.");
+      if(sunucuYedekListeAcik)await sunucuYedekleriniGetir(true);
     }catch(e:any){setSunucuYedekDurum(e?.message||"Sunucu yedeği alınamadı.");window.alert("Sunucu yedeği alınamadı: "+(e?.message||"Bilinmeyen hata"));}
     finally{setYedekHazirlaniyor(false);}
+  }
+  async function sunucuYedekleriniGetir(sadeceYenile=false){
+    if(!session||!yonetici)return;
+    if(!sadeceYenile)setSunucuYedekListeAcik(v=>!v);
+    const acilacak=sadeceYenile||!sunucuYedekListeAcik;if(!acilacak)return;
+    try{
+      const r=await fetch("/api/sunucu-yedek",{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+      const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error||"Yedek listesi alınamadı.");
+      setSunucuYedekler(Array.isArray(j.backups)?j.backups:[]);
+    }catch(e:any){window.alert("Sunucu yedekleri alınamadı: "+(e?.message||"Bilinmeyen hata"));}
+  }
+  async function sunucuYedegineDon(b:any){
+    if(!session||!yonetici||!b?.path)return;
+    const tarih=new Date(b.created_at||b.updated_at||"");const tarihYazi=Number.isNaN(tarih.getTime())?"Tarih bilinmiyor":tarih.toLocaleString("tr-TR");
+    if(!window.confirm(`SUNUCU YEDEĞİNE GERİ DÖNÜLECEK.\n\n${tarihYazi}\n${b.name||""}\n\nMevcut veriler önce otomatik güvenlik yedeğine alınacak. Ardından kayıtlar, arşiv metadata ve loglar seçilen yedeğe döndürülecek. Form dosyalarının kendisi silinmez. Devam edilsin mi?`))return;
+    const kod=window.prompt("İkinci onay için GERI YUKLE yazın:","");if(kod!=="GERI YUKLE"){if(kod!==null)window.alert("Onay metni eşleşmedi. İşlem iptal edildi.");return;}
+    setSunucuGeriYukleniyor(true);
+    try{
+      const r=await fetch("/api/sunucu-yedek",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({action:"restore",path:b.path,confirm:"GERI YUKLE"})});
+      const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error||"Geri yükleme başarısız.");
+      window.alert("Yedek başarıyla geri yüklendi. Geri yükleme öncesi güvenlik yedeği de alındı.");window.location.reload();
+    }catch(e:any){window.alert("Sunucu yedeği geri yüklenemedi: "+(e?.message||"Bilinmeyen hata"));}
+    finally{setSunucuGeriYukleniyor(false);}
   }
   async function arsivYilZipIndir(yil:string){
     if(!session||!duzenleyebilir)return;
@@ -1884,7 +1911,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </div>}
           </>}
 
-          {sayfa==="dashboard"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Sistem Yedeği" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><button type="button" onClick={sunucuYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 disabled:opacity-50"><div className="text-2xl">☁️</div><div className="mt-2 text-sm font-black text-sky-800">Şimdi Sunucu Yedeği Al</div><div className="mt-1 text-[10px] text-sky-600">Supabase trafo-yedekler • son 12 yedek</div>{sunucuYedekDurum&&<div className="mt-2 text-[10px] font-bold text-sky-700">{sunucuYedekDurum}</div>}</button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div></Panel></div>}\n\n          {sayfa==="loglar"&&yonetici&&<>
+          {sayfa==="dashboard"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Sistem Yedeği" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><button type="button" onClick={sunucuYedegiAl} disabled={yedekHazirlaniyor||sunucuGeriYukleniyor} className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 disabled:opacity-50"><div className="text-2xl">☁️</div><div className="mt-2 text-sm font-black text-sky-800">Şimdi Sunucu Yedeği Al</div><div className="mt-1 text-[10px] text-sky-600">Supabase trafo-yedekler • son 12 yedek</div>{sunucuYedekDurum&&<div className="mt-2 text-[10px] font-bold text-sky-700">{sunucuYedekDurum}</div>}</button><button type="button" onClick={()=>sunucuYedekleriniGetir()} disabled={sunucuGeriYukleniyor} className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-left transition hover:border-rose-300 disabled:opacity-50"><div className="text-2xl">↩️</div><div className="mt-2 text-sm font-black text-rose-800">Sunucu Yedekleri</div><div className="mt-1 text-[10px] text-rose-600">Tarihli yedeklerden güvenli geri dönüş</div></button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div>{sunucuYedekListeAcik&&<div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="mb-3"><div className="text-sm font-black text-slate-800">☁️ Sunucu Yedekleri</div><div className="mt-1 text-[11px] text-slate-500">Geri yükleme öncesinde mevcut sistem otomatik olarak ayrı bir güvenlik yedeğine alınır.</div></div><div className="grid gap-2">{sunucuYedekler.length?sunucuYedekler.map((b:any)=><div key={b.path} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="truncate text-xs font-black text-slate-700">{b.name}</div><div className="mt-1 text-[10px] text-slate-500">{(()=>{const d=new Date(b.created_at||b.updated_at||"");return Number.isNaN(d.getTime())?"Tarih bilinmiyor":d.toLocaleString("tr-TR")})()}</div></div><button type="button" disabled={sunucuGeriYukleniyor} onClick={()=>sunucuYedegineDon(b)} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 hover:bg-rose-100 disabled:opacity-50">Bu Yedeğe Geri Dön</button></div>):<div className="text-xs text-slate-500">Henüz sunucu yedeği bulunamadı.</div>}</div></div>}</Panel></div>}\n\n          {sayfa==="loglar"&&yonetici&&<>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4"><div className="flex flex-col gap-3 sm:flex-row"><input value={logArama} onChange={e=>setLogArama(e.target.value)} placeholder="Kullanıcı, kayıt no veya değişen değer ara..." className={inputSinif}/><button onClick={auditLoglariGetir} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-black">↻ Yenile</button></div></div>
             <Panel baslik="Değişiklik Geçmişi / Log" altBaslik="Yeni kayıt, düzenleme ve silme işlemleri veritabanı tarafından otomatik kaydedilir"><div className="mt-5 space-y-3">{filtrelenmisLoglar.length?filtrelenmisLoglar.map(l=><LogSatiri key={l.id} log={l} kayitAc={(id)=>{const k=kayitlar.find(x=>x.id===id);if(k)setDetayKayit(k);}}/>):<BosAlan>Henüz log kaydı bulunmuyor.</BosAlan>}</div></Panel>
           </>}
