@@ -21,6 +21,7 @@ const NEDENLER = [
   { ad: "YATIRIM", renk: "#facc15" },
   { ad: "YENİ TESİS", renk: "#22d3ee" },
   { ad: "ARIZA RİSKİ", renk: "#fb7185" },
+  { ad: "KISMİ ARIZALI", renk: "#f97316" },
 ];
 const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
