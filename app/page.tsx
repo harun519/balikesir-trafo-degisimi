@@ -24,7 +24,7 @@ const NEDENLER = [
 const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
-type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "loglar" | "kullanicilar" | "yedekleme";
+type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "loglar" | "kullanicilar";
 type ArsivKaydi = {
   id:string; kayit_id:number|null; yil:number; ay:string; ilce:string|null; mahalle:string|null;
   tr:string|null; lokasyon_id:string|null; trafo_id:string|null; dosya_adi:string; dosya_yolu:string;
@@ -126,10 +126,6 @@ export default function Home() {
   const [bildirimAcik,setBildirimAcik]=useState(false);
   const [okunanBildirimler,setOkunanBildirimler]=useState<string[]>([]);
   const [yedekHazirlaniyor,setYedekHazirlaniyor]=useState(false);
-  const [sunucuYedekDurum,setSunucuYedekDurum]=useState("");
-  const [sunucuYedekler,setSunucuYedekler]=useState<any[]>([]);
-  const [sunucuYedekListeAcik,setSunucuYedekListeAcik]=useState(false);
-  const [sunucuGeriYukleniyor,setSunucuGeriYukleniyor]=useState(false);
   const [taslakVar,setTaslakVar]=useState(false);
   const [favoriFiltreler,setFavoriFiltreler]=useState<FavoriFiltre[]>([]);
   const [seciliKayitlar,setSeciliKayitlar]=useState<number[]>([]);
@@ -1025,42 +1021,6 @@ async function kayitlariGetir(){
       const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`BALIKESIR_TRAFO_SISTEM_YEDEGI_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
     }finally{setYedekHazirlaniyor(false);}
   }
-  async function sunucuYedegiAl(){
-    if(!session||!yonetici)return;
-    setYedekHazirlaniyor(true);setSunucuYedekDurum("Yedekleniyor...");
-    try{
-      const r=await fetch("/api/sunucu-yedek",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:"{}"});
-      const j=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(j?.error||"Sunucu yedeği alınamadı.");
-      setSunucuYedekDurum(`Başarılı • ${j.count||1}/12 yedek saklanıyor`);
-      window.alert("Sunucu yedeği başarıyla alındı.");
-      if(sunucuYedekListeAcik)await sunucuYedekleriniGetir(true);
-    }catch(e:any){setSunucuYedekDurum(e?.message||"Sunucu yedeği alınamadı.");window.alert("Sunucu yedeği alınamadı: "+(e?.message||"Bilinmeyen hata"));}
-    finally{setYedekHazirlaniyor(false);}
-  }
-  async function sunucuYedekleriniGetir(sadeceYenile=false){
-    if(!session||!yonetici)return;
-    if(!sadeceYenile)setSunucuYedekListeAcik(v=>!v);
-    const acilacak=sadeceYenile||!sunucuYedekListeAcik;if(!acilacak)return;
-    try{
-      const r=await fetch("/api/sunucu-yedek",{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
-      const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error||"Yedek listesi alınamadı.");
-      setSunucuYedekler(Array.isArray(j.backups)?j.backups:[]);
-    }catch(e:any){window.alert("Sunucu yedekleri alınamadı: "+(e?.message||"Bilinmeyen hata"));}
-  }
-  async function sunucuYedegineDon(b:any){
-    if(!session||!yonetici||!b?.path)return;
-    const tarih=new Date(b.created_at||b.updated_at||"");const tarihYazi=Number.isNaN(tarih.getTime())?"Tarih bilinmiyor":tarih.toLocaleString("tr-TR");
-    if(!window.confirm(`SUNUCU YEDEĞİNE GERİ DÖNÜLECEK.${tarihYazi}\n${b.name||""}Mevcut veriler önce otomatik güvenlik yedeğine alınacak. Ardından kayıtlar, arşiv metadata ve loglar seçilen yedeğe döndürülecek. Form dosyalarının kendisi silinmez. Devam edilsin mi?`))return;
-    const kod=window.prompt("İkinci onay için GERI YUKLE yazın:","");if(kod!=="GERI YUKLE"){if(kod!==null)window.alert("Onay metni eşleşmedi. İşlem iptal edildi.");return;}
-    setSunucuGeriYukleniyor(true);
-    try{
-      const r=await fetch("/api/sunucu-yedek",{method:"POST",headers:{Authorization:`Bearer ${session.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({action:"restore",path:b.path,confirm:"GERI YUKLE"})});
-      const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error||"Geri yükleme başarısız.");
-      window.alert("Yedek başarıyla geri yüklendi. Geri yükleme öncesi güvenlik yedeği de alındı.");window.location.reload();
-    }catch(e:any){window.alert("Sunucu yedeği geri yüklenemedi: "+(e?.message||"Bilinmeyen hata"));}
-    finally{setSunucuGeriYukleniyor(false);}
-  }
   async function arsivYilZipIndir(yil:string){
     if(!session||!duzenleyebilir)return;
     setTopluIndiriliyor(true);setGenelHata("");
@@ -1911,9 +1871,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </div>}
           </>}
 
-          {sayfa==="yedekleme"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Yedekleme Merkezi" altBaslik="Manuel ve otomatik yedekleri tek noktadan yönetin"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><button type="button" onClick={sunucuYedegiAl} disabled={yedekHazirlaniyor||sunucuGeriYukleniyor} className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-left transition hover:border-sky-300 disabled:opacity-50"><div className="text-2xl">☁️</div><div className="mt-2 text-sm font-black text-sky-800">Şimdi Sunucu Yedeği Al</div><div className="mt-1 text-[10px] text-sky-600">Supabase trafo-yedekler • son 12 yedek</div>{sunucuYedekDurum&&<div className="mt-2 text-[10px] font-bold text-sky-700">{sunucuYedekDurum}</div>}</button><button type="button" onClick={()=>sunucuYedekleriniGetir()} disabled={sunucuGeriYukleniyor} className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-left transition hover:border-rose-300 disabled:opacity-50"><div className="text-2xl">↩️</div><div className="mt-2 text-sm font-black text-rose-800">Sunucu Yedekleri</div><div className="mt-1 text-[10px] text-rose-600">Tarihli yedeklerden güvenli geri dönüş</div></button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div>{sunucuYedekListeAcik&&<div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="mb-3"><div className="text-sm font-black text-slate-800">☁️ Sunucu Yedekleri</div><div className="mt-1 text-[11px] text-slate-500">Geri yükleme öncesinde mevcut sistem otomatik olarak ayrı bir güvenlik yedeğine alınır.</div></div><div className="grid gap-2">{sunucuYedekler.length?sunucuYedekler.map((b:any)=><div key={b.path} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="truncate text-xs font-black text-slate-700">{b.name}</div><div className="mt-1 text-[10px] text-slate-500">{(()=>{const d=new Date(b.created_at||b.updated_at||"");return Number.isNaN(d.getTime())?"Tarih bilinmiyor":d.toLocaleString("tr-TR")})()}</div></div><button type="button" disabled={sunucuGeriYukleniyor} onClick={()=>sunucuYedegineDon(b)} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 hover:bg-rose-100 disabled:opacity-50">Bu Yedeğe Geri Dön</button></div>):<div className="text-xs text-slate-500">Henüz sunucu yedeği bulunamadı.</div>}</div></div>}</Panel></div>}
-
-          {sayfa==="loglar"&&yonetici&&<>
+          {sayfa==="dashboard"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Sistem Yedeği" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div></Panel></div>}\n\n          {sayfa==="loglar"&&yonetici&&<>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4"><div className="flex flex-col gap-3 sm:flex-row"><input value={logArama} onChange={e=>setLogArama(e.target.value)} placeholder="Kullanıcı, kayıt no veya değişen değer ara..." className={inputSinif}/><button onClick={auditLoglariGetir} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-black">↻ Yenile</button></div></div>
             <Panel baslik="Değişiklik Geçmişi / Log" altBaslik="Yeni kayıt, düzenleme ve silme işlemleri veritabanı tarafından otomatik kaydedilir"><div className="mt-5 space-y-3">{filtrelenmisLoglar.length?filtrelenmisLoglar.map(l=><LogSatiri key={l.id} log={l} kayitAc={(id)=>{const k=kayitlar.find(x=>x.id===id);if(k)setDetayKayit(k);}}/>):<BosAlan>Henüz log kaydı bulunmuyor.</BosAlan>}</div></Panel>
           </>}
@@ -1948,13 +1906,72 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz,misafirMo
 {duzenleyebilir&&<MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu>}
 <MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu>
 <MenuButonu aktif={sayfa==="arsiv"} onClick={()=>git("arsiv")}>📁 Trafo Form Arşivi</MenuButonu>
-{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="yedekleme"} onClick={()=>git("yedekleme")}>🛡️ Yedekleme Merkezi</MenuButonu><MenuButonu aktif={sayfa==="loglar"} onClick={()=>git("loglar")}>🕘 Değişiklik Logları</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
+{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="loglar"} onClick={()=>git("loglar")}>🕘 Değişiklik Logları</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
 }
 function HizliFiltre({children,onClick,aktif}:{children:ReactNode;onClick:()=>void;aktif:boolean}){return <button type="button" onClick={onClick} className={`rounded-lg border px-3 py-2 text-[10px] font-black transition ${aktif?"border-orange-500 bg-orange-500/15 text-orange-300":"border-slate-300 text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
 function MenuAlt({children,onClick,aktif=false}:{children:ReactNode;onClick:()=>void;aktif?:boolean}){return <button onClick={onClick} className={`mb-0.5 block w-full rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition ${aktif?"border-orange-500/30 bg-orange-500/15 text-orange-300":"border-transparent text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
 function Alan({baslik,children}:{baslik:string;children:ReactNode}){return <label className="block"><span className="mb-2 block text-sm font-semibold text-slate-600">{baslik}</span>{children}</label>}
 function MetinAlani({baslik,deger,degistir}:{baslik:string;deger:string;degistir:(v:string)=>void}){return <Alan baslik={baslik}><input value={deger} onChange={e=>degistir(e.target.value)} className={inputSinif}/></Alan>}
-function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];listeId:string;gerekli?:boolean}){return <Alan baslik={baslik}><div className="relative"><input list={listeId} required={gerekli} autoComplete="off" value={deger} onChange={e=>degistir(e.target.value)} placeholder="Seçiniz veya yazınız" className={`${inputSinif} pr-10`}/><div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">▼</div><datalist id={listeId}>{secenekler.map(s=><option key={s} value={s}/>)}</datalist></div></Alan>}
+function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];listeId:string;gerekli?:boolean}){
+  const [acik,setAcik]=useState(false);
+  const [arama,setArama]=useState("");
+  const q=arama.trim().toLocaleUpperCase("tr-TR");
+  const filtreli=q?secenekler.filter(x=>x.toLocaleUpperCase("tr-TR").includes(q)):secenekler;
+  const tur=listeId.includes("guc")?"guc":listeId.includes("ger")?"gerilim":listeId.includes("marka")?"marka":listeId.includes("tip")?"tip":"genel";
+  const ikon=tur==="guc"?"⚡":tur==="gerilim"?"🔌":tur==="marka"?"🏷️":tur==="tip"?"🔷":"•";
+  const ek=tur==="guc"?" kVA":"";
+  return <Alan baslik={baslik}>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={()=>{setAcik(x=>!x);setArama("");}}
+        className={`flex w-full items-center justify-between rounded-xl border bg-white px-4 py-3 text-left text-sm font-black shadow-sm outline-none transition ${acik?"border-blue-500 ring-4 ring-blue-500/10":"border-slate-300 hover:border-blue-300"}`}
+      >
+        <span className={deger?"text-slate-900":"text-slate-400"}>{deger?`${deger}${ek}`:"Seçiniz veya yazınız"}</span>
+        <span className={`ml-3 text-slate-500 transition ${acik?"rotate-180":""}`}>▼</span>
+      </button>
+      {acik&&<div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,.22)]">
+        <div className="border-b border-slate-100 bg-slate-50 p-2">
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-600">⌕</span>
+            <input
+              autoFocus
+              value={arama}
+              onChange={e=>setArama(e.target.value)}
+              onKeyDown={e=>{
+                if(e.key==="Escape")setAcik(false);
+                if(e.key==="Enter"&&arama.trim()){e.preventDefault();degistir(arama.trim());setAcik(false);setArama("");}
+              }}
+              placeholder={`${baslik.replace("*","").trim()} ara...`}
+              className="w-full rounded-xl border border-blue-200 bg-white py-2.5 pl-9 pr-3 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            />
+          </div>
+        </div>
+        <div className="max-h-72 overflow-y-auto p-2">
+          {filtreli.length?filtreli.map(x=>{
+            const secili=x===deger;
+            return <button
+              key={x}
+              type="button"
+              onClick={()=>{degistir(x);setAcik(false);setArama("");}}
+              className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${secili?"bg-blue-600 text-white shadow-md shadow-blue-200":"text-slate-800 hover:bg-blue-50"}`}
+            >
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base ${secili?"bg-white/15":"bg-slate-100"}`}>{ikon}</span>
+              <span className="text-sm font-black">{x}{ek}</span>
+              {secili&&<span className="ml-auto text-sm font-black">✓</span>}
+            </button>
+          }):<div className="p-4 text-center text-xs text-slate-400">Eşleşen seçenek yok.</div>}
+          {arama.trim()&&!secenekler.some(x=>x.toLocaleUpperCase("tr-TR")===arama.trim().toLocaleUpperCase("tr-TR"))&&
+            <button type="button" onClick={()=>{degistir(arama.trim());setAcik(false);setArama("");}} className="mt-1 flex w-full items-center gap-3 rounded-xl border border-dashed border-blue-300 bg-blue-50 px-3 py-3 text-left text-blue-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">＋</span>
+              <span className="text-sm font-black">“{arama.trim()}” değerini kullan</span>
+            </button>}
+        </div>
+      </div>}
+      <input tabIndex={-1} aria-hidden="true" required={gerekli} value={deger} onChange={()=>{}} className="pointer-events-none absolute h-px w-px opacity-0"/>
+    </div>
+  </Alan>
+}
 function SelectAlan({baslik,deger,degistir,secenekler,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];gerekli?:boolean}){return <Alan baslik={baslik}><select required={gerekli} value={deger} onChange={e=>degistir(e.target.value)} className={inputSinif}><option value="">Seçiniz</option>{secenekler.map(s=><option key={s} value={s}>{s}</option>)}</select></Alan>}
 function FormGrid({children}:{children:ReactNode}){return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{children}</div>}
 function FormBolumu({baslik,children}:{baslik:string;children:ReactNode}){return <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,.07)] ring-1 ring-slate-100"><div className="border-b border-blue-100 bg-[linear-gradient(90deg,#eff6ff,#ffffff)] px-4 py-4 font-black text-[#16345e] sm:px-5">{baslik}</div><div className="p-4 sm:p-5 lg:p-6">{children}</div></section>}
