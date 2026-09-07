@@ -2023,6 +2023,14 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             setAcik(true);
             setArama("");
             setTimeout(()=>aramaRef.current?.focus(),0);
+            return;
+          }
+          if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key!==" "){
+            e.preventDefault();
+            setAcik(true);
+            setArama(e.key);
+            setAktifIndex(0);
+            setTimeout(()=>aramaRef.current?.focus(),0);
           }
         }}
         className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm font-bold shadow-sm outline-none transition ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"}`}
