@@ -1920,8 +1920,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   const [arama,setArama]=useState("");
   const [aktifIndex,setAktifIndex]=useState(-1);
   const kutuRef=useRef<HTMLDivElement|null>(null);
-  const butonRef=useRef<HTMLButtonElement|null>(null);
-  const aramaRef=useRef<HTMLInputElement|null>(null);
+  const anaInputRef=useRef<HTMLInputElement|null>(null);
   const secenekRefleri=useRef<(HTMLButtonElement|null)[]>([]);
 
   const q=arama.trim().toLocaleUpperCase("tr-TR");
@@ -1933,7 +1932,14 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   useEffect(()=>{
     if(!acik)return;
     const kapat=(e:MouseEvent|TouchEvent)=>{
-      if(kutuRef.current&&!kutuRef.current.contains(e.target as Node))setAcik(false);
+      if(kutuRef.current&&!kutuRef.current.contains(e.target as Node)){
+        if(arama.trim()){
+          const tam=secenekler.find(x=>x.toLocaleUpperCase("tr-TR")===arama.trim().toLocaleUpperCase("tr-TR"));
+          if(tam)degistir(tam);
+        }
+        setAcik(false);
+        setArama("");
+      }
     };
     document.addEventListener("mousedown",kapat);
     document.addEventListener("touchstart",kapat);
@@ -1941,121 +1947,106 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
       document.removeEventListener("mousedown",kapat);
       document.removeEventListener("touchstart",kapat);
     };
-  },[acik]);
+  },[acik,arama,secenekler,degistir]);
 
   useEffect(()=>{
     if(!acik)return;
-    const mevcut=filtreli.findIndex(x=>x===deger);
-    setAktifIndex(mevcut>=0?mevcut:(filtreli.length?0:-1));
-  },[acik,arama]);
+    setAktifIndex(filtreli.length?0:-1);
+  },[arama,acik]);
 
   useEffect(()=>{
     if(aktifIndex<0)return;
     secenekRefleri.current[aktifIndex]?.scrollIntoView({block:"nearest"});
   },[aktifIndex]);
 
-  function sonrakiAlanaGec(){
-    const tumAlanlar=Array.from(document.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )).filter(el=>{
-      const style=window.getComputedStyle(el);
-      if(style.display==="none"||style.visibility==="hidden")return false;
-      if(el.dataset.comboPopup==="true")return false;
-      return true;
-    });
-    const index=butonRef.current?tumAlanlar.indexOf(butonRef.current):-1;
-    const sonraki=index>=0?tumAlanlar[index+1]:null;
-    setTimeout(()=>sonraki?.focus(),0);
-  }
-
   function sec(x:string){
     degistir(x);
-    setAcik(false);
     setArama("");
+    setAcik(false);
+    setTimeout(()=>anaInputRef.current?.focus(),0);
   }
 
-  function klavyeKontrol(e:React.KeyboardEvent<HTMLInputElement>){
-    if(e.key==="ArrowDown"){
-      e.preventDefault();
-      setAktifIndex(i=>filtreli.length?Math.min(i+1,filtreli.length-1):-1);
-      return;
-    }
-    if(e.key==="ArrowUp"){
-      e.preventDefault();
-      setAktifIndex(i=>filtreli.length?Math.max(i-1,0):-1);
-      return;
-    }
-    if(e.key==="Enter"){
-      e.preventDefault();
-      if(aktifIndex>=0&&filtreli[aktifIndex])sec(filtreli[aktifIndex]);
-      else if(arama.trim())sec(arama.trim());
-      setTimeout(()=>butonRef.current?.focus(),0);
-      return;
-    }
-    if(e.key==="Escape"){
-      e.preventDefault();
-      setAcik(false);
-      setArama("");
-      setTimeout(()=>butonRef.current?.focus(),0);
-      return;
-    }
-    if(e.key==="Tab"){
-      e.preventDefault();
-      if(aktifIndex>=0&&filtreli[aktifIndex])degistir(filtreli[aktifIndex]);
-      else if(arama.trim())degistir(arama.trim());
-      setAcik(false);
-      setArama("");
-      sonrakiAlanaGec();
+  function commitEt(){
+    if(aktifIndex>=0&&filtreli[aktifIndex]){
+      degistir(filtreli[aktifIndex]);
+    }else if(arama.trim()){
+      degistir(arama.trim());
     }
   }
 
   return <div className="block">
     <span className="mb-2 block text-sm font-semibold text-slate-600">{baslik}</span>
     <div ref={kutuRef} className="relative">
-      <button
-        ref={butonRef}
-        type="button"
-        data-combo-main="true"
-        onClick={()=>{setAcik(x=>!x);setArama("");}}
-        onKeyDown={e=>{
-          if(e.key==="ArrowDown"||e.key==="Enter"){
-            e.preventDefault();
+      <div className="relative">
+        <input
+          ref={anaInputRef}
+          required={gerekli}
+          autoComplete="off"
+          value={acik?arama:deger}
+          onFocus={e=>{
             setAcik(true);
             setArama("");
-            setTimeout(()=>aramaRef.current?.focus(),0);
-            return;
-          }
-          if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key!==" "){
-            e.preventDefault();
-            setAcik(true);
-            setArama(e.key);
             setAktifIndex(0);
-            setTimeout(()=>aramaRef.current?.focus(),0);
-          }
-        }}
-        className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm font-bold shadow-sm outline-none transition ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"}`}
-      >
-        <span className={deger?"text-slate-800":"text-slate-400"}>{deger?`${deger}${ek}`:"Seçiniz veya yazınız"}</span>
-        <span className={`ml-3 text-[10px] text-slate-400 transition ${acik?"rotate-180":""}`}>▼</span>
-      </button>
+          }}
+          onChange={e=>{
+            setArama(e.target.value);
+            setAcik(true);
+            setAktifIndex(0);
+          }}
+          onKeyDown={e=>{
+            if(e.key==="ArrowDown"){
+              e.preventDefault();
+              setAcik(true);
+              setAktifIndex(i=>filtreli.length?Math.min(i+1,filtreli.length-1):-1);
+              return;
+            }
+            if(e.key==="ArrowUp"){
+              e.preventDefault();
+              setAktifIndex(i=>filtreli.length?Math.max(i-1,0):-1);
+              return;
+            }
+            if(e.key==="Enter"){
+              e.preventDefault();
+              commitEt();
+              setArama("");
+              setAcik(false);
+              return;
+            }
+            if(e.key==="Escape"){
+              e.preventDefault();
+              setArama("");
+              setAcik(false);
+              return;
+            }
+            if(e.key==="Tab"){
+              commitEt();
+              setArama("");
+              setAcik(false);
+              return;
+            }
+          }}
+          placeholder="Seçiniz veya yazınız"
+          className={`w-full rounded-xl border bg-white px-3.5 py-2.5 pr-10 text-sm font-bold text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"}`}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={e=>e.preventDefault()}
+          onClick={()=>{
+            if(acik){
+              setAcik(false);
+              setArama("");
+            }else{
+              setAcik(true);
+              setArama("");
+              setTimeout(()=>anaInputRef.current?.focus(),0);
+            }
+          }}
+          className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[10px] text-slate-400 hover:bg-slate-100"
+        >▼</button>
+      </div>
 
       {acik&&<div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,.16)]">
-        <div className="border-b border-slate-100 bg-slate-50/80 p-2">
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-blue-500">⌕</span>
-            <input
-              ref={aramaRef}
-              data-combo-popup="true"
-              autoFocus
-              value={arama}
-              onChange={e=>{setArama(e.target.value);setAktifIndex(0);}}
-              onKeyDown={klavyeKontrol}
-              placeholder={`${baslik.replace("*","").trim()} ara...`}
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"
-            />
-          </div>
-        </div>
-
         <div className="max-h-56 overflow-y-auto p-1.5">
           {filtreli.length?filtreli.map((x,i)=>{
             const secili=x===deger;
@@ -2065,8 +2056,8 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
               key={x}
               type="button"
               tabIndex={-1}
-              data-combo-popup="true"
               onMouseEnter={()=>setAktifIndex(i)}
+              onMouseDown={e=>e.preventDefault()}
               onClick={()=>sec(x)}
               className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${
                 secili?"bg-blue-600 text-white":
@@ -2084,7 +2075,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             <button
               type="button"
               tabIndex={-1}
-              data-combo-popup="true"
+              onMouseDown={e=>e.preventDefault()}
               onClick={()=>sec(arama.trim())}
               className="mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed border-blue-200 bg-blue-50/70 px-2.5 py-2 text-left text-blue-700"
             >
@@ -2093,8 +2084,6 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             </button>}
         </div>
       </div>}
-
-      <input tabIndex={-1} aria-hidden="true" required={gerekli} value={deger} onChange={()=>{}} className="pointer-events-none absolute h-px w-px opacity-0"/>
     </div>
   </div>
 }
