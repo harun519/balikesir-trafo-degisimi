@@ -74,7 +74,7 @@ async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   };
 
   const body=JSON.stringify(payload,null,2);
-  const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:"application/json;charset=utf-8",upsert:false});
+  const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:"application/json",upsert:false});
   if(error)throw error;
   return {name,path,size:new TextEncoder().encode(body).length,created_at:now.toISOString(),kaynak};
 }
