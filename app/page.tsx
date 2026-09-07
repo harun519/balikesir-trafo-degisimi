@@ -190,12 +190,12 @@ export default function Home() {
       const ilce=form.ilce.trim();
       if(!ilce){setMahalleSecenekleri([]);setMahalleHata("");setMahalleYukleniyor(false);return;}
       setMahalleYukleniyor(true);setMahalleHata("");
-      const kayitMahalleleri=Array.from(new Set(kayitlar.filter(k=>norm(k.ilce)===norm(ilce)).map(k=>k.mahalle?.trim()).filter(Boolean) as string[]));
+      const kayitMahalleleri=Array.from(new Set(kayitlar.filter(k=>norm(k.ilce)===norm(ilce)).map(k=>k.mahalle?.trim().toLocaleUpperCase("tr-TR")).filter(Boolean) as string[]));
       try{
         const r=await fetch(`/api/mahalleler?ilce=${encodeURIComponent(ilce)}`,{cache:"no-store"});
         const j=await r.json().catch(()=>({}));
         if(!r.ok)throw new Error(j?.error||"Mahalleler alınamadı.");
-        const apiMahalleleri=Array.isArray(j?.mahalleler)?j.mahalleler.map((x:unknown)=>String(x).trim()).filter(Boolean):[];
+        const apiMahalleleri=Array.isArray(j?.mahalleler)?j.mahalleler.map((x:unknown)=>String(x).trim().toLocaleUpperCase("tr-TR")).filter(Boolean):[];
         const birlesik=Array.from(new Set([...apiMahalleleri,...kayitMahalleleri])).sort((a,b)=>a.localeCompare(b,"tr"));
         if(!iptal)setMahalleSecenekleri(birlesik);
       }catch(err){
