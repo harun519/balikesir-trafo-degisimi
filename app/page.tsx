@@ -1920,6 +1920,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   const [arama,setArama]=useState("");
   const [aktifIndex,setAktifIndex]=useState(-1);
   const kutuRef=useRef<HTMLDivElement|null>(null);
+  const butonRef=useRef<HTMLButtonElement|null>(null);
   const aramaRef=useRef<HTMLInputElement|null>(null);
   const secenekRefleri=useRef<(HTMLButtonElement|null)[]>([]);
 
@@ -1958,15 +1959,15 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
       'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )).filter(el=>{
       const style=window.getComputedStyle(el);
-      return style.display!=="none"&&style.visibility!=="hidden"&&!kutuRef.current?.contains(el);
+      if(style.display==="none"||style.visibility==="hidden")return false;
+      if(el.dataset.comboPopup==="true")return false;
+      return true;
     });
-
-    const comboButton=kutuRef.current?.querySelector<HTMLButtonElement>('button[type="button"]');
-    if(!comboButton)return;
-    const index=tumAlanlar.indexOf(comboButton);
-    const sonraki=tumAlanlar[index+1];
+    const index=butonRef.current?tumAlanlar.indexOf(butonRef.current):-1;
+    const sonraki=index>=0?tumAlanlar[index+1]:null;
     setTimeout(()=>sonraki?.focus(),0);
   }
+
   function sec(x:string){
     degistir(x);
     setAcik(false);
@@ -1988,12 +1989,14 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
       e.preventDefault();
       if(aktifIndex>=0&&filtreli[aktifIndex])sec(filtreli[aktifIndex]);
       else if(arama.trim())sec(arama.trim());
+      setTimeout(()=>butonRef.current?.focus(),0);
       return;
     }
     if(e.key==="Escape"){
       e.preventDefault();
       setAcik(false);
       setArama("");
+      setTimeout(()=>butonRef.current?.focus(),0);
       return;
     }
     if(e.key==="Tab"){
@@ -2006,10 +2009,13 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
     }
   }
 
-  return <Alan baslik={baslik}>
+  return <div className="block">
+    <span className="mb-2 block text-sm font-semibold text-slate-600">{baslik}</span>
     <div ref={kutuRef} className="relative">
       <button
+        ref={butonRef}
         type="button"
+        data-combo-main="true"
         onClick={()=>{setAcik(x=>!x);setArama("");}}
         onKeyDown={e=>{
           if(e.key==="ArrowDown"||e.key==="Enter"){
@@ -2019,7 +2025,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             setTimeout(()=>aramaRef.current?.focus(),0);
           }
         }}
-        className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm font-bold shadow-sm outline-none transition ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300"}`}
+        className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm font-bold shadow-sm outline-none transition ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"}`}
       >
         <span className={deger?"text-slate-800":"text-slate-400"}>{deger?`${deger}${ek}`:"Seçiniz veya yazınız"}</span>
         <span className={`ml-3 text-[10px] text-slate-400 transition ${acik?"rotate-180":""}`}>▼</span>
@@ -2031,6 +2037,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-blue-500">⌕</span>
             <input
               ref={aramaRef}
+              data-combo-popup="true"
               autoFocus
               value={arama}
               onChange={e=>{setArama(e.target.value);setAktifIndex(0);}}
@@ -2050,6 +2057,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
               key={x}
               type="button"
               tabIndex={-1}
+              data-combo-popup="true"
               onMouseEnter={()=>setAktifIndex(i)}
               onClick={()=>sec(x)}
               className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${
@@ -2068,6 +2076,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
             <button
               type="button"
               tabIndex={-1}
+              data-combo-popup="true"
               onClick={()=>sec(arama.trim())}
               className="mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed border-blue-200 bg-blue-50/70 px-2.5 py-2 text-left text-blue-700"
             >
@@ -2079,7 +2088,7 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
 
       <input tabIndex={-1} aria-hidden="true" required={gerekli} value={deger} onChange={()=>{}} className="pointer-events-none absolute h-px w-px opacity-0"/>
     </div>
-  </Alan>
+  </div>
 }
 function SelectAlan({baslik,deger,degistir,secenekler,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];gerekli?:boolean}){return <Alan baslik={baslik}><select required={gerekli} value={deger} onChange={e=>degistir(e.target.value)} className={inputSinif}><option value="">Seçiniz</option>{secenekler.map(s=><option key={s} value={s}>{s}</option>)}</select></Alan>}
 function FormGrid({children}:{children:ReactNode}){return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{children}</div>}
