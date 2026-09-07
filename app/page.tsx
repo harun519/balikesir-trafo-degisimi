@@ -25,7 +25,7 @@ const NEDENLER = [
 const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
-type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "loglar" | "kullanicilar" | "markalar";
+type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "yedekleme" | "loglar" | "kullanicilar" | "markalar";
 type ArsivKaydi = {
   id:string; kayit_id:number|null; yil:number; ay:string; ilce:string|null; mahalle:string|null;
   tr:string|null; lokasyon_id:string|null; trafo_id:string|null; dosya_adi:string; dosya_yolu:string;
@@ -1944,7 +1944,31 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </div>}
           </>}
 
-          {sayfa==="dashboard"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Sistem Yedeği" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div></Panel></div>}\n\n          {sayfa==="loglar"&&yonetici&&<>
+          {sayfa==="dashboard"&&yonetici&&<div className="mt-5"><Panel baslik="🛡️ Sistem Yedeği" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri"><div className="mt-4 grid gap-3 md:grid-cols-3"><button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:border-emerald-300"><div className="text-2xl">📊</div><div className="mt-2 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-[10px] text-emerald-600">Aktif filtre yoksa tüm trafo kayıtları</div></button><button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-300 disabled:opacity-50"><div className="text-2xl">💾</div><div className="mt-2 text-sm font-black text-blue-800">Sistem JSON Yedeği</div><div className="mt-1 text-[10px] text-blue-600">Kayıt + arşiv metadata + loglar</div></button><div className="rounded-2xl border border-violet-200 bg-violet-50 p-4"><div className="text-2xl">🗜️</div><div className="mt-2 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-2 flex flex-wrap gap-1.5">{arsivYillari.slice(0,8).map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-violet-700 hover:bg-violet-100">{y}</button>)}</div></div></div></Panel></div>}\n\n          {sayfa==="yedekleme"&&yonetici&&<>
+            <div className="mb-5">
+              <div className="text-2xl font-black text-slate-900">💾 Yedekleme Merkezi</div>
+              <div className="mt-1 text-sm text-slate-500">Trafo kayıtları ve form arşivi için yedekleme araçları.</div>
+            </div>
+            <Panel baslik="🛡️ Sistem Yedekleri" altBaslik="Kayıtlar, arşiv metadatası ve yıllık form paketleri">
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-left transition hover:border-emerald-300 hover:shadow-sm">
+                  <div className="text-3xl">📊</div><div className="mt-3 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-xs leading-5 text-emerald-600">Trafo değişim kayıtlarını Excel dosyası olarak bilgisayara indir.</div>
+                </button>
+                <button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-left transition hover:border-blue-300 hover:shadow-sm disabled:opacity-50">
+                  <div className="text-3xl">💾</div><div className="mt-3 text-sm font-black text-blue-800">{yedekHazirlaniyor?"Yedek Hazırlanıyor...":"Sistem JSON Yedeği"}</div><div className="mt-1 text-xs leading-5 text-blue-600">Kayıtlar, arşiv metadatası ve sistem loglarını tek JSON yedeğinde indir.</div>
+                </button>
+                <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+                  <div className="text-3xl">🗜️</div><div className="mt-3 text-sm font-black text-violet-800">Yıllık Form ZIP</div><div className="mt-1 text-xs leading-5 text-violet-600">Trafo form arşivini yıl bazında ZIP olarak indir.</div>
+                  <div className="mt-4 flex flex-wrap gap-2">{arsivYillari.length?arsivYillari.map(y=><button type="button" key={y} disabled={topluIndiriliyor} onClick={()=>arsivYilZipIndir(y)} className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-black text-violet-700 hover:bg-violet-100 disabled:opacity-50">{y}</button>):<span className="text-xs text-violet-500">Arşiv yılı bulunamadı.</span>}</div>
+                </div>
+              </div>
+            </Panel>
+            <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-6 text-blue-700">
+              <b>Yedekleme notu:</b> Excel ve JSON veri yedeklerini, yıllık ZIP paketlerini de form dosyalarının fiziksel yedeğini almak için kullanabilirsiniz.
+            </div>
+          </>}
+
+          {sayfa==="loglar"&&yonetici&&<>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4"><div className="flex flex-col gap-3 sm:flex-row"><input value={logArama} onChange={e=>setLogArama(e.target.value)} placeholder="Kullanıcı, kayıt no veya değişen değer ara..." className={inputSinif}/><button onClick={auditLoglariGetir} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-black">↻ Yenile</button></div></div>
             <Panel baslik="Değişiklik Geçmişi / Log" altBaslik="Yeni kayıt, düzenleme ve silme işlemleri veritabanı tarafından otomatik kaydedilir"><div className="mt-5 space-y-3">{filtrelenmisLoglar.length?filtrelenmisLoglar.map(l=><LogSatiri key={l.id} log={l} kayitAc={(id)=>{const k=kayitlar.find(x=>x.id===id);if(k)setDetayKayit(k);}}/>):<BosAlan>Henüz log kaydı bulunmuyor.</BosAlan>}</div></Panel>
           </>}
@@ -2007,7 +2031,7 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz,misafirMo
 {duzenleyebilir&&<MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu>}
 <MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu>
 <MenuButonu aktif={sayfa==="arsiv"} onClick={()=>git("arsiv")}>📁 Trafo Form Arşivi</MenuButonu>
-{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="loglar"} onClick={()=>git("loglar")}>🕘 Değişiklik Logları</MenuButonu><MenuButonu aktif={sayfa==="markalar"} onClick={()=>git("markalar")}>🏷️ Trafo Markaları</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
+{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="loglar"} onClick={()=>git("loglar")}>🕘 Değişiklik Logları</MenuButonu><MenuButonu aktif={sayfa==="markalar"} onClick={()=>git("markalar")}>🏷️ Trafo Markaları</MenuButonu><MenuButonu aktif={sayfa==="yedekleme"} onClick={()=>git("yedekleme")}>💾 Yedekleme Merkezi</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
 }
 function HizliFiltre({children,onClick,aktif}:{children:ReactNode;onClick:()=>void;aktif:boolean}){return <button type="button" onClick={onClick} className={`rounded-lg border px-3 py-2 text-[10px] font-black transition ${aktif?"border-orange-500 bg-orange-500/15 text-orange-300":"border-slate-300 text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
 function MenuAlt({children,onClick,aktif=false}:{children:ReactNode;onClick:()=>void;aktif?:boolean}){return <button onClick={onClick} className={`mb-0.5 block w-full rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition ${aktif?"border-orange-500/30 bg-orange-500/15 text-orange-300":"border-transparent text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
