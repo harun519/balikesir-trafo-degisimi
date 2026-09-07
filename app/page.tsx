@@ -120,6 +120,9 @@ export default function Home() {
   const [markaDuzenlenenId,setMarkaDuzenlenenId]=useState<number|null>(null);
   const [markaDuzenlenenAd,setMarkaDuzenlenenAd]=useState("");
   const [markaIslem,setMarkaIslem]=useState(false);
+  const [mahalleSecenekleri,setMahalleSecenekleri]=useState<string[]>([]);
+  const [mahalleYukleniyor,setMahalleYukleniyor]=useState(false);
+  const [mahalleHata,setMahalleHata]=useState("");
   const [logArama,setLogArama]=useState(""); const [gecmisKayit,setGecmisKayit]=useState<TrafoKaydi|null>(null);
   const [formHatalari,setFormHatalari]=useState<string[]>([]); const [pwaGuncellemeVar,setPwaGuncellemeVar]=useState(false);
   const [dashboardHizliFiltre,setDashboardHizliFiltre]=useState<
@@ -180,6 +183,28 @@ export default function Home() {
       if(dolu){localStorage.setItem("trafo_yeni_kayit_taslak",JSON.stringify({form,formAdim,updatedAt:new Date().toISOString()}));setTaslakVar(true);}
     }catch{}
   },[form,formAdim,sayfa,duzenlenenId]);
+
+  useEffect(()=>{
+    let iptal=false;
+    async function mahalleleriYukle(){
+      const ilce=form.ilce.trim();
+      if(!ilce){setMahalleSecenekleri([]);setMahalleHata("");setMahalleYukleniyor(false);return;}
+      setMahalleYukleniyor(true);setMahalleHata("");
+      const kayitMahalleleri=Array.from(new Set(kayitlar.filter(k=>norm(k.ilce)===norm(ilce)).map(k=>k.mahalle?.trim()).filter(Boolean) as string[]));
+      try{
+        const r=await fetch(`/api/mahalleler?ilce=${encodeURIComponent(ilce)}`,{cache:"no-store"});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok)throw new Error(j?.error||"Mahalleler alınamadı.");
+        const apiMahalleleri=Array.isArray(j?.mahalleler)?j.mahalleler.map((x:unknown)=>String(x).trim()).filter(Boolean):[];
+        const birlesik=Array.from(new Set([...apiMahalleleri,...kayitMahalleleri])).sort((a,b)=>a.localeCompare(b,"tr"));
+        if(!iptal)setMahalleSecenekleri(birlesik);
+      }catch(err){
+        if(!iptal){setMahalleSecenekleri(kayitMahalleleri.sort((a,b)=>a.localeCompare(b,"tr")));setMahalleHata(err instanceof Error?err.message:"Mahalle listesi alınamadı.");}
+      }finally{if(!iptal)setMahalleYukleniyor(false);}
+    }
+    mahalleleriYukle();
+    return()=>{iptal=true;};
+  },[form.ilce,kayitlar]);
 
   useEffect(()=>{
     const fn=(e:KeyboardEvent)=>{
@@ -1761,7 +1786,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-xl">📍</div>
                     <div><h2 className="text-lg font-black text-slate-900">Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Trafo değişiminin gerçekleştiği konum ve sistem bilgilerini girin.</p></div>
                   </div>
-                  <div className="mt-6"><FormGrid><ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/><ComboAlani baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} listeId="ay" gerekli/><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><MetinAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)}/><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
+                  <div className="mt-6"><FormGrid><ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/><ComboAlani baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} listeId="ay" gerekli/><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><div><ComboAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)} secenekler={mahalleSecenekleri} listeId="mahalle"/><div className="mt-1 text-[10px] text-slate-400">{!form.ilce?"Önce ilçe seçin.":mahalleYukleniyor?"Mahalleler yükleniyor...":mahalleHata?"Hazır liste alınamadı; mahalleyi elle de yazabilirsiniz.":`${mahalleSecenekleri.length} mahalle hazır.`}</div></div><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
                   <div className="mt-4 flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son kullanılan ilçeler</span>{sonKullanilanlar.ilce.map(x=><button type="button" key={x} onClick={()=>formDegistir("ilce",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-blue-50">{x}</button>)}</div>
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
