@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createClient, Session } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 
@@ -127,6 +127,7 @@ export default function Home() {
   const [okunanBildirimler,setOkunanBildirimler]=useState<string[]>([]);
   const [yedekHazirlaniyor,setYedekHazirlaniyor]=useState(false);
   const [taslakVar,setTaslakVar]=useState(false);
+  const [kontrolOnayi,setKontrolOnayi]=useState(false);
   const [favoriFiltreler,setFavoriFiltreler]=useState<FavoriFiltre[]>([]);
   const [seciliKayitlar,setSeciliKayitlar]=useState<number[]>([]);
   const [topluAlan,setTopluAlan]=useState<"ilce"|"degisim_nedeni"|"ay"|"yil">("ilce");
@@ -587,7 +588,7 @@ async function kayitlariGetir(){
     });
     if(formHatalari.length)setFormHatalari([]);
   }
-  function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);setFormHatalari([]);setFormAdim(1);}
+  function formTemizle(){setForm(BOS_FORM);setDuzenlenenId(null);setFormHatalari([]);setFormAdim(1);setKontrolOnayi(false);}
   function taslakYukle(){
     try{
       const raw=localStorage.getItem("trafo_yeni_kayit_taslak");
@@ -646,6 +647,8 @@ async function kayitlariGetir(){
 
   async function kaydet(e:FormEvent<HTMLFormElement>){
     e.preventDefault(); if(!supabase)return;
+    if(formAdim!==5){setFormAdim(5);setKontrolOnayi(false);return;}
+    if(!kontrolOnayi){setGenelHata("Kaydetmeden önce Kontrol & Kaydet ekranındaki kontrol onayını işaretleyin.");return;}
     if(!duzenleyebilir){setGenelHata("Bu işlem için düzenleme yetkiniz yok.");return;}
     const hatalar:string[]=[];
     if(!form.yil)hatalar.push("Yıl");if(!form.ay)hatalar.push("Ay");if(!form.ilce)hatalar.push("İlçe");if(!form.tarih)hatalar.push("Tarih");if(!form.degisim_nedeni)hatalar.push("Değişim Nedeni");
@@ -1736,7 +1739,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 </div>}
 
                 {formAdim===5&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
-                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Kontrol & Kaydet</h2><p className="mt-1 text-xs text-slate-500">Kaydetmeden önce temel bilgileri son kez kontrol edin.</p></div></div>
+                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Kontrol & Kaydet</h2><p className="mt-1 text-xs text-slate-500">Kaydetmeden önce temel bilgileri son kez kontrol edin.</p></div></div><div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4"><label className="flex cursor-pointer items-start gap-3"><input type="checkbox" checked={kontrolOnayi} onChange={e=>setKontrolOnayi(e.target.checked)} className="mt-0.5 h-5 w-5 rounded border-slate-300 text-emerald-600"/><div><div className="text-sm font-black text-amber-900">Bilgileri kontrol ettim</div><div className="mt-1 text-xs leading-5 text-amber-700">Aşağıdaki özet bilgileri kontrol ettim ve kaydı tamamlamaya hazırım.</div></div></label></div>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     {[
                       ["Konum",`${form.ilce||"-"}${form.mahalle?` / ${form.mahalle}`:""}`],
@@ -1780,9 +1783,9 @@ const filtrelenmisKayitlar=useMemo(()=>{
             {veriKaliteUyarilari.length>0&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><div className="text-sm font-black text-amber-800">🛡️ Veri Kalite Kontrolü</div><div className="mt-2 grid gap-2 sm:grid-cols-2">{veriKaliteUyarilari.map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700">⚠ {x}</div>)}</div></div>}
 
             <div className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
-              <button type="button" disabled={formAdim===1} onClick={()=>setFormAdim(x=>Math.max(1,x-1))} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
+              <button type="button" disabled={formAdim===1} onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.max(1,x-1));}} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
               <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 5</div>
-              {formAdim<5?<button type="button" onClick={()=>setFormAdim(x=>Math.min(5,x+1))} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">Devam Et →</button>:<button type="submit" disabled={kaydediliyor} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:opacity-50">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
+              {formAdim<5?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(5,x+1));}} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===4?"Kontrol Et →":"Devam Et →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
             </div>
           </form>}
 
@@ -1915,59 +1918,177 @@ function MetinAlani({baslik,deger,degistir}:{baslik:string;deger:string;degistir
 function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{baslik:string;deger:string;degistir:(v:string)=>void;secenekler:string[];listeId:string;gerekli?:boolean}){
   const [acik,setAcik]=useState(false);
   const [arama,setArama]=useState("");
+  const [aktifIndex,setAktifIndex]=useState(-1);
+  const kutuRef=useRef<HTMLDivElement|null>(null);
+  const aramaRef=useRef<HTMLInputElement|null>(null);
+  const secenekRefleri=useRef<(HTMLButtonElement|null)[]>([]);
+
   const q=arama.trim().toLocaleUpperCase("tr-TR");
   const filtreli=q?secenekler.filter(x=>x.toLocaleUpperCase("tr-TR").includes(q)):secenekler;
   const tur=listeId.includes("guc")?"guc":listeId.includes("ger")?"gerilim":listeId.includes("marka")?"marka":listeId.includes("tip")?"tip":"genel";
-  const ikon=tur==="guc"?"⚡":tur==="gerilim"?"🔌":tur==="marka"?"🏷️":tur==="tip"?"🔷":"•";
+  const ikon=tur==="guc"?"⚡":tur==="gerilim"?"🔌":tur==="marka"?"🏷️":tur==="tip"?"◈":"•";
   const ek=tur==="guc"?" kVA":"";
+
+  useEffect(()=>{
+    if(!acik)return;
+    const kapat=(e:MouseEvent|TouchEvent)=>{
+      if(kutuRef.current&&!kutuRef.current.contains(e.target as Node))setAcik(false);
+    };
+    document.addEventListener("mousedown",kapat);
+    document.addEventListener("touchstart",kapat);
+    return ()=>{
+      document.removeEventListener("mousedown",kapat);
+      document.removeEventListener("touchstart",kapat);
+    };
+  },[acik]);
+
+  useEffect(()=>{
+    if(!acik)return;
+    const mevcut=filtreli.findIndex(x=>x===deger);
+    setAktifIndex(mevcut>=0?mevcut:(filtreli.length?0:-1));
+  },[acik,arama]);
+
+  useEffect(()=>{
+    if(aktifIndex<0)return;
+    secenekRefleri.current[aktifIndex]?.scrollIntoView({block:"nearest"});
+  },[aktifIndex]);
+
+  function sonrakiAlanaGec(){
+    const focusable=Array.from(document.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(el=>{
+      const style=window.getComputedStyle(el);
+      return style.display!=="none"&&style.visibility!=="hidden"&&!kutuRef.current?.contains(el);
+    });
+    const rect=kutuRef.current?.getBoundingClientRect();
+    if(!rect)return;
+    const currentTop=rect.top+window.scrollY;
+    const currentLeft=rect.left+window.scrollX;
+    const sirali=focusable
+      .map(el=>({el,r:el.getBoundingClientRect()}))
+      .filter(x=>{
+        const top=x.r.top+window.scrollY;
+        const left=x.r.left+window.scrollX;
+        return top>currentTop+8 || (Math.abs(top-currentTop)<=8 && left>currentLeft+8);
+      })
+      .sort((a,b)=>{
+        const at=a.r.top+window.scrollY, bt=b.r.top+window.scrollY;
+        if(Math.abs(at-bt)>8)return at-bt;
+        return (a.r.left+window.scrollX)-(b.r.left+window.scrollX);
+      });
+    setTimeout(()=>sirali[0]?.el.focus(),0);
+  }
+
+  function sec(x:string){
+    degistir(x);
+    setAcik(false);
+    setArama("");
+  }
+
+  function klavyeKontrol(e:React.KeyboardEvent<HTMLInputElement>){
+    if(e.key==="ArrowDown"){
+      e.preventDefault();
+      setAktifIndex(i=>filtreli.length?Math.min(i+1,filtreli.length-1):-1);
+      return;
+    }
+    if(e.key==="ArrowUp"){
+      e.preventDefault();
+      setAktifIndex(i=>filtreli.length?Math.max(i-1,0):-1);
+      return;
+    }
+    if(e.key==="Enter"){
+      e.preventDefault();
+      if(aktifIndex>=0&&filtreli[aktifIndex])sec(filtreli[aktifIndex]);
+      else if(arama.trim())sec(arama.trim());
+      return;
+    }
+    if(e.key==="Escape"){
+      e.preventDefault();
+      setAcik(false);
+      setArama("");
+      return;
+    }
+    if(e.key==="Tab"){
+      e.preventDefault();
+      if(aktifIndex>=0&&filtreli[aktifIndex])degistir(filtreli[aktifIndex]);
+      else if(arama.trim())degistir(arama.trim());
+      setAcik(false);
+      setArama("");
+      sonrakiAlanaGec();
+    }
+  }
+
   return <Alan baslik={baslik}>
-    <div className="relative">
+    <div ref={kutuRef} className="relative">
       <button
         type="button"
         onClick={()=>{setAcik(x=>!x);setArama("");}}
-        className={`flex w-full items-center justify-between rounded-xl border bg-white px-4 py-3 text-left text-sm font-black shadow-sm outline-none transition ${acik?"border-blue-500 ring-4 ring-blue-500/10":"border-slate-300 hover:border-blue-300"}`}
+        onKeyDown={e=>{
+          if(e.key==="ArrowDown"||e.key==="Enter"){
+            e.preventDefault();
+            setAcik(true);
+            setArama("");
+            setTimeout(()=>aramaRef.current?.focus(),0);
+          }
+        }}
+        className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2.5 text-left text-sm font-bold shadow-sm outline-none transition ${acik?"border-blue-400 ring-2 ring-blue-500/10":"border-slate-300 hover:border-blue-300"}`}
       >
-        <span className={deger?"text-slate-900":"text-slate-400"}>{deger?`${deger}${ek}`:"Seçiniz veya yazınız"}</span>
-        <span className={`ml-3 text-slate-500 transition ${acik?"rotate-180":""}`}>▼</span>
+        <span className={deger?"text-slate-800":"text-slate-400"}>{deger?`${deger}${ek}`:"Seçiniz veya yazınız"}</span>
+        <span className={`ml-3 text-[10px] text-slate-400 transition ${acik?"rotate-180":""}`}>▼</span>
       </button>
-      {acik&&<div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,.22)]">
-        <div className="border-b border-slate-100 bg-slate-50 p-2">
+
+      {acik&&<div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,.16)]">
+        <div className="border-b border-slate-100 bg-slate-50/80 p-2">
           <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-600">⌕</span>
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-blue-500">⌕</span>
             <input
+              ref={aramaRef}
               autoFocus
               value={arama}
-              onChange={e=>setArama(e.target.value)}
-              onKeyDown={e=>{
-                if(e.key==="Escape")setAcik(false);
-                if(e.key==="Enter"&&arama.trim()){e.preventDefault();degistir(arama.trim());setAcik(false);setArama("");}
-              }}
+              onChange={e=>{setArama(e.target.value);setAktifIndex(0);}}
+              onKeyDown={klavyeKontrol}
               placeholder={`${baslik.replace("*","").trim()} ara...`}
-              className="w-full rounded-xl border border-blue-200 bg-white py-2.5 pl-9 pr-3 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10"
             />
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto p-2">
-          {filtreli.length?filtreli.map(x=>{
+
+        <div className="max-h-56 overflow-y-auto p-1.5">
+          {filtreli.length?filtreli.map((x,i)=>{
             const secili=x===deger;
+            const aktif=i===aktifIndex;
             return <button
+              ref={el=>{secenekRefleri.current[i]=el;}}
               key={x}
               type="button"
-              onClick={()=>{degistir(x);setAcik(false);setArama("");}}
-              className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${secili?"bg-blue-600 text-white shadow-md shadow-blue-200":"text-slate-800 hover:bg-blue-50"}`}
+              tabIndex={-1}
+              onMouseEnter={()=>setAktifIndex(i)}
+              onClick={()=>sec(x)}
+              className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${
+                secili?"bg-blue-600 text-white":
+                aktif?"bg-blue-100 text-blue-800 ring-1 ring-blue-200":
+                "text-slate-700 hover:bg-blue-50"
+              }`}
             >
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base ${secili?"bg-white/15":"bg-slate-100"}`}>{ikon}</span>
-              <span className="text-sm font-black">{x}{ek}</span>
-              {secili&&<span className="ml-auto text-sm font-black">✓</span>}
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[12px] ${secili?"bg-white/15":aktif?"bg-white":"bg-slate-100"}`}>{ikon}</span>
+              <span className="text-xs font-bold">{x}{ek}</span>
+              {secili&&<span className="ml-auto text-xs">✓</span>}
             </button>
-          }):<div className="p-4 text-center text-xs text-slate-400">Eşleşen seçenek yok.</div>}
+          }):<div className="p-3 text-center text-xs text-slate-400">Eşleşen seçenek yok.</div>}
+
           {arama.trim()&&!secenekler.some(x=>x.toLocaleUpperCase("tr-TR")===arama.trim().toLocaleUpperCase("tr-TR"))&&
-            <button type="button" onClick={()=>{degistir(arama.trim());setAcik(false);setArama("");}} className="mt-1 flex w-full items-center gap-3 rounded-xl border border-dashed border-blue-300 bg-blue-50 px-3 py-3 text-left text-blue-700">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">＋</span>
-              <span className="text-sm font-black">“{arama.trim()}” değerini kullan</span>
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={()=>sec(arama.trim())}
+              className="mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed border-blue-200 bg-blue-50/70 px-2.5 py-2 text-left text-blue-700"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-xs">＋</span>
+              <span className="text-xs font-bold">“{arama.trim()}” değerini kullan</span>
             </button>}
         </div>
       </div>}
+
       <input tabIndex={-1} aria-hidden="true" required={gerekli} value={deger} onChange={()=>{}} className="pointer-events-none absolute h-px w-px opacity-0"/>
     </div>
   </Alan>
