@@ -1887,6 +1887,16 @@ const filtrelenmisKayitlar=useMemo(()=>{
     </div>
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500 text-xl font-black text-white shadow-2xl hover:bg-orange-400" title="Yukarı çık">↑</button>
     
+    {detayKayit&&<DetayModal
+      kayit={detayKayit}
+      kapat={()=>setDetayKayit(null)}
+      duzenle={kaydiDuzenle}
+      yazdir={tekKayitYazdir}
+      gecmis={()=>setGecmisKayit(detayKayit)}
+      duzenleyebilir={duzenleyebilir}
+      onceki={detayOnceki?()=>setDetayKayit(detayOnceki):undefined}
+      sonraki={detaySonraki?()=>setDetayKayit(detaySonraki):undefined}
+    />}
     {gecmisKayit&&<TrafoGecmisModal anaKayit={gecmisKayit} kayitlar={gecmisKayitlari} kapat={()=>setGecmisKayit(null)} detay={k=>{setGecmisKayit(null);setDetayKayit(k);}}/>}
     {arsivSecili&&<div className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-5" onMouseDown={()=>setArsivSecili(null)}><div onMouseDown={e=>e.stopPropagation()} className="w-full max-w-lg rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><div className="text-[10px] font-black uppercase tracking-wider text-blue-600">📁 Arşiv Dosyası</div><div className="mt-2 break-words text-lg font-black text-slate-900">{arsivSecili.dosya_adi}</div></div><button onClick={()=>setArsivSecili(null)} className="h-9 w-9 rounded-xl border border-slate-200">×</button></div><div className="mt-5 grid grid-cols-2 gap-3">{[["Yıl",arsivSecili.yil],["Ay",arsivSecili.ay],["İlçe",arsivSecili.ilce||"—"],["Mahalle",arsivSecili.mahalle||"—"],["Boyut",arsivBoyutGoster(Number(arsivSecili.dosya_boyutu||0))],["Eklenme",new Date(arsivSecili.created_at).toLocaleString("tr-TR")]].map(([a,b])=><div key={String(a)} className="rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="text-[9px] font-black uppercase text-slate-400">{a}</div><div className="mt-1 text-xs font-black text-slate-700">{String(b)}</div></div>)}</div><div className="mt-5 flex justify-end gap-2">{arsivSecili.signed_url&&<button onClick={()=>window.open(arsivSecili.signed_url!,"_blank")} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white">Dosyayı Aç</button>}<button onClick={()=>setArsivSecili(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-600">Kapat</button></div></div></div>}
 
