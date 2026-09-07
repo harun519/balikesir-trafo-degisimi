@@ -1954,31 +1954,19 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   },[aktifIndex]);
 
   function sonrakiAlanaGec(){
-    const focusable=Array.from(document.querySelectorAll<HTMLElement>(
+    const tumAlanlar=Array.from(document.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )).filter(el=>{
       const style=window.getComputedStyle(el);
       return style.display!=="none"&&style.visibility!=="hidden"&&!kutuRef.current?.contains(el);
     });
-    const rect=kutuRef.current?.getBoundingClientRect();
-    if(!rect)return;
-    const currentTop=rect.top+window.scrollY;
-    const currentLeft=rect.left+window.scrollX;
-    const sirali=focusable
-      .map(el=>({el,r:el.getBoundingClientRect()}))
-      .filter(x=>{
-        const top=x.r.top+window.scrollY;
-        const left=x.r.left+window.scrollX;
-        return top>currentTop+8 || (Math.abs(top-currentTop)<=8 && left>currentLeft+8);
-      })
-      .sort((a,b)=>{
-        const at=a.r.top+window.scrollY, bt=b.r.top+window.scrollY;
-        if(Math.abs(at-bt)>8)return at-bt;
-        return (a.r.left+window.scrollX)-(b.r.left+window.scrollX);
-      });
-    setTimeout(()=>sirali[0]?.el.focus(),0);
-  }
 
+    const comboButton=kutuRef.current?.querySelector<HTMLButtonElement>('button[type="button"]');
+    if(!comboButton)return;
+    const index=tumAlanlar.indexOf(comboButton);
+    const sonraki=tumAlanlar[index+1];
+    setTimeout(()=>sonraki?.focus(),0);
+  }
   function sec(x:string){
     degistir(x);
     setAcik(false);
