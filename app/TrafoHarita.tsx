@@ -34,8 +34,8 @@ export default function TrafoHarita(){
  const [merkezi,setMerkezi]=useState(false),[adminMi,setAdminMi]=useState(false),[envanterIslem,setEnvanterIslem]=useState(false);
 
  const supabase=useMemo(()=>{const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return url&&key?createClient(url,key):null;},[]);
- const degisimIndex=useMemo(()=>{const idx=new Map<string,Set<number>>(),byId=new Map<number,DegisimKaydi>();for(const k of degisimKayitlari){byId.set(k.id,k);for(const v of [k.trafo_id,k.lokasyon_id,k.tr]){const a=anahtar(v);if(!a)continue;if(!idx.has(a))idx.set(a,new Set());idx.get(a)!.add(k.id);}}return{idx,byId};},[degisimKayitlari]);
- const eslesen=(p:any)=>{const ids=new Set<number>();for(const v of [prop(p,"ID"),prop(p,"LOKASYON_I"),prop(p,"ADI")]){const a=anahtar(v);if(!a)continue;degisimIndex.idx.get(a)?.forEach(id=>ids.add(id));}return Array.from(ids).map(id=>degisimIndex.byId.get(id)).filter(Boolean) as DegisimKaydi[];};
+ const degisimIndex=useMemo(()=>{const idx=new Map<string,Set<number>>(),byId=new Map<number,DegisimKaydi>();for(const k of degisimKayitlari){byId.set(k.id,k);const a=anahtar(k.lokasyon_id);if(!a)continue;if(!idx.has(a))idx.set(a,new Set());idx.get(a)!.add(k.id);}return{idx,byId};},[degisimKayitlari]);
+ const eslesen=(p:any)=>{const a=anahtar(prop(p,"LOKASYON_I"));if(!a)return[];const ids=degisimIndex.idx.get(a);if(!ids)return[];return Array.from(ids).map(id=>degisimIndex.byId.get(id)).filter(Boolean) as DegisimKaydi[];};
 
  const veriyiKur=(x:any,ad:string)=>{const a=ayir(x);pointData.current=a.nokta;buildingData.current=a.bina;setDosyaAdi(ad);setVeriHazir(true);setDurum(`${a.nokta.features.length.toLocaleString("tr-TR")} trafo noktası • ${a.bina.features.length.toLocaleString("tr-TR")} trafo binası`);setHata("");};
  const zipOku=async(blob:Blob,ad:string)=>{if(!window.shp)throw new Error("SHP okuyucu hazır değil");setDurum("Trafo envanteri hazırlanıyor...");const x=await window.shp(await blob.arrayBuffer());veriyiKur(x,ad);};
