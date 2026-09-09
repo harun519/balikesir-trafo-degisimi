@@ -61,7 +61,14 @@ export async function POST(req:NextRequest){
     const ilk=new Uint8Array(body.slice(0,4));
     if(ilk[0]!==0x50||ilk[1]!==0x4b)return NextResponse.json({error:"Geçerli bir ZIP dosyası gönderilmedi."},{status:400});
 
-    const {error}=await auth.sb.storage.from(BUCKET).upload(PATH,new Uint8Array(body),{contentType:"application/zip",upsert:true,cacheControl:"0"});
+    // Supabase Storage bucket MIME allow-list eski ayarlarda application/zip'i reddedebiliyor.
+    // ZIP baytlarını değiştirmeden genel binary MIME ile saklıyoruz; GET her zaman application/zip döndürüyor.
+    const bytes=new Uint8Array(body);
+    let {error}=await auth.sb.storage.from(BUCKET).upload(PATH,bytes,{contentType:"application/octet-stream",upsert:true,cacheControl:"0"});
+    if(error&&String(error.message||"").toLowerCase().includes("mime type")){
+      const blob=new Blob([bytes],{type:"application/octet-stream"});
+      ({error}=await auth.sb.storage.from(BUCKET).upload(PATH,blob,{contentType:"application/octet-stream",upsert:true,cacheControl:"0"}));
+    }
     if(error)throw error;
     return NextResponse.json({ok:true,size:body.byteLength,updated_at:new Date().toISOString()});
   }catch(e:any){
