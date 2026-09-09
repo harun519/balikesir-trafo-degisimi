@@ -1,36 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import TrafoHarita from "./TrafoHarita";
 
 const EVENT_AC="trafo-harita-ac";
+const tarih=(v:any)=>{if(!v)return"—";const s=String(v).slice(0,10).split("-");return s.length===3?`${s[2]}.${s[1]}.${s[0]}`:String(v);};
 
 export default function HaritaEntegrasyon(){
-  const [acik,setAcik]=useState(false);
+ const [acik,setAcik]=useState(false),[gecmis,setGecmis]=useState<any[]|null>(null),[gecmisLok,setGecmisLok]=useState(""),[gecmisYukleniyor,setGecmisYukleniyor]=useState(false),[gecmisHata,setGecmisHata]=useState("");
+ const supabase=useMemo(()=>{const u=process.env.NEXT_PUBLIC_SUPABASE_URL,k=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return u&&k?createClient(u,k):null;},[]);
 
-  useEffect(()=>{const ac=()=>setAcik(true);window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
-  useEffect(()=>{const menudeBaskaSekme=(e:MouseEvent)=>{const hedef=e.target as HTMLElement|null;const buton=hedef?.closest("nav button") as HTMLButtonElement|null;if(!buton)return;if(buton.dataset.trafoHaritaMenu==="1")return;setAcik(false);};document.addEventListener("click",menudeBaskaSekme,true);return()=>document.removeEventListener("click",menudeBaskaSekme,true);},[]);
+ useEffect(()=>{const ac=()=>setAcik(true);window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
+ useEffect(()=>{const f=(e:MouseEvent)=>{const b=(e.target as HTMLElement|null)?.closest("nav button") as HTMLButtonElement|null;if(!b||b.dataset.trafoHaritaMenu==="1")return;setAcik(false);setGecmis(null);};document.addEventListener("click",f,true);return()=>document.removeEventListener("click",f,true);},[]);
+ useEffect(()=>{const ekle=()=>{document.querySelectorAll("nav").forEach(nav=>{if(nav.querySelector('[data-trafo-harita-menu="1"]'))return;const hedef=Array.from(nav.querySelectorAll("button")).find(b=>b.textContent?.includes("Trafo Kayıtları"));if(!hedef)return;const b=document.createElement("button");b.type="button";b.dataset.trafoHaritaMenu="1";b.textContent="🗺️ Trafo Haritası";b.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";b.onclick=()=>{window.dispatchEvent(new Event(EVENT_AC));const aside=b.closest("aside");if(aside&&!window.matchMedia("(min-width: 1024px)").matches){(Array.from(aside.querySelectorAll("button")).find(x=>x.textContent?.trim()==="×") as HTMLButtonElement|undefined)?.click();}window.scrollTo({top:0,behavior:"smooth"});};hedef.insertAdjacentElement("afterend",b);});};ekle();const o=new MutationObserver(ekle);o.observe(document.body,{childList:true,subtree:true});return()=>o.disconnect();},[]);
+ useEffect(()=>{document.querySelectorAll<HTMLElement>('[data-trafo-harita-menu="1"]').forEach(b=>b.className=acik?"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-200/60":"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700");},[acik]);
 
-  useEffect(()=>{const ekle=()=>{document.querySelectorAll("nav").forEach(nav=>{if(nav.querySelector('[data-trafo-harita-menu="1"]'))return;const hedef=Array.from(nav.querySelectorAll("button")).find(b=>b.textContent?.includes("Trafo Kayıtları"));if(!hedef)return;const b=document.createElement("button");b.type="button";b.dataset.trafoHaritaMenu="1";b.textContent="🗺️ Trafo Haritası";b.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";b.onclick=()=>{window.dispatchEvent(new Event(EVENT_AC));const mobilAside=b.closest("aside");if(mobilAside&&!window.matchMedia("(min-width: 1024px)").matches){const kapat=Array.from(mobilAside.querySelectorAll("button")).find(x=>x.textContent?.trim()==="×") as HTMLButtonElement|undefined;kapat?.click();}window.scrollTo({top:0,behavior:"smooth"});};hedef.insertAdjacentElement("afterend",b);});};ekle();const observer=new MutationObserver(ekle);observer.observe(document.body,{childList:true,subtree:true});return()=>observer.disconnect();},[]);
+ useEffect(()=>{
+  if(!acik)return;
+  const gecmisAc=async(lokasyonId:string)=>{setGecmisLok(lokasyonId);setGecmis([]);setGecmisHata("");setGecmisYukleniyor(true);try{if(!supabase)throw new Error("Supabase bağlantısı bulunamadı.");const {data,error}=await supabase.from("trafo_degisim").select("*").eq("lokasyon_id",lokasyonId).order("tarih",{ascending:false,nullsFirst:false});if(error)throw error;setGecmis(data||[]);}catch(e:any){setGecmisHata(e?.message||"Geçmiş alınamadı.");}finally{setGecmisYukleniyor(false);}};
+  const event=(e:Event)=>{const lok=(e as CustomEvent).detail?.lokasyonId;if(lok)gecmisAc(String(lok));};window.addEventListener("trafo-harita-gecmis-ac",event);
+  const ekle=()=>document.querySelectorAll<HTMLElement>(".leaflet-popup-content").forEach(p=>{if(p.querySelector('[data-harita-gecmis="1"]'))return;const m=p.innerText||"";const lok=m.match(/Lokasyon ID:\s*([^\n]+)/)?.[1]?.trim()||"";if(!lok||lok==="—")return;const b=document.createElement("button");b.type="button";b.dataset.haritaGecmis="1";b.textContent="🕘 Trafo Geçmişini Gör";b.style.cssText="width:100%;margin-top:10px;padding:9px 12px;border:0;border-radius:10px;background:#6d28d9;color:white;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(109,40,217,.22)";b.onclick=e=>{e.preventDefault();e.stopPropagation();gecmisAc(lok);};p.appendChild(b);});
+  ekle();const o=new MutationObserver(ekle);o.observe(document.body,{childList:true,subtree:true});return()=>{o.disconnect();window.removeEventListener("trafo-harita-gecmis-ac",event);};
+ },[acik,supabase]);
 
-  useEffect(()=>{document.querySelectorAll<HTMLElement>('[data-trafo-harita-menu="1"]').forEach(b=>{b.className=acik?"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-200/60":"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";});},[acik]);
-
-  useEffect(()=>{
-    if(!acik)return;
-    const popupButonuEkle=()=>{
-      document.querySelectorAll<HTMLElement>(".leaflet-popup-content").forEach(popup=>{
-        if(popup.querySelector('[data-harita-gecmis="1"]'))return;
-        const metin=popup.innerText||"";
-        if(!metin.includes("Lokasyon ID:"))return;
-        const lokasyonId=metin.match(/Lokasyon ID:\s*([^\n]+)/)?.[1]?.trim()||"";
-        if(!lokasyonId||lokasyonId==="—")return;
-        const b=document.createElement("button");b.type="button";b.dataset.haritaGecmis="1";b.textContent="🕘 Trafo Geçmişini Gör";b.style.cssText="width:100%;margin-top:10px;padding:9px 12px;border:0;border-radius:10px;background:#6d28d9;color:white;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(109,40,217,.22)";
-        b.onclick=e=>{e.preventDefault();e.stopPropagation();window.dispatchEvent(new CustomEvent("trafo-harita-gecmis-ac",{detail:{lokasyonId}}));};popup.appendChild(b);
-      });
-    };
-    popupButonuEkle();const observer=new MutationObserver(popupButonuEkle);observer.observe(document.body,{childList:true,subtree:true});return()=>observer.disconnect();
-  },[acik]);
-
-  if(!acik)return null;
-  return <div className="fixed inset-x-0 bottom-0 top-[76px] z-[29] overflow-y-auto bg-[#f4f7fb] lg:left-[248px]"><div className="mx-auto w-full max-w-[1700px] p-3 sm:p-5 lg:p-6"><div className="mb-5"><div className="text-[10px] font-black uppercase tracking-[.18em] text-blue-500">Şebeke Envanteri</div><h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">🗺️ Trafo Haritası</h1><p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">Balıkesir trafo noktaları ve trafo bina envanteri.</p></div><TrafoHarita/></div></div>;
+ if(!acik)return null;
+ const ilk=gecmis?.[0];
+ return <div className="fixed inset-x-0 bottom-0 top-[76px] z-[29] overflow-y-auto bg-[#f4f7fb] lg:left-[248px]">
+  <div className="mx-auto w-full max-w-[1700px] p-3 sm:p-5 lg:p-6"><div className="mb-5"><div className="text-[10px] font-black uppercase tracking-[.18em] text-blue-500">Şebeke Envanteri</div><h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">🗺️ Trafo Haritası</h1><p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">Balıkesir trafo noktaları ve trafo bina envanteri.</p></div><TrafoHarita/></div>
+  {gecmis!==null&&<div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-[2px]" onMouseDown={e=>{if(e.target===e.currentTarget)setGecmis(null);}}><div className="max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"><div className="flex items-start justify-between border-b border-slate-200 px-5 py-4"><div><div className="text-[10px] font-black uppercase tracking-wider text-violet-600">Trafo Geçmişi</div><div className="mt-1 text-lg font-black text-slate-900">{ilk?.tr||`Lokasyon ${gecmisLok}`}</div><div className="mt-1 text-xs font-semibold text-slate-500">Lokasyon ID: {gecmisLok} • {gecmisYukleniyor?"Yükleniyor...":`${gecmis.length} değişim kaydı`}</div></div><button onClick={()=>setGecmis(null)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-xl font-bold text-slate-500 hover:bg-slate-200">×</button></div><div className="max-h-[68vh] overflow-y-auto p-4 sm:p-5">{gecmisHata&&<div className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">{gecmisHata}</div>}{gecmisYukleniyor&&<div className="py-10 text-center text-sm font-bold text-slate-400">Geçmiş kayıtları yükleniyor...</div>}{!gecmisYukleniyor&&!gecmisHata&&gecmis.length===0&&<div className="py-10 text-center text-sm font-bold text-slate-400">Bu lokasyon için değişim kaydı bulunamadı.</div>}{!gecmisYukleniyor&&gecmis.map((k:any,i:number)=><div key={k.id??i} className="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 last:mb-0"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-sm font-black text-slate-900">{i+1}. Değişim</div><div className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-black text-violet-700">{tarih(k.tarih)}</div></div><div className="mt-3 grid gap-2 text-xs sm:grid-cols-2"><div><span className="font-bold text-slate-400">Trafo:</span> <span className="font-bold text-slate-700">{k.tr||"—"}</span></div><div><span className="font-bold text-slate-400">Trafo ID:</span> <span className="font-bold text-slate-700">{k.trafo_id||"—"}</span></div>{k.degisim_nedeni&&<div className="sm:col-span-2"><span className="font-bold text-slate-400">Değişim Nedeni:</span> <span className="font-bold text-slate-700">{k.degisim_nedeni}</span></div>}{k.aciklama&&<div className="sm:col-span-2"><span className="font-bold text-slate-400">Açıklama:</span> <span className="font-bold text-slate-700">{k.aciklama}</span></div>}</div></div>)}</div></div></div>}
+ </div>;
 }
