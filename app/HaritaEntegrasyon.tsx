@@ -15,6 +15,18 @@ export default function HaritaEntegrasyon(){
   },[]);
 
   useEffect(()=>{
+    const menudeBaskaSekme=(e:MouseEvent)=>{
+      const hedef=e.target as HTMLElement|null;
+      const buton=hedef?.closest("nav button") as HTMLButtonElement|null;
+      if(!buton)return;
+      if(buton.dataset.trafoHaritaMenu==="1")return;
+      setAcik(false);
+    };
+    document.addEventListener("click",menudeBaskaSekme,true);
+    return()=>document.removeEventListener("click",menudeBaskaSekme,true);
+  },[]);
+
+  useEffect(()=>{
     const ekle=()=>{
       document.querySelectorAll("nav").forEach(nav=>{
         if(nav.querySelector('[data-trafo-harita-menu="1"]'))return;
