@@ -51,6 +51,61 @@ export default function HaritaEntegrasyon(){
     });
   },[acik]);
 
+  useEffect(()=>{
+    if(!acik)return;
+
+    const gecmisiAc=(arama:string)=>{
+      if(!arama)return;
+      setAcik(false);
+
+      setTimeout(()=>{
+        const kayitButonu=Array.from(document.querySelectorAll<HTMLButtonElement>("nav button")).find(b=>b.textContent?.includes("Trafo Kayıtları"));
+        kayitButonu?.click();
+
+        setTimeout(()=>{
+          const input=Array.from(document.querySelectorAll<HTMLInputElement>("input")).find(i=>i.placeholder?.includes("Trafo ID, seri no"));
+          if(!input)return;
+          const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")?.set;
+          setter?.call(input,arama);
+          input.dispatchEvent(new Event("input",{bubbles:true}));
+          input.dispatchEvent(new Event("change",{bubbles:true}));
+
+          setTimeout(()=>{
+            const gorunenGecmis=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(b=>b.textContent?.trim()==="Geçmiş" && b.offsetParent!==null);
+            gorunenGecmis?.click();
+          },350);
+        },300);
+      },80);
+    };
+
+    const popupButonuEkle=()=>{
+      document.querySelectorAll<HTMLElement>(".leaflet-popup-content").forEach(popup=>{
+        if(popup.querySelector('[data-harita-gecmis="1"]'))return;
+        const metin=popup.innerText||"";
+        if(!metin.includes("Trafo ID:"))return;
+
+        const trafoId=metin.match(/Trafo ID:\s*([^\n]+)/)?.[1]?.trim()||"";
+        const lokasyonId=metin.match(/Lokasyon ID:\s*([^\n]+)/)?.[1]?.trim()||"";
+        const baslik=metin.split("\n")[0]?.replace(/^⚡\s*/,"").trim()||"";
+        const arama=trafoId&&trafoId!=="—"?trafoId:lokasyonId&&lokasyonId!=="—"?lokasyonId:baslik;
+        if(!arama)return;
+
+        const b=document.createElement("button");
+        b.type="button";
+        b.dataset.haritaGecmis="1";
+        b.textContent="🕘 Trafo Geçmişini Gör";
+        b.style.cssText="width:100%;margin-top:10px;padding:9px 12px;border:0;border-radius:10px;background:#6d28d9;color:white;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(109,40,217,.22)";
+        b.onclick=e=>{e.preventDefault();e.stopPropagation();gecmisiAc(arama);};
+        popup.appendChild(b);
+      });
+    };
+
+    popupButonuEkle();
+    const observer=new MutationObserver(popupButonuEkle);
+    observer.observe(document.body,{childList:true,subtree:true});
+    return()=>observer.disconnect();
+  },[acik]);
+
   if(!acik)return null;
   return <div className="fixed inset-x-0 bottom-0 top-[76px] z-[29] overflow-y-auto bg-[#f4f7fb] lg:left-[248px]">
     <div className="mx-auto w-full max-w-[1700px] p-3 sm:p-5 lg:p-6">
