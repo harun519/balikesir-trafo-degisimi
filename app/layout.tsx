@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import HaritaKisayol from "./HaritaKisayol";
+import HaritaEntegrasyon from "./HaritaEntegrasyon";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}<HaritaKisayol /></body>
+      <body>{children}<HaritaEntegrasyon /></body>
     </html>
   );
 }
