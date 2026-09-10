@@ -1,24 +1,13 @@
-const CACHE_VERSION = "trafo-app-v5";
-
-const APP_SHELL = ["/"];
+const CACHE_VERSION = "trafo-app-v6-clean";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL))
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_VERSION)
-            .map((key) => caches.delete(key))
-        )
-      )
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -26,9 +15,14 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  // Sayfa geçişlerinde eski uygulama HTML'ini cache'den kesinlikle verme.
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Statik dosyalarda da ağ öncelikli çalış.
+  event.respondWith(fetch(event.request));
 });
 
 self.addEventListener("message", (event) => {
