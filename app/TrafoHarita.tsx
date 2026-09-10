@@ -12,10 +12,17 @@ declare global {
 
 type GeoFeature = { type: string; geometry: any; properties: Record<string, any> };
 type GeoJSON = { type: "FeatureCollection"; features: GeoFeature[] };
-type DegisimKaydi = { id: number; trafo_id: string | null; lokasyon_id: string | null; tr: string | null; tarih: string | null };
 type HaritaSinifi = "DIREK" | "BINA";
 type DegisimFiltre = "TUMU" | "DEGISEN" | "DEGISMEYEN";
-
+type DegisimKaydi = {
+  id: number;
+  trafo_id: string | null;
+  lokasyon_id: string | null;
+  tr: string | null;
+  tarih: string | null;
+  degisim_nedeni: string | null;
+  aciklama: string | null;
+};
 type PoligonAday = {
   feature: GeoFeature;
   sinif: HaritaSinifi;
@@ -26,6 +33,17 @@ type PoligonAday = {
 
 const ILCE_LISTESI = ["Altıeylül", "Karesi", "Balya", "Bigadiç", "Dursunbey", "İvrindi", "Kepsut", "Savaştepe", "Sındırgı", "Susurluk"];
 const DB = "trafo-harita-db", STORE = "dosyalar", KEY = "shp-zip";
+const NEDEN_RENKLERI = [
+  { ad: "ARIZA", renk: "#ef4444" },
+  { ad: "DÖNÜŞÜM", renk: "#3b82f6" },
+  { ad: "GÜÇ DEĞİŞİMİ", renk: "#84cc16" },
+  { ad: "TRAFO İPTAL", renk: "#38bdf8" },
+  { ad: "YATIRIM", renk: "#facc15" },
+  { ad: "YENİ TESİS", renk: "#22d3ee" },
+  { ad: "ARIZA RİSKİ", renk: "#fb7185" },
+  { ad: "KISMİ ARIZALI", renk: "#f97316" },
+];
+
 const norm = (v: any) => String(v ?? "").trim();
 const anahtar = (v: any) => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "I").replace(/İ/g, "I").toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 const esc = (v: any) => String(v ?? "—").replace(/[&<>'\"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c] || c));
@@ -33,6 +51,7 @@ const prop = (p: any, ...keys: string[]) => { for (const k of keys) if (p?.[k] !
 const shpTipiEtiket = (p: any) => anahtar(prop(p, "TIPI")) === "HARICI" ? "HARİCİ" : anahtar(prop(p, "TIPI")) === "DAHILI" ? "DAHİLİ" : norm(prop(p, "TIPI")) || "Bilinmiyor";
 const haritaSinifiEtiket = (p: any) => p?.__HARITA_SINIFI === "BINA" ? "Bina Tipi" : "Direk Tipi";
 const mulkiyetEtiket = (p: any) => anahtar(prop(p, "MULKIYET")) === "EDAS" ? "EDAŞ" : anahtar(prop(p, "MULKIYET")) === "DEVIRLI" ? "Devirli" : norm(prop(p, "MULKIYET")) || "Bilinmiyor";
+const nedenRengi = (neden: any) => NEDEN_RENKLERI.find(x => anahtar(x.ad) === anahtar(neden))?.renk || "#64748b";
 
 function dbAc() {
   return new Promise<IDBDatabase>((ok, no) => {
@@ -94,10 +113,9 @@ function ayir(x: any) {
 }
 function tarihGoster(t: string | null) {
   if (!t) return "—";
-  const p = t.split("-");
-  return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : t;
+  const p = String(t).slice(0, 10).split("-");
+  return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : String(t);
 }
-
 function noktaKoordinati(f: GeoFeature): [number, number] | null {
   const g = f?.geometry;
   if (!g) return null;
@@ -147,12 +165,8 @@ function metreMesafe(a: [number, number], b: [number, number]) {
   const dx = (a[0] - b[0]) * 111320 * Math.cos(lat), dy = (a[1] - b[1]) * 110540;
   return Math.sqrt(dx * dx + dy * dy);
 }
-function shpFallbackSinifi(p: any): HaritaSinifi {
-  return anahtar(prop(p, "TIPI")) === "DAHILI" ? "BINA" : "DIREK";
-}
-function poligonSinifi(p: any): HaritaSinifi {
-  return anahtar(prop(p, "TIPI")) === "DIREK" ? "DIREK" : "BINA";
-}
+function shpFallbackSinifi(p: any): HaritaSinifi { return anahtar(prop(p, "TIPI")) === "DAHILI" ? "BINA" : "DIREK"; }
+function poligonSinifi(p: any): HaritaSinifi { return anahtar(prop(p, "TIPI")) === "DIREK" ? "DIREK" : "BINA"; }
 function noktalariSiniflandir(noktalar: GeoFeature[], poligonlar: GeoFeature[]) {
   const adaylar: PoligonAday[] = poligonlar.map(feature => {
     const geo = geometriBilgisi(feature);
@@ -163,14 +177,10 @@ function noktalariSiniflandir(noktalar: GeoFeature[], poligonlar: GeoFeature[]) 
     if (!ilceMap.has(a.ilce)) ilceMap.set(a.ilce, []);
     ilceMap.get(a.ilce)!.push(a);
   }
-
   return noktalar.map(f => {
     const p = { ...(f.properties || {}) };
-    const pt = noktaKoordinati(f);
-    const ilceKey = anahtar(prop(p, "ILCE"));
-    const havuz = ilceMap.get(ilceKey) || adaylar;
+    const pt = noktaKoordinati(f), ilceKey = anahtar(prop(p, "ILCE")), havuz = ilceMap.get(ilceKey) || adaylar;
     let eslesenPoligon: PoligonAday | null = null;
-
     if (pt) {
       for (const a of havuz) {
         const [minX, minY, maxX, maxY] = a.bbox;
@@ -186,9 +196,7 @@ function noktalariSiniflandir(noktalar: GeoFeature[], poligonlar: GeoFeature[]) 
         if (enYakin > 75) eslesenPoligon = null;
       }
     }
-
-    const sinif = eslesenPoligon?.sinif || shpFallbackSinifi(p);
-    const shpSinif = shpFallbackSinifi(p);
+    const sinif = eslesenPoligon?.sinif || shpFallbackSinifi(p), shpSinif = shpFallbackSinifi(p);
     p.__HARITA_SINIFI = sinif;
     p.__TIP_UYUMSUZ = (anahtar(prop(p, "TIPI")) === "HARICI" || anahtar(prop(p, "TIPI")) === "DAHILI") && shpSinif !== sinif;
     p.__POLIGON_TIPI = eslesenPoligon ? norm(prop(eslesenPoligon.feature.properties || {}, "TIPI")) : "";
@@ -197,10 +205,11 @@ function noktalariSiniflandir(noktalar: GeoFeature[], poligonlar: GeoFeature[]) 
   });
 }
 
-function noktaPopup(p: any, adet: number, sonTarih: string | null) {
+function noktaPopup(p: any, kayitlar: DegisimKaydi[]) {
+  const son = kayitlar[0], adet = kayitlar.length;
   const durum = adet > 0
-    ? `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:${adet > 1 ? "#f3e8ff" : "#ecfdf5"};color:${adet > 1 ? "#6d28d9" : "#047857"};font-weight:800"><div>🕘 ${adet} değişim kaydı</div>${sonTarih ? `<div style="margin-top:3px;font-size:10px;font-weight:700;opacity:.8">Son değişim: ${esc(tarihGoster(sonTarih))}</div>` : ""}</div>`
-    : `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#fff7ed;color:#c2410c;font-weight:800">Değişim kaydı yok</div>`;
+    ? `<div style="margin-top:8px;padding:9px 10px;border-radius:9px;background:#f8fafc;border-left:5px solid ${nedenRengi(son?.degisim_nedeni)};color:#334155;font-weight:800"><div>🕘 ${adet} değişim kaydı</div><div style="margin-top:3px;font-size:11px">Son neden: <b>${esc(son?.degisim_nedeni || "Belirtilmemiş")}</b></div>${son?.tarih ? `<div style="margin-top:2px;font-size:10px;font-weight:700;color:#64748b">Son değişim: ${esc(tarihGoster(son.tarih))}</div>` : ""}</div>`
+    : `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#f1f5f9;color:#64748b;font-weight:800">Değişim kaydı yok</div>`;
   const uyari = p?.__TIP_UYUMSUZ ? `<div style="margin-top:8px;padding:7px 9px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800">⚠ SHP TIPI ile geometrik sınıf uyuşmuyor</div>` : "";
   return `<div style="min-width:250px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">⚡ ${esc(prop(p, "ADI") || "Trafo")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Montaj Tipi:</b> ${esc(haritaSinifiEtiket(p))}</div><div><b>Mülkiyet:</b> ${esc(mulkiyetEtiket(p))}</div><div><b>SHP TIPI:</b> ${esc(shpTipiEtiket(p))}</div>${p?.__POLIGON_TIPI ? `<div><b>Eşleşen Yapı:</b> ${esc(p.__POLIGON_TIPI)}</div>` : ""}<div><b>Trafo ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Lokasyon ID:</b> ${esc(prop(p, "LOKASYON_I"))}</div><div><b>Güç:</b> ${esc(prop(p, "GUC"))}${prop(p, "GUC") ? " kVA" : ""}</div><div><b>Primer Gerilim:</b> ${esc(prop(p, "PRIMER_GER"))}</div><div><b>Marka:</b> ${esc(prop(p, "MARKA"))}</div><div><b>Seri No:</b> ${esc(prop(p, "SERI_NO"))}</div><div><b>İmal Yılı:</b> ${esc(prop(p, "IMAL_YILI"))}</div><div><b>Cinsi:</b> ${esc(prop(p, "CINSI"))}</div></div>${uyari}${durum}</div>`;
 }
@@ -220,23 +229,17 @@ export default function TrafoHarita() {
     return url && key ? createClient(url, key) : null;
   }, []);
   const degisimIndex = useMemo(() => {
-    const idx = new Map<string, Set<number>>(), byId = new Map<number, DegisimKaydi>();
+    const idx = new Map<string, DegisimKaydi[]>();
     for (const k of degisimKayitlari) {
-      byId.set(k.id, k);
       const a = anahtar(k.lokasyon_id);
       if (!a) continue;
-      if (!idx.has(a)) idx.set(a, new Set());
-      idx.get(a)!.add(k.id);
+      if (!idx.has(a)) idx.set(a, []);
+      idx.get(a)!.push(k);
     }
-    return { idx, byId };
+    idx.forEach(v => v.sort((a, b) => String(b.tarih || "").localeCompare(String(a.tarih || ""))));
+    return idx;
   }, [degisimKayitlari]);
-  const eslesen = (p: any) => {
-    const a = anahtar(prop(p, "LOKASYON_I"));
-    if (!a) return [];
-    const ids = degisimIndex.idx.get(a);
-    if (!ids) return [];
-    return Array.from(ids).map(id => degisimIndex.byId.get(id)).filter(Boolean) as DegisimKaydi[];
-  };
+  const eslesen = (p: any) => degisimIndex.get(anahtar(prop(p, "LOKASYON_I"))) || [];
 
   const veriyiKur = (x: any, ad: string) => {
     const a = ayir(x);
@@ -245,8 +248,8 @@ export default function TrafoHarita() {
     const noktaFeatures = noktalariSiniflandir(hamNoktalar, binaFeatures);
     pointData.current = { type: "FeatureCollection", features: noktaFeatures };
     buildingData.current = { type: "FeatureCollection", features: binaFeatures };
-    const uyumsuz = noktaFeatures.filter(f => !!f.properties?.__TIP_UYUMSUZ).length;
-    setDosyaAdi(ad); setVeriHazir(true); setUyumsuzSayisi(uyumsuz); setDurum(`${noktaFeatures.length.toLocaleString("tr-TR")} trafo noktası • ${binaFeatures.length.toLocaleString("tr-TR")} yapı poligonu • geometrik tip ayrımı • özel mülkiyet hariç`); setHata("");
+    setUyumsuzSayisi(noktaFeatures.filter(f => !!f.properties?.__TIP_UYUMSUZ).length);
+    setDosyaAdi(ad); setVeriHazir(true); setDurum(`${noktaFeatures.length.toLocaleString("tr-TR")} trafo noktası • ${binaFeatures.length.toLocaleString("tr-TR")} yapı poligonu • geometrik tip ayrımı • özel mülkiyet hariç`); setHata("");
   };
   const zipOku = async (blob: Blob, ad: string) => {
     if (!window.shp) throw new Error("SHP okuyucu hazır değil");
@@ -275,7 +278,7 @@ export default function TrafoHarita() {
       setDegisimYukleniyor(true);
       try {
         if (!supabase) throw new Error("Supabase ayarları bulunamadı");
-        const { data, error } = await supabase.from("trafo_degisim").select("id,trafo_id,lokasyon_id,tr,tarih").order("tarih", { ascending: false, nullsFirst: false });
+        const { data, error } = await supabase.from("trafo_degisim").select("id,trafo_id,lokasyon_id,tr,tarih,degisim_nedeni,aciklama").order("tarih", { ascending: false, nullsFirst: false });
         if (error) throw error;
         if (!kapandi) setDegisimKayitlari((data || []) as DegisimKaydi[]);
       } catch (e: any) { if (!kapandi) setHata(h => h || `Değişim kayıtları eşleştirilemedi: ${e?.message || "bilinmeyen hata"}`); }
@@ -301,7 +304,6 @@ export default function TrafoHarita() {
         const map = L.map(mapEl.current, { zoomControl: true, preferCanvas: true, renderer: L.canvas({ padding: .5, tolerance: 12 }) }).setView([39.65, 27.9], 9);
         tileLayer.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap' }).addTo(map);
         mapRef.current = map; setHazir(true);
-
         let merkezVar = false;
         try {
           const r = await fetch("/api/harita-envanter", { cache: "no-store" });
@@ -312,7 +314,6 @@ export default function TrafoHarita() {
             const j = await r.json().catch(() => ({})); throw new Error(j?.error || "Merkezi envanter indirilemedi.");
           }
         } catch (e: any) { if (!kapandi) setHata(h => h || `Merkezi envanter: ${e?.message || "bağlantı hatası"}`); }
-
         if (!merkezVar && !kapandi) {
           const eski = await okuBlob().catch(() => undefined);
           if (eski) {
@@ -386,15 +387,15 @@ export default function TrafoHarita() {
     if (binaAcik && degisimFiltre === "TUMU") buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
     if (noktaAcik) pointLayer.current = L.geoJSON(pts, {
       pointToLayer: (f: any, ll: any) => {
-        const p = f.properties || {}, n = eslesen(p).length, fill = n > 1 ? "#8b5cf6" : n === 1 ? "#10b981" : "#f97316", sinif = p.__HARITA_SINIFI as HaritaSinifi;
+        const p = f.properties || {}, kayitlar = eslesen(p), son = kayitlar[0], fill = kayitlar.length ? nedenRengi(son?.degisim_nedeni) : "#94a3b8", sinif = p.__HARITA_SINIFI as HaritaSinifi;
         const html = sinif === "DIREK"
           ? `<div style="position:relative;width:30px;height:30px;filter:drop-shadow(0 2px 3px rgba(15,23,42,.55))"><div style="position:absolute;left:1px;top:0;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:28px solid #ffffff"></div><div style="position:absolute;left:5px;top:5px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid ${fill}"></div></div>`
           : `<div style="width:24px;height:24px;border:4px solid #ffffff;border-radius:2px;background:${fill};box-shadow:0 2px 4px rgba(15,23,42,.55)"></div>`;
         return L.marker(ll, { icon: L.divIcon({ className: "", html, iconSize: [30, 30], iconAnchor: [15, 15] }), interactive: true, riseOnHover: true });
       },
       onEachFeature: (f: any, l: any) => {
-        const kayitlar = eslesen(f.properties || {}).sort((a, b) => String(b.tarih || "").localeCompare(String(a.tarih || "")));
-        l.bindPopup(noktaPopup(f.properties || {}, kayitlar.length, kayitlar[0]?.tarih || null), { maxWidth: 340 });
+        const kayitlar = eslesen(f.properties || {});
+        l.bindPopup(noktaPopup(f.properties || {}, kayitlar), { maxWidth: 350 });
       }
     }).addTo(map);
 
@@ -439,20 +440,23 @@ export default function TrafoHarita() {
           <button type="button" onClick={tumunuGoster} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-600">Filtreyi Temizle</button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-          <button onClick={() => setNoktaAcik(v => !v)} className={`rounded-xl border px-3 py-2 text-xs font-black ${noktaAcik ? "border-orange-200 bg-orange-50 text-orange-700" : "border-slate-200 bg-white text-slate-500"}`}>⚡ Trafo Noktaları ({noktaSayisi})</button>
+          <button onClick={() => setNoktaAcik(v => !v)} className={`rounded-xl border px-3 py-2 text-xs font-black ${noktaAcik ? "border-slate-300 bg-slate-100 text-slate-700" : "border-slate-200 bg-white text-slate-500"}`}>⚡ Trafo Noktaları ({noktaSayisi})</button>
           <button onClick={() => setBinaAcik(v => !v)} disabled={degisimFiltre !== "TUMU"} className={`rounded-xl border px-3 py-2 text-xs font-black disabled:opacity-40 ${binaAcik ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500"}`}>🏢 Yapı Poligonları ({binaSayisi})</button>
           <button onClick={() => setDegisimFiltre(v => v === "DEGISEN" ? "TUMU" : "DEGISEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISEN" ? "border-emerald-300 bg-emerald-600 text-white" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>🕘 Değişim Yapılanlar</button>
-          <button onClick={() => setDegisimFiltre(v => v === "DEGISMEYEN" ? "TUMU" : "DEGISMEYEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISMEYEN" ? "border-orange-300 bg-orange-600 text-white" : "border-orange-200 bg-orange-50 text-orange-700"}`}>○ Değişim Yapılmayanlar</button>
+          <button onClick={() => setDegisimFiltre(v => v === "DEGISMEYEN" ? "TUMU" : "DEGISMEYEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISMEYEN" ? "border-slate-400 bg-slate-600 text-white" : "border-slate-200 bg-slate-50 text-slate-600"}`}>○ Değişim Yapılmayanlar</button>
           <button onClick={() => setHaritaTipi(x => x === "standart" ? "uydu" : "standart")} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">{haritaTipi === "standart" ? "🛰️ Uydu Görünümü" : "🗺️ Standart Harita"}</button>
           <span className="ml-auto text-[11px] font-bold text-slate-400">Görünen toplam: {toplam}</span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-bold text-slate-500"><span>▲ Direk tipi (geometrik)</span><span>■ Bina tipi (geometrik)</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />Değişim kaydı yok</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />1 değişim</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-violet-500" />2+ değişim</span></div>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-bold text-slate-600">
+          <span>▲ Direk tipi</span><span>■ Bina tipi</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />Değişim yok</span>
+          {NEDEN_RENKLERI.map(x => <span key={x.ad}><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: x.renk }} />{x.ad}</span>)}
+        </div>
       </>}
     </div>
 
     {hata && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{hata}</div>}
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,.08)]">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3"><div><div className="text-sm font-black text-slate-800">Balıkesir Trafo Envanter Haritası</div><div className="mt-0.5 text-[10px] text-slate-400">▲ Direk tipi • ■ Bina tipi • sınıf geometri/yapı poligonundan belirlenir • Turuncu: kayıt yok • Yeşil: 1 değişim • Mor: 2+ değişim</div></div><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${hazir && veriHazir ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{hazir && veriHazir ? "HARİTA HAZIR" : "YÜKLENİYOR"}</span></div>
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3"><div><div className="text-sm font-black text-slate-800">Balıkesir Trafo Envanter Haritası</div><div className="mt-0.5 text-[10px] text-slate-400">Sembol şekli montaj tipini, renk ise son değişim nedenini gösterir.</div></div><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${hazir && veriHazir ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{hazir && veriHazir ? "HARİTA HAZIR" : "YÜKLENİYOR"}</span></div>
       <div ref={mapEl} className="h-[72vh] min-h-[580px] w-full" />
     </div>
   </div>;
