@@ -16,7 +16,21 @@ export default function HaritaEntegrasyon(){
  useEffect(()=>{const ac=()=>setAcik(true);window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
  useEffect(()=>{const f=(e:MouseEvent)=>{const b=(e.target as HTMLElement|null)?.closest("nav button") as HTMLButtonElement|null;if(!b||b.dataset.trafoHaritaMenu==="1")return;setAcik(false);setGecmis(null);};document.addEventListener("click",f,true);return()=>document.removeEventListener("click",f,true);},[]);
  useEffect(()=>{const ekle=()=>{document.querySelectorAll("nav").forEach(nav=>{if(nav.querySelector('[data-trafo-harita-menu="1"]'))return;const hedef=Array.from(nav.querySelectorAll("button")).find(b=>b.textContent?.includes("Trafo Kayıtları"));if(!hedef)return;const b=document.createElement("button");b.type="button";b.dataset.trafoHaritaMenu="1";b.textContent="🗺️ Trafo Haritası";b.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";b.onclick=()=>{window.dispatchEvent(new Event(EVENT_AC));const aside=b.closest("aside");if(aside&&!window.matchMedia("(min-width: 1024px)").matches){(Array.from(aside.querySelectorAll("button")).find(x=>x.textContent?.trim()==="×") as HTMLButtonElement|undefined)?.click();}window.scrollTo({top:0,behavior:"smooth"});};hedef.insertAdjacentElement("afterend",b);});};ekle();const o=new MutationObserver(ekle);o.observe(document.body,{childList:true,subtree:true});return()=>o.disconnect();},[]);
- useEffect(()=>{document.querySelectorAll<HTMLElement>('[data-trafo-harita-menu="1"]').forEach(b=>b.className=acik?"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-200/60":"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700");},[acik]);
+ useEffect(()=>{
+  document.querySelectorAll<HTMLElement>('[data-trafo-harita-menu="1"]').forEach(b=>b.className=acik?"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-200/60":"w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700");
+  document.querySelectorAll<HTMLButtonElement>("nav button").forEach(b=>{
+    if(b.dataset.trafoHaritaMenu==="1")return;
+    if(acik){
+      if(!b.dataset.haritaOncekiClass&&(b.className.includes("from-blue-600")||b.className.includes("bg-blue-600"))){
+        b.dataset.haritaOncekiClass=b.className;
+        b.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";
+      }
+    }else if(b.dataset.haritaOncekiClass){
+      b.className=b.dataset.haritaOncekiClass;
+      delete b.dataset.haritaOncekiClass;
+    }
+  });
+ },[acik]);
 
  useEffect(()=>{
   if(!acik)return;
