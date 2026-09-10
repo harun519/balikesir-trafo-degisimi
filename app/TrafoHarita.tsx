@@ -14,6 +14,7 @@ type GeoFeature = { type: string; geometry: any; properties: Record<string, any>
 type GeoJSON = { type: "FeatureCollection"; features: GeoFeature[] };
 type DegisimKaydi = { id: number; trafo_id: string | null; lokasyon_id: string | null; tr: string | null; tarih: string | null };
 type HaritaSinifi = "DIREK" | "BINA";
+type DegisimFiltre = "TUMU" | "DEGISEN" | "DEGISMEYEN";
 
 type PoligonAday = {
   feature: GeoFeature;
@@ -31,6 +32,7 @@ const esc = (v: any) => String(v ?? "—").replace(/[&<>'\"]/g, c => ({ "&": "&a
 const prop = (p: any, ...keys: string[]) => { for (const k of keys) if (p?.[k] != null && String(p[k]).trim() !== "") return p[k]; return ""; };
 const shpTipiEtiket = (p: any) => anahtar(prop(p, "TIPI")) === "HARICI" ? "HARİCİ" : anahtar(prop(p, "TIPI")) === "DAHILI" ? "DAHİLİ" : norm(prop(p, "TIPI")) || "Bilinmiyor";
 const haritaSinifiEtiket = (p: any) => p?.__HARITA_SINIFI === "BINA" ? "Bina Tipi" : "Direk Tipi";
+const mulkiyetEtiket = (p: any) => anahtar(prop(p, "MULKIYET")) === "EDAS" ? "EDAŞ" : anahtar(prop(p, "MULKIYET")) === "DEVIRLI" ? "Devirli" : norm(prop(p, "MULKIYET")) || "Bilinmiyor";
 
 function dbAc() {
   return new Promise<IDBDatabase>((ok, no) => {
@@ -200,17 +202,17 @@ function noktaPopup(p: any, adet: number, sonTarih: string | null) {
     ? `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:${adet > 1 ? "#f3e8ff" : "#ecfdf5"};color:${adet > 1 ? "#6d28d9" : "#047857"};font-weight:800"><div>🕘 ${adet} değişim kaydı</div>${sonTarih ? `<div style="margin-top:3px;font-size:10px;font-weight:700;opacity:.8">Son değişim: ${esc(tarihGoster(sonTarih))}</div>` : ""}</div>`
     : `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#fff7ed;color:#c2410c;font-weight:800">Değişim kaydı yok</div>`;
   const uyari = p?.__TIP_UYUMSUZ ? `<div style="margin-top:8px;padding:7px 9px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800">⚠ SHP TIPI ile geometrik sınıf uyuşmuyor</div>` : "";
-  return `<div style="min-width:245px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">⚡ ${esc(prop(p, "ADI") || "Trafo")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Harita Sınıfı:</b> ${esc(haritaSinifiEtiket(p))}</div><div><b>SHP TIPI:</b> ${esc(shpTipiEtiket(p))}</div>${p?.__POLIGON_TIPI ? `<div><b>Eşleşen Yapı:</b> ${esc(p.__POLIGON_TIPI)}</div>` : ""}<div><b>Mülkiyet:</b> ${esc(prop(p, "MULKIYET"))}</div><div><b>Trafo ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Lokasyon ID:</b> ${esc(prop(p, "LOKASYON_I"))}</div><div><b>Güç:</b> ${esc(prop(p, "GUC"))}${prop(p, "GUC") ? " kVA" : ""}</div><div><b>Primer Gerilim:</b> ${esc(prop(p, "PRIMER_GER"))}</div><div><b>Marka:</b> ${esc(prop(p, "MARKA"))}</div><div><b>Seri No:</b> ${esc(prop(p, "SERI_NO"))}</div><div><b>İmal Yılı:</b> ${esc(prop(p, "IMAL_YILI"))}</div><div><b>Cinsi:</b> ${esc(prop(p, "CINSI"))}</div></div>${uyari}${durum}</div>`;
+  return `<div style="min-width:250px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">⚡ ${esc(prop(p, "ADI") || "Trafo")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Montaj Tipi:</b> ${esc(haritaSinifiEtiket(p))}</div><div><b>Mülkiyet:</b> ${esc(mulkiyetEtiket(p))}</div><div><b>SHP TIPI:</b> ${esc(shpTipiEtiket(p))}</div>${p?.__POLIGON_TIPI ? `<div><b>Eşleşen Yapı:</b> ${esc(p.__POLIGON_TIPI)}</div>` : ""}<div><b>Trafo ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Lokasyon ID:</b> ${esc(prop(p, "LOKASYON_I"))}</div><div><b>Güç:</b> ${esc(prop(p, "GUC"))}${prop(p, "GUC") ? " kVA" : ""}</div><div><b>Primer Gerilim:</b> ${esc(prop(p, "PRIMER_GER"))}</div><div><b>Marka:</b> ${esc(prop(p, "MARKA"))}</div><div><b>Seri No:</b> ${esc(prop(p, "SERI_NO"))}</div><div><b>İmal Yılı:</b> ${esc(prop(p, "IMAL_YILI"))}</div><div><b>Cinsi:</b> ${esc(prop(p, "CINSI"))}</div></div>${uyari}${durum}</div>`;
 }
 function binaPopup(p: any) {
-  return `<div style="min-width:235px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">🏢 ${esc(prop(p, "ADI") || "Trafo Binası")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Bina ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Kodu:</b> ${esc(prop(p, "KODU"))}</div><div><b>Tipi:</b> ${esc(prop(p, "TIPI"))}</div><div><b>Alt Tip:</b> ${esc(prop(p, "ALTTIP"))}</div><div><b>Gerilim:</b> ${esc(prop(p, "ISLETME_GE"))}</div></div></div>`;
+  return `<div style="min-width:235px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">🏢 ${esc(prop(p, "ADI") || "Trafo Binası")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Bina ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Kodu:</b> ${esc(prop(p, "KODU"))}</div><div><b>Tipi:</b> ${esc(prop(p, "TIPI"))}</div><div><b>Mülkiyet:</b> ${esc(mulkiyetEtiket(p))}</div><div><b>Alt Tip:</b> ${esc(prop(p, "ALTTIP"))}</div><div><b>Gerilim:</b> ${esc(prop(p, "ISLETME_GE"))}</div></div></div>`;
 }
 
 export default function TrafoHarita() {
   const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);
   const [hazir, setHazir] = useState(false), [veriHazir, setVeriHazir] = useState(false), [hata, setHata] = useState(""), [durum, setDurum] = useState("Merkezi envanter kontrol ediliyor..."), [dosyaAdi, setDosyaAdi] = useState("");
-  const [ilce, setIlce] = useState(""), [arama, setArama] = useState(""), [tipFiltre, setTipFiltre] = useState<"" | "DIREK" | "BINA">(""), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi, setNoktaSayisi] = useState(0), [binaSayisi, setBinaSayisi] = useState(0), [direkTipiSayisi, setDirekTipiSayisi] = useState(0), [binaTipiSayisi, setBinaTipiSayisi] = useState(0), [uyumsuzSayisi, setUyumsuzSayisi] = useState(0), [haritaTipi, setHaritaTipi] = useState<"standart" | "uydu">("standart");
-  const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>([]), [degisimYukleniyor, setDegisimYukleniyor] = useState(true), [sadeceDegisen, setSadeceDegisen] = useState(false), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
+  const [ilce, setIlce] = useState(""), [arama, setArama] = useState(""), [tipFiltre, setTipFiltre] = useState<"" | "DIREK" | "BINA">(""), [mulkiyetFiltre, setMulkiyetFiltre] = useState<"" | "EDAS" | "DEVIRLI">(""), [degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi, setNoktaSayisi] = useState(0), [binaSayisi, setBinaSayisi] = useState(0), [direkTipiSayisi, setDirekTipiSayisi] = useState(0), [binaTipiSayisi, setBinaTipiSayisi] = useState(0), [uyumsuzSayisi, setUyumsuzSayisi] = useState(0), [haritaTipi, setHaritaTipi] = useState<"standart" | "uydu">("standart");
+  const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>([]), [degisimYukleniyor, setDegisimYukleniyor] = useState(true), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
   const [merkezi, setMerkezi] = useState(false), [adminMi, setAdminMi] = useState(false), [envanterIslem, setEnvanterIslem] = useState(false);
 
   const supabase = useMemo(() => {
@@ -348,7 +350,12 @@ export default function TrafoHarita() {
       const p = f.properties || {}, fi = norm(prop(p, "ILCE", "ilce"));
       if (ilce && fi.toLocaleLowerCase("tr-TR") !== ilce.toLocaleLowerCase("tr-TR")) return false;
       if (tipFiltre && p.__HARITA_SINIFI !== tipFiltre) return false;
-      if (q && !["ADI", "ID", "GIS_ID", "LOKASYON_I", "KODU", "MAHALLE", "MARKA", "SERI_NO", "SERI_NUMAR", "GUC", "TIPI"].some(k => norm(p[k]).toLocaleLowerCase("tr-TR").includes(q))) return false;
+      if (mulkiyetFiltre && anahtar(prop(p, "MULKIYET")) !== mulkiyetFiltre) return false;
+      if (q) {
+        const alanlar = ["ADI", "ID", "GIS_ID", "LOKASYON_I", "KODU", "MAHALLE", "MARKA", "SERI_NO", "SERI_NUMAR", "GUC", "TIPI"].map(k => norm(p[k]));
+        alanlar.push(haritaSinifiEtiket(p), p.__HARITA_SINIFI === "DIREK" ? "direk üçgen harici" : "bina kare dahili", mulkiyetEtiket(p));
+        if (!alanlar.some(v => v.toLocaleLowerCase("tr-TR").includes(q))) return false;
+      }
       return true;
     };
     const tumFiltreli = pointData.current.features.filter(temelUygun);
@@ -356,12 +363,19 @@ export default function TrafoHarita() {
     for (const f of tumFiltreli) { const n = eslesen(f.properties || {}).length; if (n > 0) { eslesenToplam++; if (n === 1) tek++; else cok++; } }
     setEslesenSayisi(eslesenToplam); setTekDegisimSayisi(tek); setCokDegisimSayisi(cok);
 
-    const pts = { type: "FeatureCollection", features: pointData.current.features.filter(f => temelUygun(f) && (!sadeceDegisen || eslesen(f.properties || {}).length > 0)) } as GeoJSON;
+    const pts = { type: "FeatureCollection", features: pointData.current.features.filter(f => {
+      if (!temelUygun(f)) return false;
+      const n = eslesen(f.properties || {}).length;
+      if (degisimFiltre === "DEGISEN" && n === 0) return false;
+      if (degisimFiltre === "DEGISMEYEN" && n > 0) return false;
+      return true;
+    }) } as GeoJSON;
     const bins = { type: "FeatureCollection", features: buildingData.current.features.filter(f => {
       const p = f.properties || {}, fi = norm(prop(p, "ILCE", "ilce"));
       if (ilce && fi.toLocaleLowerCase("tr-TR") !== ilce.toLocaleLowerCase("tr-TR")) return false;
+      if (mulkiyetFiltre && anahtar(prop(p, "MULKIYET")) !== mulkiyetFiltre) return false;
       if (!q) return true;
-      return ["ADI", "ID", "KODU", "MAHALLE"].some(k => norm(p[k]).toLocaleLowerCase("tr-TR").includes(q));
+      return ["ADI", "ID", "KODU", "MAHALLE", "MULKIYET", "TIPI"].some(k => norm(p[k]).toLocaleLowerCase("tr-TR").includes(q));
     }) } as GeoJSON;
 
     setNoktaSayisi(pts.features.length); setBinaSayisi(bins.features.length);
@@ -369,14 +383,14 @@ export default function TrafoHarita() {
     setBinaTipiSayisi(pts.features.filter(f => f.properties?.__HARITA_SINIFI === "BINA").length);
     setUyumsuzSayisi(pointData.current.features.filter(f => !!f.properties?.__TIP_UYUMSUZ).length);
 
-    if (binaAcik && !sadeceDegisen) buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
+    if (binaAcik && degisimFiltre === "TUMU") buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
     if (noktaAcik) pointLayer.current = L.geoJSON(pts, {
       pointToLayer: (f: any, ll: any) => {
         const p = f.properties || {}, n = eslesen(p).length, fill = n > 1 ? "#8b5cf6" : n === 1 ? "#10b981" : "#f97316", sinif = p.__HARITA_SINIFI as HaritaSinifi;
         const html = sinif === "DIREK"
-          ? `<div style="position:relative;width:22px;height:22px;filter:drop-shadow(0 1px 2px rgba(15,23,42,.35))"><div style="position:absolute;left:1px;top:0;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid white"></div><div style="position:absolute;left:4px;top:4px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid ${fill}"></div></div>`
-          : `<div style="width:18px;height:18px;border:3px solid white;border-radius:2px;background:${fill};box-shadow:0 1px 3px rgba(15,23,42,.4)"></div>`;
-        return L.marker(ll, { icon: L.divIcon({ className: "", html, iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: true });
+          ? `<div style="position:relative;width:30px;height:30px;filter:drop-shadow(0 2px 3px rgba(15,23,42,.55))"><div style="position:absolute;left:1px;top:0;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:28px solid #ffffff"></div><div style="position:absolute;left:5px;top:5px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid ${fill}"></div></div>`
+          : `<div style="width:24px;height:24px;border:4px solid #ffffff;border-radius:2px;background:${fill};box-shadow:0 2px 4px rgba(15,23,42,.55)"></div>`;
+        return L.marker(ll, { icon: L.divIcon({ className: "", html, iconSize: [30, 30], iconAnchor: [15, 15] }), interactive: true, riseOnHover: true });
       },
       onEachFeature: (f: any, l: any) => {
         const kayitlar = eslesen(f.properties || {}).sort((a, b) => String(b.tarih || "").localeCompare(String(a.tarih || "")));
@@ -387,10 +401,10 @@ export default function TrafoHarita() {
     const layers = [pointLayer.current, buildingLayer.current].filter(Boolean);
     if (layers.length) {
       const bounds = L.featureGroup(layers).getBounds();
-      if (bounds.isValid() && (ilce || q || tipFiltre || sadeceDegisen)) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
+      if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
       else if (bounds.isValid()) map.fitBounds(bounds.pad(.04), { maxZoom: 11 });
     }
-  }, [hazir, veriHazir, ilce, arama, tipFiltre, noktaAcik, binaAcik, sadeceDegisen, degisimKayitlari]);
+  }, [hazir, veriHazir, ilce, arama, tipFiltre, mulkiyetFiltre, degisimFiltre, noktaAcik, binaAcik, degisimKayitlari]);
 
   const adminGuncelle = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
@@ -400,7 +414,7 @@ export default function TrafoHarita() {
     catch (err: any) { setHata(err?.message || "Merkezi envanter güncellenemedi"); }
     finally { setEnvanterIslem(false); }
   };
-  const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setSadeceDegisen(false); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
+  const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setMulkiyetFiltre(""); setDegisimFiltre("TUMU"); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
   const toplam = useMemo(() => noktaSayisi + binaSayisi, [noktaSayisi, binaSayisi]);
 
   return <div className="space-y-4">
@@ -417,16 +431,18 @@ export default function TrafoHarita() {
         {adminMi && <label className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-black text-white shadow-sm ${envanterIslem ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"}`}>☁ {envanterIslem ? "Güncelleniyor..." : "Envanteri Güncelle"}<input type="file" accept=".zip,application/zip" onChange={adminGuncelle} disabled={envanterIslem} className="hidden" /></label>}
       </div>
       {veriHazir && <><div className="my-4 border-t border-slate-100" />
-        <div className="grid gap-3 lg:grid-cols-[190px_190px_minmax(0,1fr)_auto]">
+        <div className="grid gap-3 lg:grid-cols-[175px_175px_175px_minmax(0,1fr)_auto]">
           <select value={ilce} onChange={e => setIlce(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm İlçeler</option>{ILCE_LISTESI.map(x => <option key={x}>{x}</option>)}</select>
           <select value={tipFiltre} onChange={e => setTipFiltre(e.target.value as "" | "DIREK" | "BINA")} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm Tipler</option><option value="DIREK">▲ Direk Tipi</option><option value="BINA">■ Bina Tipi</option></select>
-          <input value={arama} onChange={e => setArama(e.target.value)} placeholder="Trafo adı, ID, mahalle, marka, seri no, güç ara..." className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" />
+          <select value={mulkiyetFiltre} onChange={e => setMulkiyetFiltre(e.target.value as "" | "EDAS" | "DEVIRLI")} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm Mülkiyetler</option><option value="EDAS">EDAŞ</option><option value="DEVIRLI">Devirli</option></select>
+          <input value={arama} onChange={e => setArama(e.target.value)} placeholder="Trafo adı, Lokasyon ID, Trafo ID, mahalle, marka, seri no, güç, direk/bina tipi ara..." className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" />
           <button type="button" onClick={tumunuGoster} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-600">Filtreyi Temizle</button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
           <button onClick={() => setNoktaAcik(v => !v)} className={`rounded-xl border px-3 py-2 text-xs font-black ${noktaAcik ? "border-orange-200 bg-orange-50 text-orange-700" : "border-slate-200 bg-white text-slate-500"}`}>⚡ Trafo Noktaları ({noktaSayisi})</button>
-          <button onClick={() => setBinaAcik(v => !v)} disabled={sadeceDegisen} className={`rounded-xl border px-3 py-2 text-xs font-black disabled:opacity-40 ${binaAcik ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500"}`}>🏢 Yapı Poligonları ({binaSayisi})</button>
-          <button onClick={() => setSadeceDegisen(v => !v)} className={`rounded-xl border px-3 py-2 text-xs font-black ${sadeceDegisen ? "border-emerald-300 bg-emerald-600 text-white" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>🕘 {sadeceDegisen ? "Tüm Trafoları Göster" : "Sadece Değişim Yapılanlar"}</button>
+          <button onClick={() => setBinaAcik(v => !v)} disabled={degisimFiltre !== "TUMU"} className={`rounded-xl border px-3 py-2 text-xs font-black disabled:opacity-40 ${binaAcik ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500"}`}>🏢 Yapı Poligonları ({binaSayisi})</button>
+          <button onClick={() => setDegisimFiltre(v => v === "DEGISEN" ? "TUMU" : "DEGISEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISEN" ? "border-emerald-300 bg-emerald-600 text-white" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>🕘 Değişim Yapılanlar</button>
+          <button onClick={() => setDegisimFiltre(v => v === "DEGISMEYEN" ? "TUMU" : "DEGISMEYEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISMEYEN" ? "border-orange-300 bg-orange-600 text-white" : "border-orange-200 bg-orange-50 text-orange-700"}`}>○ Değişim Yapılmayanlar</button>
           <button onClick={() => setHaritaTipi(x => x === "standart" ? "uydu" : "standart")} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">{haritaTipi === "standart" ? "🛰️ Uydu Görünümü" : "🗺️ Standart Harita"}</button>
           <span className="ml-auto text-[11px] font-bold text-slate-400">Görünen toplam: {toplam}</span>
         </div>
