@@ -13,66 +13,23 @@ function bolumBul(baslik:string){const h=Array.from(document.querySelectorAll<HT
 
 export default function HaritaGelismisIslemler(){
  useEffect(()=>{
-  let uyduSecildi=false;
-  let fsHandler:(()=>void)|null=null;
-
-  const uyduyuAc=()=>{
-    if(uyduSecildi)return;
-    const uydu=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(x=>norm(x.textContent||"").includes("uydu gorunumu"));
-    if(uydu){uyduSecildi=true;uydu.click();}
-  };
-
+  let uyduSecildi=false;let fsHandler:(()=>void)|null=null;
+  const uyduyuAc=()=>{if(uyduSecildi)return;const uydu=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(x=>norm(x.textContent||"").includes("uydu gorunumu"));if(uydu){uyduSecildi=true;uydu.click();}};
   const ekle=()=>{
    const harita=document.querySelector<HTMLElement>(".leaflet-container");if(!harita)return;
-
    if(!uyduSecildi)window.setTimeout(uyduyuAc,120);
-
    if(!harita.querySelector('[data-harita-full="1"]')){
-    harita.style.position="relative";
-    const b=document.createElement("button");b.type="button";b.dataset.haritaFull="1";b.textContent="⛶ Tam Ekran";b.style.cssText="position:absolute;right:12px;top:12px;z-index:10000;background:#0f172a;color:#fff;border:2px solid #fff;border-radius:10px;padding:8px 11px;font-size:11px;font-weight:900;box-shadow:0 4px 14px rgba(15,23,42,.35);cursor:pointer";
-
-    const duzenle=()=>{
-      const tam=document.fullscreenElement===harita;
-      b.textContent=tam?"✕ Tam Ekrandan Çık":"⛶ Tam Ekran";
-      if(tam){
-        harita.style.width="100vw";
-        harita.style.height="100vh";
-        harita.style.minHeight="100vh";
-        harita.style.maxHeight="100vh";
-        harita.style.margin="0";
-        harita.style.borderRadius="0";
-        harita.style.overflow="hidden";
-        document.documentElement.style.overflow="hidden";
-        document.body.style.overflow="hidden";
-      }else{
-        harita.style.width="";
-        harita.style.height="";
-        harita.style.minHeight="";
-        harita.style.maxHeight="";
-        harita.style.margin="";
-        harita.style.borderRadius="";
-        harita.style.overflow="";
-        document.documentElement.style.overflow="";
-        document.body.style.overflow="";
-      }
-      window.setTimeout(()=>window.dispatchEvent(new Event("resize")),150);
-    };
-
-    b.onclick=async()=>{try{if(document.fullscreenElement===harita)await document.exitFullscreen();else await harita.requestFullscreen();}catch{}};
-    fsHandler=duzenle;
-    document.addEventListener("fullscreenchange",duzenle);
-    harita.appendChild(b);
+    harita.style.position="relative";const b=document.createElement("button");b.type="button";b.dataset.haritaFull="1";b.textContent="⛶ Tam Ekran";b.style.cssText="position:absolute;right:12px;top:12px;z-index:10000;background:#0f172a;color:#fff;border:2px solid #fff;border-radius:10px;padding:8px 11px;font-size:11px;font-weight:900;box-shadow:0 4px 14px rgba(15,23,42,.35);cursor:pointer";
+    const duzenle=()=>{const tam=document.fullscreenElement===harita;b.textContent=tam?"✕ Tam Ekrandan Çık":"⛶ Tam Ekran";if(tam){harita.style.width="100vw";harita.style.height="100vh";harita.style.minHeight="100vh";harita.style.maxHeight="100vh";harita.style.margin="0";harita.style.borderRadius="0";harita.style.overflow="hidden";document.documentElement.style.overflow="hidden";document.body.style.overflow="hidden";}else{harita.style.width="";harita.style.height="";harita.style.minHeight="";harita.style.maxHeight="";harita.style.margin="";harita.style.borderRadius="";harita.style.overflow="";document.documentElement.style.overflow="";document.body.style.overflow="";}window.setTimeout(()=>window.dispatchEvent(new Event("resize")),150);};
+    b.onclick=async()=>{try{if(document.fullscreenElement===harita)await document.exitFullscreen();else await harita.requestFullscreen();}catch{}};fsHandler=duzenle;document.addEventListener("fullscreenchange",duzenle);harita.appendChild(b);
    }
-
-   document.querySelectorAll<HTMLElement>(".leaflet-popup-content").forEach(p=>{const txt=p.innerText||"";const lok=alan(txt,"Lokasyon ID");if(!lok)return;if(!p.querySelector('[data-harita-yeni="1"]')){const baslik=(txt.split("\n")[0]||"").replace(/^⚡\s*/,"").trim();const detay={lokasyonId:lok,trafoId:alan(txt,"Trafo ID"),ilce:alan(txt,"İlçe"),mahalle:alan(txt,"Mahalle"),tr:baslik,trafoTipi:/bina/i.test(alan(txt,"Montaj Tipi"))?"BİNA":/direk/i.test(alan(txt,"Montaj Tipi"))?"DİREK":""};const b=document.createElement("button");b.type="button";b.dataset.haritaYeni="1";b.textContent="➕ Değişim Kaydı Oluştur";b.style.cssText="width:100%;margin-top:8px;padding:9px 12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-size:12px;font-weight:800;cursor:pointer";b.onclick=()=>window.dispatchEvent(new CustomEvent("trafo-harita-yeni-kayit",{detail:detay}));p.appendChild(b);}});
-   const kartlar=Array.from(document.querySelectorAll<HTMLElement>("div")).filter(x=>norm(x.textContent||"").includes("tip uyumsuzlugu"));const k=kartlar.find(x=>x.children.length<8);if(k&&!k.dataset.uyumsuzKlik){k.dataset.uyumsuzKlik="1";k.style.cursor="pointer";k.title="Uyumsuz trafoları haritada göster";}
+   document.querySelectorAll<HTMLElement>(".leaflet-popup-content").forEach(p=>{
+    const txt=p.innerText||"";const lok=alan(txt,"Lokasyon ID");if(!lok)return;
+    if(!p.querySelector('[data-harita-yol="1"]')){const popup=p.closest(".leaflet-popup") as HTMLElement|null;const pane=popup?.parentElement;const sol=parseFloat(popup?.style.left||"0"),ust=parseFloat(popup?.style.bottom||"0");let lat="",lng="";const x=alan(txt,"X Koordinatı")||alan(txt,"X_KOORDINA")||alan(txt,"Boylam");const y=alan(txt,"Y Koordinatı")||alan(txt,"Y_KOORDINA")||alan(txt,"Enlem");if(x&&y){lng=x;lat=y;}else if(pane){const mapEl=document.querySelector<HTMLElement>(".leaflet-container");const map=(mapEl as any)?._leaflet_map;if(map&&popup){try{const pt=(window as any).L.point(sol,-ust);const ll=map.layerPointToLatLng(pt);lat=String(ll.lat);lng=String(ll.lng);}catch{}}}if(!lat||!lng){const links=Array.from(p.querySelectorAll<HTMLAnchorElement>("a"));const coord=links.map(a=>a.href).join(" ").match(/(-?\d{2}\.\d+)[,%20\s]+(-?\d{2}\.\d+)/);if(coord){lat=coord[1];lng=coord[2];}}const b=document.createElement("button");b.type="button";b.dataset.haritaYol="1";b.textContent="🧭 Yol Tarifi";b.style.cssText="width:100%;margin-top:8px;padding:9px 12px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-size:12px;font-weight:800;cursor:pointer";b.onclick=()=>{const q=lat&&lng?`${lat},${lng}`:[alan(txt,"TR / Trafo Bölge Adı"),alan(txt,"Mahalle"),alan(txt,"İlçe")].filter(Boolean).join(" ")||lok;window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`,"_blank","noopener,noreferrer");};p.appendChild(b);}
+    if(!p.querySelector('[data-harita-yeni="1"]')){const baslik=(txt.split("\n")[0]||"").replace(/^⚡\s*/,"").trim();const detay={lokasyonId:lok,trafoId:alan(txt,"Trafo ID"),ilce:alan(txt,"İlçe"),mahalle:alan(txt,"Mahalle"),tr:baslik,trafoTipi:/bina/i.test(alan(txt,"Montaj Tipi"))?"BİNA":/direk/i.test(alan(txt,"Montaj Tipi"))?"DİREK":""};const b=document.createElement("button");b.type="button";b.dataset.haritaYeni="1";b.textContent="➕ Değişim Kaydı Oluştur";b.style.cssText="width:100%;margin-top:8px;padding:9px 12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-size:12px;font-weight:800;cursor:pointer";b.onclick=()=>window.dispatchEvent(new CustomEvent("trafo-harita-yeni-kayit",{detail:detay}));p.appendChild(b);}
+   });
   };
-
   const yeni=async(e:Event)=>{const d=(e as CustomEvent).detail||{};if(!d.lokasyonId)return;const nav=Array.from(document.querySelectorAll<HTMLButtonElement>("nav button"));const b=nav.find(x=>norm(x.textContent||"").includes("yeni kayit"));if(!b)return;b.click();for(let i=0;i<30&&!Array.from(document.querySelectorAll("h1")).some(x=>norm(x.textContent||"").includes("yeni trafo degisim kaydi"));i++)await bekle(100);const konum=bolumBul("Konum Bilgileri");await comboDoldur("İlçe",d.ilce||"",konum);await comboDoldur("Mahalle",d.mahalle||"",konum);await metinDoldur("TR / Trafo Bölge Adı",d.tr||"",konum);await metinDoldur("Lokasyon ID",String(d.lokasyonId||""),konum);await metinDoldur("Trafo ID",String(d.trafoId||""),konum);await comboDoldur("Trafo Tipi",d.trafoTipi||"",konum);window.scrollTo({top:0,behavior:"smooth"});};
-
-  window.addEventListener("trafo-harita-yeni-kayit",yeni);
-  const o=new MutationObserver(ekle);o.observe(document.body,{childList:true,subtree:true});ekle();
-  const uyduTimer=window.setInterval(uyduyuAc,250);
-  return()=>{o.disconnect();window.clearInterval(uyduTimer);window.removeEventListener("trafo-harita-yeni-kayit",yeni);if(fsHandler)document.removeEventListener("fullscreenchange",fsHandler);document.documentElement.style.overflow="";document.body.style.overflow="";};
+  window.addEventListener("trafo-harita-yeni-kayit",yeni);const o=new MutationObserver(ekle);o.observe(document.body,{childList:true,subtree:true});ekle();const uyduTimer=window.setInterval(uyduyuAc,250);return()=>{o.disconnect();window.clearInterval(uyduTimer);window.removeEventListener("trafo-harita-yeni-kayit",yeni);if(fsHandler)document.removeEventListener("fullscreenchange",fsHandler);document.documentElement.style.overflow="";document.body.style.overflow="";};
  },[]);return null;
 }
