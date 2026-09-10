@@ -9,7 +9,6 @@ const alan=(metin:string,ad:string)=>{
   const v=metin.match(re)?.[1]?.trim()||"";
   return v==="—"?"":v;
 };
-const gucTemizle=(v:string)=>v.replace(/\s*kva\s*$/i,"").trim();
 
 function alanInput(baslik:string,scope:ParentNode=document){
   const hedef=norm(baslik.replace(/\*/g,""));
@@ -36,7 +35,7 @@ async function comboDoldur(baslik:string,v:string,scope:ParentNode=document){
   const secenekler=Array.from(document.querySelectorAll<HTMLButtonElement>("button"));
   const sec=secenekler.find(x=>{
     const t=norm(x.textContent||"");
-    return t===hedef||t===`${hedef} kva`||t.startsWith(`${hedef} `);
+    return t===hedef||t.startsWith(`${hedef} `);
   });
   if(sec){sec.click();await bekle(100);return;}
   el.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",bubbles:true,cancelable:true}));
@@ -71,12 +70,7 @@ export default function HaritaGelismisIslemler(){
         ilce:alan(txt,"İlçe"),
         mahalle:alan(txt,"Mahalle"),
         tr:baslik,
-        trafoTipi:/bina/i.test(alan(txt,"Montaj Tipi"))?"BİNA":/direk/i.test(alan(txt,"Montaj Tipi"))?"DİREK":"",
-        guc:gucTemizle(alan(txt,"Güç")),
-        gerilim:alan(txt,"Primer Gerilim"),
-        marka:alan(txt,"Marka"),
-        seriNo:alan(txt,"Seri No"),
-        imalYili:alan(txt,"İmal Yılı")
+        trafoTipi:/bina/i.test(alan(txt,"Montaj Tipi"))?"BİNA":/direk/i.test(alan(txt,"Montaj Tipi"))?"DİREK":""
       };
       const b=document.createElement("button");b.type="button";b.dataset.haritaYeni="1";b.textContent="➕ Değişim Kaydı Oluştur";b.style.cssText="width:100%;margin-top:8px;padding:9px 12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-size:12px;font-weight:800;cursor:pointer";
       b.onclick=()=>window.dispatchEvent(new CustomEvent("trafo-harita-yeni-kayit",{detail:detay}));p.appendChild(b);
@@ -102,16 +96,6 @@ export default function HaritaGelismisIslemler(){
     await metinDoldur("Lokasyon ID",String(d.lokasyonId||""),konum);
     await metinDoldur("Trafo ID",String(d.trafoId||""),konum);
     await comboDoldur("Trafo Tipi",d.trafoTipi||"",konum);
-
-    const adim2=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(x=>norm(x.textContent||"").includes("sokulen trafo"));
-    if(adim2){adim2.click();}
-    for(let i=0;i<20&&!Array.from(document.querySelectorAll("h2")).some(x=>norm(x.textContent||"")==="sokulen trafo");i++)await bekle(100);
-    const sokulen=bolumBul("Sökülen Trafo");
-    await comboDoldur("Gücü",d.guc||"",sokulen);
-    await comboDoldur("Gerilim",d.gerilim||"",sokulen);
-    await comboDoldur("Markası",d.marka||"",sokulen);
-    await metinDoldur("Seri No",d.seriNo||"",sokulen);
-    await metinDoldur("İmal Yılı",d.imalYili||"",sokulen);
     window.scrollTo({top:0,behavior:"smooth"});
   };
 
