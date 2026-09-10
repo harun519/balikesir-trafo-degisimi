@@ -37,7 +37,7 @@ export default function TrafoHarita(){
  const degisimIndex=useMemo(()=>{const idx=new Map<string,Set<number>>(),byId=new Map<number,DegisimKaydi>();for(const k of degisimKayitlari){byId.set(k.id,k);const a=anahtar(k.lokasyon_id);if(!a)continue;if(!idx.has(a))idx.set(a,new Set());idx.get(a)!.add(k.id);}return{idx,byId};},[degisimKayitlari]);
  const eslesen=(p:any)=>{const a=anahtar(prop(p,"LOKASYON_I"));if(!a)return[];const ids=degisimIndex.idx.get(a);if(!ids)return[];return Array.from(ids).map(id=>degisimIndex.byId.get(id)).filter(Boolean) as DegisimKaydi[];};
 
- const veriyiKur=(x:any,ad:string)=>{const a=ayir(x);pointData.current=a.nokta;buildingData.current=a.bina;setDosyaAdi(ad);setVeriHazir(true);setDurum(`${a.nokta.features.length.toLocaleString("tr-TR")} trafo noktası • ${a.bina.features.length.toLocaleString("tr-TR")} trafo binası`);setHata("");};
+ const veriyiKur=(x:any,ad:string)=>{const a=ayir(x);const noktaFeatures=a.nokta.features.filter(f=>anahtar(prop(f.properties||{},"MULKIYET"))!=="OZEL");const binaFeatures=a.bina.features.filter(f=>anahtar(prop(f.properties||{},"MULKIYET"))!=="OZEL");pointData.current={type:"FeatureCollection",features:noktaFeatures};buildingData.current={type:"FeatureCollection",features:binaFeatures};setDosyaAdi(ad);setVeriHazir(true);setDurum(`${noktaFeatures.length.toLocaleString("tr-TR")} trafo noktası • ${binaFeatures.length.toLocaleString("tr-TR")} trafo binası • özel mülkiyet hariç`);setHata("");};
  const zipOku=async(blob:Blob,ad:string)=>{if(!window.shp)throw new Error("SHP okuyucu hazır değil");setDurum("Trafo envanteri hazırlanıyor...");const x=await window.shp(await blob.arrayBuffer());veriyiKur(x,ad);};
 
  async function oturumBilgisi(){
