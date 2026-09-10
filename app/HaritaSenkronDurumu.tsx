@@ -10,8 +10,10 @@ export default function HaritaSenkronDurumu(){
   let ilkChecksum="";
   let durdu=false;
   let timer:number|undefined;
+  let sonMeta:any=null;
 
   const kutuGuncelle=(meta:any)=>{
+    if(!meta||!meta.updated_at)return;
     const baslik=Array.from(document.querySelectorAll<HTMLElement>("div")).find(x=>x.textContent?.trim()==="🗺️ Trafo Envanteri");
     if(!baslik)return;
     const ust=baslik.parentElement?.parentElement?.parentElement;
@@ -23,7 +25,8 @@ export default function HaritaSenkronDurumu(){
       kutu.style.cssText="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10px;font-weight:800;color:#475569";
       ust.appendChild(kutu);
     }
-    kutu.innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;border-radius:999px;padding:5px 8px">● SENKRON</span><span>Son güncelleme: <b>${tarihSaat(meta.updated_at)}</b></span><span>• Sürüm: <b>v${meta.version||1}</b></span><span>• Boyut: <b>${boyut(Number(meta.size||0))}</b></span>`;
+    const yeni=`<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;border-radius:999px;padding:5px 8px">● SENKRON</span><span>Son güncelleme: <b>${tarihSaat(meta.updated_at)}</b></span><span>• Sürüm: <b>v${meta.version||1}</b></span><span>• Boyut: <b>${boyut(Number(meta.size||0))}</b></span>`;
+    if(kutu.innerHTML!==yeni)kutu.innerHTML=yeni;
   };
 
   const kontrol=async()=>{
@@ -32,22 +35,24 @@ export default function HaritaSenkronDurumu(){
       if(!r.ok)return;
       const meta=await r.json();
       if(durdu)return;
+      sonMeta=meta;
       kutuGuncelle(meta);
       const checksum=String(meta.checksum||`${meta.version||""}-${meta.updated_at||""}`);
       if(!ilkChecksum){ilkChecksum=checksum;return;}
       if(checksum&&checksum!==ilkChecksum){
         ilkChecksum=checksum;
-        const harita=document.querySelector(".leaflet-container");
-        if(harita){window.location.reload();}
+        if(document.querySelector(".leaflet-container"))window.location.reload();
       }
     }catch{}
   };
 
   kontrol();
-  timer=window.setInterval(kontrol,60000);
-  const o=new MutationObserver(()=>kutuGuncelle({}));
-  o.observe(document.body,{childList:true,subtree:true});
-  return()=>{durdu=true;if(timer)window.clearInterval(timer);o.disconnect();};
+  timer=window.setInterval(()=>{
+    if(sonMeta)kutuGuncelle(sonMeta);
+    kontrol();
+  },60000);
+
+  return()=>{durdu=true;if(timer)window.clearInterval(timer);};
  },[]);
  return null;
 }
