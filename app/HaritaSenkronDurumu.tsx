@@ -7,11 +7,7 @@ const boyut=(n:number)=>n?`${(n/1024/1024).toFixed(1)} MB`:"—";
 
 export default function HaritaSenkronDurumu(){
  useEffect(()=>{
-  let ilkChecksum="";
   let durdu=false;
-  let timer:number|undefined;
-  let sonMeta:any=null;
-
   const kutuGuncelle=(meta:any)=>{
     if(!meta||!meta.updated_at)return;
     const baslik=Array.from(document.querySelectorAll<HTMLElement>("div")).find(x=>x.textContent?.trim()==="🗺️ Trafo Envanteri");
@@ -19,40 +15,12 @@ export default function HaritaSenkronDurumu(){
     const ust=baslik.parentElement?.parentElement?.parentElement;
     if(!ust)return;
     let kutu=ust.querySelector<HTMLElement>('[data-envanter-senkron="1"]');
-    if(!kutu){
-      kutu=document.createElement("div");
-      kutu.dataset.envanterSenkron="1";
-      kutu.style.cssText="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10px;font-weight:800;color:#475569";
-      ust.appendChild(kutu);
-    }
-    const yeni=`<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;border-radius:999px;padding:5px 8px">● SENKRON</span><span>Son güncelleme: <b>${tarihSaat(meta.updated_at)}</b></span><span>• Sürüm: <b>v${meta.version||1}</b></span><span>• Boyut: <b>${boyut(Number(meta.size||0))}</b></span>`;
-    if(kutu.innerHTML!==yeni)kutu.innerHTML=yeni;
+    if(!kutu){kutu=document.createElement("div");kutu.dataset.envanterSenkron="1";kutu.style.cssText="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10px;font-weight:800;color:#475569";ust.appendChild(kutu);}
+    kutu.innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px;border:1px solid #bbf7d0;background:#f0fdf4;color:#15803d;border-radius:999px;padding:5px 8px">● SENKRON</span><span>Son güncelleme: <b>${tarihSaat(meta.updated_at)}</b></span><span>• Sürüm: <b>v${meta.version||1}</b></span><span>• Boyut: <b>${boyut(Number(meta.size||0))}</b></span>`;
   };
-
-  const kontrol=async()=>{
-    try{
-      const r=await fetch("/api/harita-envanter?meta=1",{cache:"no-store"});
-      if(!r.ok)return;
-      const meta=await r.json();
-      if(durdu)return;
-      sonMeta=meta;
-      kutuGuncelle(meta);
-      const checksum=String(meta.checksum||`${meta.version||""}-${meta.updated_at||""}`);
-      if(!ilkChecksum){ilkChecksum=checksum;return;}
-      if(checksum&&checksum!==ilkChecksum){
-        ilkChecksum=checksum;
-        if(document.querySelector(".leaflet-container"))window.location.reload();
-      }
-    }catch{}
-  };
-
-  kontrol();
-  timer=window.setInterval(()=>{
-    if(sonMeta)kutuGuncelle(sonMeta);
-    kontrol();
-  },60000);
-
-  return()=>{durdu=true;if(timer)window.clearInterval(timer);};
+  const acilistaKontrol=async()=>{try{const r=await fetch("/api/harita-envanter?meta=1",{cache:"no-store"});if(!r.ok)return;const meta=await r.json();if(!durdu)kutuGuncelle(meta);}catch{}};
+  acilistaKontrol();
+  return()=>{durdu=true;};
  },[]);
  return null;
 }
