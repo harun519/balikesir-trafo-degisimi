@@ -4,38 +4,17 @@ import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
 import HaritaNedenFiltresi from "./HaritaNedenFiltresi";
 import HaritaUyduEtiketleri from "./HaritaUyduEtiketleri";
+import HaritaGelismisIslemler from "./HaritaGelismisIslemler";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
   description: "Balıkesir Trafo Değişimi Yönetim Sistemi",
   applicationName: "BALIKESİR TRAFO DEĞİŞİMİ",
   manifest: "/manifest.webmanifest",
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/icon-192.png",
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black",
-    title: "Trafo Değişimi",
-  },
+  icons: { icon: "/favicon.ico", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, statusBarStyle: "black", title: "Trafo Değişimi" },
 };
-
-export const viewport: Viewport = {
-  themeColor: "#07111f",
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="tr">
-      <body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /></body>
-    </html>
-  );
+export const viewport: Viewport = { themeColor: "#07111f", width: "device-width", initialScale: 1, viewportFit: "cover" };
+export default function RootLayout({children}:{children:React.ReactNode}) {
+  return <html lang="tr"><body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /></body></html>;
 }
