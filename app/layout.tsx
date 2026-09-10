@@ -3,6 +3,7 @@ import "./globals.css";
 import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
 import HaritaNedenFiltresi from "./HaritaNedenFiltresi";
+import HaritaUyduEtiketleri from "./HaritaUyduEtiketleri";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
@@ -34,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /></body>
+      <body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /></body>
     </html>
   );
 }
