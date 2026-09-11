@@ -17,18 +17,13 @@ export default function HaritaUyduEtiketleri(){
       if(!L.map.__tabletPerfPatch){
         const orjMap=L.map.bind(L);
         const patchedMap=((el:any, options:any={})=>orjMap(el,{
-          preferCanvas:true,
-          zoomAnimation:false,
-          fadeAnimation:false,
-          markerZoomAnimation:false,
-          inertia:true,
-          inertiaDeceleration:3400,
           ...options,
-          // mevcut kod bu değerleri ayrıca vermiyorsa tablet için güvenli varsayılanlar
           preferCanvas: options?.preferCanvas ?? true,
           zoomAnimation: options?.zoomAnimation ?? false,
           fadeAnimation: options?.fadeAnimation ?? false,
           markerZoomAnimation: options?.markerZoomAnimation ?? false,
+          inertia: options?.inertia ?? true,
+          inertiaDeceleration: options?.inertiaDeceleration ?? 3400,
         })) as any;
         patchedMap.__tabletPerfPatch=true;
         patchedMap.__orj=orjMap;
