@@ -9,6 +9,7 @@ export default function OtpViewerGate(){
     const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     return url&&key?createClient(url,key):null;
   },[]);
+  const adminEmail=(process.env.NEXT_PUBLIC_ADMIN_EMAIL||"harun519@gmail.com").trim().toLowerCase();
   const [acik,setAcik]=useState(false);
   const [email,setEmail]=useState("");
   const [kod,setKod]=useState("");
@@ -44,6 +45,10 @@ export default function OtpViewerGate(){
     if(!supabase){setHata("Kimlik doğrulama bağlantısı kurulamadı.");return;}
     const temiz=email.trim().toLowerCase();
     if(!temiz){setHata("E-posta adresini yazmalısın.");return;}
+    if(temiz===adminEmail){
+      setHata("Yönetici hesabı görüntüleyici kodu ile kullanılamaz. Yönetici girişi için e-posta ve şifre alanını kullanın.");
+      return;
+    }
     setYukleniyor(true);setHata("");setMesaj("");
     const {error}=await supabase.auth.signInWithOtp({email:temiz,options:{shouldCreateUser:true}});
     if(error){
@@ -63,8 +68,7 @@ export default function OtpViewerGate(){
     setYukleniyor(true);setHata("");
     const {data,error}=await supabase.auth.verifyOtp({email:email.trim().toLowerCase(),token:temizKod,type:"email"});
     if(error||!data.session){setHata(error?.message||"Kod doğrulanamadı.");setYukleniyor(false);return;}
-    // Oturumu açık tutuyoruz: yeni OTP kullanıcıları veritabanında varsayılan VIEWER rolü alır.
-    // Böylece anonim/misafir erişimi kullanılmadan RLS ile gerçek salt-okunur yetki uygulanır.
+    // OTP ile giriş yalnızca viewer hesaplarında kullanılabilir. Admin hesabı yukarıda engellenir.
     localStorage.setItem("trafo_verified_viewer_email",email.trim().toLowerCase());
     setAcik(false);setKod("");setAdim("email");setYukleniyor(false);
   }
