@@ -7,6 +7,7 @@ import HaritaUyduEtiketleri from "./HaritaUyduEtiketleri";
 import HaritaGelismisIslemler from "./HaritaGelismisIslemler";
 import HaritaSenkronDurumu from "./HaritaSenkronDurumu";
 import HaritaTabletFix from "./HaritaTabletFix";
+import OtpViewerGate from "./OtpViewerGate";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#07111f", width: "device-width", initialScale: 1, viewportFit: "cover" };
 export default function RootLayout({children}:{children:React.ReactNode}) {
-  return <html lang="tr"><body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /><HaritaSenkronDurumu /><HaritaTabletFix /></body></html>;
+  return <html lang="tr"><body>{children}<OtpViewerGate /><HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /><HaritaSenkronDurumu /><HaritaTabletFix /></body></html>;
 }
 
 // Tablet geçmiş penceresi düzeltmesi: HaritaTabletFix global olarak etkin.
