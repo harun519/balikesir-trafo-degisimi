@@ -10,21 +10,35 @@ export default function HaritaTabletFix(){
       s.id=id;
       s.textContent=`
         @media (min-width:640px) and (max-width:1199px){
-          [data-trafo-gecmis-modal="1"]{padding:18px!important;align-items:center!important}
-          [data-trafo-gecmis-panel="1"]{height:auto!important;max-height:calc(100dvh - 110px)!important;width:min(94vw,980px)!important;border-radius:18px!important}
-          [data-trafo-gecmis-header="1"]{position:sticky!important;top:0!important;z-index:20!important;background:#fff!important}
-          [data-trafo-gecmis-kapat="1"]{position:sticky!important;top:0!important;right:0!important;z-index:30!important;width:48px!important;height:48px!important;background:#fee2e2!important;color:#dc2626!important;border:2px solid #fecaca!important}
-          [data-trafo-gecmis-scroll="1"]{max-height:calc(100dvh - 205px)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+          [data-trafo-gecmis-modal="1"]{padding:16px!important;align-items:center!important;justify-content:center!important}
+          [data-trafo-gecmis-panel="1"]{height:auto!important;max-height:calc(100dvh - 100px)!important;width:min(92vw,900px)!important;border-radius:18px!important;overflow:hidden!important}
+          [data-trafo-gecmis-header="1"]{position:relative!important;z-index:20!important;background:#fff!important;padding-right:70px!important}
+          [data-trafo-gecmis-kapat="1"]{position:absolute!important;top:12px!important;right:12px!important;z-index:9999!important;width:48px!important;height:48px!important;background:#fee2e2!important;color:#dc2626!important;border:2px solid #fecaca!important;border-radius:14px!important;font-size:28px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+          [data-trafo-gecmis-scroll="1"]{max-height:calc(100dvh - 210px)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important}
         }
       `;
       document.head.appendChild(s);
     }
 
-    // Harita ilk kez açıldıktan sonra tarayıcı oturumu boyunca sıcak tutulduğunu işaretle.
-    // TrafoHarita'nın IndexedDB önbelleği ikinci açılışta merkezi ZIP indirmeden yerel kopyayı kullanabilir.
-    const ac=()=>sessionStorage.setItem("trafo-harita-sicak","1");
-    window.addEventListener("trafo-harita-ac",ac);
-    return()=>window.removeEventListener("trafo-harita-ac",ac);
+    const duzenle=()=>{
+      const baslik=Array.from(document.querySelectorAll<HTMLElement>("div")).find(x=>(x.textContent||"").trim()==="Trafo Değişim Geçmişi");
+      if(!baslik)return;
+      const header=baslik.parentElement?.parentElement as HTMLElement|null;
+      const panel=header?.parentElement as HTMLElement|null;
+      const modal=panel?.parentElement as HTMLElement|null;
+      if(!header||!panel||!modal)return;
+      modal.dataset.trafoGecmisModal="1";
+      panel.dataset.trafoGecmisPanel="1";
+      header.dataset.trafoGecmisHeader="1";
+      const kapat=Array.from(header.querySelectorAll<HTMLButtonElement>("button")).find(b=>(b.textContent||"").trim()==="×");
+      if(kapat)kapat.dataset.trafoGecmisKapat="1";
+      const scroll=Array.from(panel.children).find(x=>x!==header) as HTMLElement|undefined;
+      if(scroll)scroll.dataset.trafoGecmisScroll="1";
+    };
+    const tik=()=>window.setTimeout(duzenle,80);
+    document.addEventListener("click",tik,{passive:true});
+    window.addEventListener("trafo-harita-gecmis-ac",tik as EventListener);
+    return()=>{document.removeEventListener("click",tik);window.removeEventListener("trafo-harita-gecmis-ac",tik as EventListener);};
   },[]);
   return null;
 }
