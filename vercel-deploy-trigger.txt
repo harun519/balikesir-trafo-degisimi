@@ -1,0 +1,2 @@
+Vercel redeploy trigger - 2026-09-11
+Harita görünümü son çalışan sürüme geri alındı.
