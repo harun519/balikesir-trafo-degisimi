@@ -20,3 +20,5 @@ export const viewport: Viewport = { themeColor: "#07111f", width: "device-width"
 export default function RootLayout({children}:{children:React.ReactNode}) {
   return <html lang="tr"><body>{children}<HaritaEntegrasyon /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /><HaritaSenkronDurumu /><HaritaTabletFix /></body></html>;
 }
+
+// Tablet geçmiş penceresi düzeltmesi: HaritaTabletFix global olarak etkin.
