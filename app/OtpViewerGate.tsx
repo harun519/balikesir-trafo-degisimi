@@ -19,23 +19,29 @@ export default function OtpViewerGate(){
   const [hata,setHata]=useState("");
 
   useEffect(()=>{
+    const ac=()=>{
+      setHata("");setMesaj("");setKod("");setAdim("email");setAcik(true);
+    };
     const yerlestir=()=>{
+      document.querySelectorAll("#trafoOtpViewerBtn,#otpViewerInlineTrafo").forEach(el=>el.remove());
       const buttons=[...document.querySelectorAll<HTMLButtonElement>("button")];
-      const original=buttons.find(b=>(b.textContent||"").includes("Misafir Olarak Görüntüle"));
+      const original=buttons.find(b=>b.dataset.trafoOtpTrigger==="1"||(b.textContent||"").includes("Misafir Olarak Görüntüle"));
       if(!original)return;
-      original.style.display="none";
-      original.setAttribute("aria-hidden","true");
-      if(document.getElementById("trafoOtpViewerBtn"))return;
-      const btn=document.createElement("button");
-      btn.id="trafoOtpViewerBtn";
-      btn.type="button";
-      btn.className=original.className;
-      btn.textContent="✉ E-posta Kodu ile Görüntüle";
-      btn.onclick=(e)=>{e.preventDefault();e.stopPropagation();setHata("");setMesaj("");setAdim("email");setAcik(true)};
-      original.insertAdjacentElement("afterend",btn);
+      original.dataset.trafoOtpTrigger="1";
+      original.textContent="👁 Misafir Girişi";
+      if(original.dataset.trafoOtpBound==="1")return;
+      original.dataset.trafoOtpBound="1";
+      original.addEventListener("click",e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        ac();
+      },true);
     };
     yerlestir();
-    const o=new MutationObserver(yerlestir);
+    const o=new MutationObserver(records=>{
+      if(records.some(x=>x.addedNodes.length||x.removedNodes.length))yerlestir();
+    });
     o.observe(document.body,{childList:true,subtree:true});
     return()=>o.disconnect();
   },[]);
