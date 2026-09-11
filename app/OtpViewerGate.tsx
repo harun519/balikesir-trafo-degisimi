@@ -22,28 +22,8 @@ export default function OtpViewerGate(){
     const ac=()=>{
       setHata("");setMesaj("");setKod("");setAdim("email");setAcik(true);
     };
-    const yerlestir=()=>{
-      document.querySelectorAll("#trafoOtpViewerBtn,#otpViewerInlineTrafo").forEach(el=>el.remove());
-      const buttons=[...document.querySelectorAll<HTMLButtonElement>("button")];
-      const original=buttons.find(b=>b.dataset.trafoOtpTrigger==="1"||(b.textContent||"").includes("Misafir Olarak Görüntüle"));
-      if(!original)return;
-      original.dataset.trafoOtpTrigger="1";
-      original.textContent="👁 Misafir Girişi";
-      if(original.dataset.trafoOtpBound==="1")return;
-      original.dataset.trafoOtpBound="1";
-      original.addEventListener("click",e=>{
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        ac();
-      },true);
-    };
-    yerlestir();
-    const o=new MutationObserver(records=>{
-      if(records.some(x=>x.addedNodes.length||x.removedNodes.length))yerlestir();
-    });
-    o.observe(document.body,{childList:true,subtree:true});
-    return()=>o.disconnect();
+    window.addEventListener("trafo-open-viewer-otp",ac);
+    return()=>window.removeEventListener("trafo-open-viewer-otp",ac);
   },[]);
 
   async function kodGonder(e?:FormEvent){

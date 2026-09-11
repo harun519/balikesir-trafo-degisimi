@@ -1448,7 +1448,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
               <div className="flex items-center gap-3 py-1"><div className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">veya</span><div className="h-px flex-1 bg-slate-200"/></div>
 
-              <button type="button" onClick={misafirGirisi} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-black text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">👁 Misafir Olarak Görüntüle</button>
+              <button type="button" onClick={()=>window.dispatchEvent(new Event("trafo-open-viewer-otp"))} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-black text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">👁 Misafir Girişi</button>
 
               <div className="flex items-center justify-center gap-2 pt-1 text-[11px] text-slate-400"><span>🔒</span><span>Tüm verileriniz güvenle korunmaktadır.</span></div>
             </form>
