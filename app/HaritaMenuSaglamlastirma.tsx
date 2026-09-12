@@ -16,12 +16,23 @@ export default function HaritaMenuSaglamlastirma(){
         button.dataset.trafoHaritaMenu="1";
         button.textContent="🗺️ Trafo Haritası";
         button.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";
-        button.onclick=()=>window.dispatchEvent(new Event("trafo-harita-ac"));
+        button.onclick=()=>{
+          window.dispatchEvent(new Event("trafo-harita-ac"));
+          const aside=button.closest("aside");
+          if(aside&&!window.matchMedia("(min-width: 1024px)").matches){
+            const close=Array.from(aside.querySelectorAll("button")).find(x=>x.textContent?.trim()==="×");
+            close?.click();
+          }
+          window.scrollTo({top:0,behavior:"smooth"});
+        };
         target.insertAdjacentElement("afterend",button);
       }
     };
     ensure();
-    const onChange=()=>requestAnimationFrame(ensure);
+    const onChange=()=>{
+      requestAnimationFrame(ensure);
+      window.setTimeout(ensure,80);
+    };
     document.addEventListener("click",onChange,true);
     window.addEventListener("focus",onChange);
     window.addEventListener("pageshow",onChange);
