@@ -1,7 +1,8 @@
 "use client";
 
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { createClient, Session } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
+import { getSupabaseBrowserClient } from "./supabaseClient";
 import { createPortal } from "react-dom";
 import ExcelJS from "exceljs";
 
