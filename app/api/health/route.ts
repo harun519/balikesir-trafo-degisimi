@@ -45,7 +45,8 @@ export async function GET(){
       lastBackupAt:backup?.created_at||null,
       lastBackupName:backup?.name||null,
       latencyMs:Date.now()-started,
-      checkedAt:new Date().toISOString()
+      checkedAt:new Date().toISOString(),
+      backupScheduleConfigured:Boolean(process.env.CRON_SECRET)
     },{headers:{"Cache-Control":"no-store"}});
   }catch(e:any){
     return NextResponse.json({ok:false,service:"trafo",database:false,error:e?.message||"health check failed",latencyMs:Date.now()-started,checkedAt:new Date().toISOString()},{status:503,headers:{"Cache-Control":"no-store"}});
