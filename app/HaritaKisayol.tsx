@@ -4,11 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 export default function HaritaKisayol(){
-  const supabase=useMemo(()=>{
-    const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    return url&&key?createClient(url,key):null;
-  },[]);
+  const supabase=useMemo(getSupabaseBrowserClient,[]);
   const [giris,setGiris]=useState(false);
   useEffect(()=>{
     if(!supabase)return;

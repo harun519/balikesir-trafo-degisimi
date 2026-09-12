@@ -5,11 +5,7 @@ import { createClient, Session } from "@supabase/supabase-js";
 import TrafoHarita from "../TrafoHarita";
 
 export default function HaritaPage(){
-  const supabase=useMemo(()=>{
-    const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    return url&&key?createClient(url,key):null;
-  },[]);
+  const supabase=useMemo(getSupabaseBrowserClient,[]);
   const [session,setSession]=useState<Session|null>(null);
   const [kontrol,setKontrol]=useState(true);
 

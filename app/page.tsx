@@ -71,11 +71,7 @@ const inputSinif="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5
 
 type SistemYedekDosyasi={name:string;created_at:string|null;updated_at:string|null;size:number;url:string};
 export default function Home() {
-  const supabase = useMemo(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    return url && key ? createClient(url, key) : null;
-  }, []);
+  const supabase = useMemo(getSupabaseBrowserClient, []);
 
   const [email,setEmail]=useState(""); const [password,setPassword]=useState("");
   const [session,setSession]=useState<Session|null>(null); const [authKontrol,setAuthKontrol]=useState(true);

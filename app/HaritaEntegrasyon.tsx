@@ -15,7 +15,7 @@ const NEDENLER=["ARIZA","DÖNÜŞÜM","GÜÇ DEĞİŞİMİ","TRAFO İPTAL","YATI
 export default function HaritaEntegrasyon(){
  const [acik,setAcik]=useState(false),[gecmis,setGecmis]=useState<any[]|null>(null),[gecmisLok,setGecmisLok]=useState(""),[gecmisYukleniyor,setGecmisYukleniyor]=useState(false),[gecmisHata,setGecmisHata]=useState("");
  const [duzenlenenId,setDuzenlenenId]=useState<any>(null),[form,setForm]=useState<any>({}),[kaydediliyor,setKaydediliyor]=useState(false),[duzenlemeHata,setDuzenlemeHata]=useState("");
- const supabase=useMemo(()=>{const u=process.env.NEXT_PUBLIC_SUPABASE_URL,k=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;return u&&k?createClient(u,k):null;},[]);
+ const supabase=useMemo(getSupabaseBrowserClient,[]);
 
  useEffect(()=>{const ac=()=>setAcik(true);window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
  useEffect(()=>{const f=(e:MouseEvent)=>{const b=(e.target as HTMLElement|null)?.closest("nav button") as HTMLButtonElement|null;if(!b||b.dataset.trafoHaritaMenu==="1")return;setAcik(false);setGecmis(null);};document.addEventListener("click",f,true);return()=>document.removeEventListener("click",f,true);},[]);

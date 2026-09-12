@@ -4,11 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 export default function OtpViewerGate(){
-  const supabase=useMemo(()=>{
-    const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    return url&&key?createClient(url,key):null;
-  },[]);
+  const supabase=useMemo(getSupabaseBrowserClient,[]);
   const adminEmail=(process.env.NEXT_PUBLIC_ADMIN_EMAIL||"harun519@gmail.com").trim().toLowerCase();
   const [acik,setAcik]=useState(false);
   const [email,setEmail]=useState("");
