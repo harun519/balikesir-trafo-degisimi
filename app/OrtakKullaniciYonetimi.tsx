@@ -21,9 +21,10 @@ export default function OrtakKullaniciYonetimi(){
   useEffect(()=>{if(open)load()},[open]);
 
   async function load(){setLoading(true);setMsg("");try{
+    const client=supabase;if(!client)throw new Error("Supabase bağlantısı kurulamadı.");
     const [{data:a,error:ae},{data:s,error:se}]=await Promise.all([
-      supabase.from("app_users").select("id,email,role").order("email"),
-      supabase.from("scada_users").select("id,email,role").order("email")
+      client.from("app_users").select("id,email,role").order("email"),
+      client.from("scada_users").select("id,email,role").order("email")
     ]);
     if(ae)throw ae;if(se)throw se;
     const map=new Map<string,UserRow>();
@@ -33,8 +34,9 @@ export default function OrtakKullaniciYonetimi(){
   }catch(e:any){setMsg(e?.message||"Kullanıcılar okunamadı. Admin oturumu gerekli.")}finally{setLoading(false)}}
 
   async function role(id:string,app:"trafo"|"scada",value:string){setMsg("");try{
+    const client=supabase;if(!client)throw new Error("Supabase bağlantısı kurulamadı.");
     const table=app==="trafo"?"app_users":"scada_users";
-    const {error}=await supabase.from(table).update({role:value,updated_at:new Date().toISOString()}).eq("id",id);
+    const {error}=await client.from(table).update({role:value,updated_at:new Date().toISOString()}).eq("id",id);
     if(error)throw error;setMsg("Yetki güncellendi.");await load();
   }catch(e:any){setMsg(e?.message||"Yetki güncellenemedi.")}}
 
