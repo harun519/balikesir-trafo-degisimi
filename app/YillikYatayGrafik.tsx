@@ -37,7 +37,7 @@ export default function YillikYatayGrafik(){
         const row=ch as HTMLElement;
         const children=[...row.children] as HTMLElement[];
         if(children.length<3)return;
-        const total=Number((children[0].textContent||"").trim())||0;
+        const toplam=Number((children[0].textContent||"").trim())||0;
         const bars=children[1];
         const yil=Number((children[2].textContent||"").trim());
         if(!yil)return;
