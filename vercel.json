@@ -5,7 +5,7 @@
       "schedule": "0 5 * * *"
     },
     {
-      "path": "/api/sistem-yedek",
+      "path": "/api/sunucu-yedek",
       "schedule": "30 5 * * *"
     }
   ]
