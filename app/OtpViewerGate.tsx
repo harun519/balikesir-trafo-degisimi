@@ -32,7 +32,7 @@ export default function OtpViewerGate(){
       return;
     }
     setYukleniyor(true);setHata("");setMesaj("");
-    const {error}=await supabase.auth.signInWithOtp({email:temiz,options:{shouldCreateUser:true}});
+    const {error}=await supabase.auth.signInWithOtp({email:temiz,options:{shouldCreateUser:true,emailRedirectTo:"https://balikesir-trafo-degisimi.vercel.app/"}});
     if(error){
       const raw=error.message||"";
       setHata(/rate limit/i.test(raw)?"Çok fazla doğrulama isteği gönderildi. Bir süre bekleyip tekrar deneyin.":(raw||"Doğrulama e-postası gönderilemedi."));
