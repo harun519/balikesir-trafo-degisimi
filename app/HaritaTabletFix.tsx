@@ -19,6 +19,11 @@ function gecmisModaliniDuzelt(){
   return true;
 }
 
+function haritayiCanlandir(){
+  const fire=()=>window.dispatchEvent(new Event("resize"));
+  [0,80,220,500,900].forEach(ms=>window.setTimeout(fire,ms));
+}
+
 export default function HaritaTabletFix(){
   useEffect(()=>{
     const cssId="trafo-tablet-history-fix-v2";
@@ -49,11 +54,27 @@ export default function HaritaTabletFix(){
         }
       },80);
     };
-    document.addEventListener("click",baslat,true);
+    const click=(e:MouseEvent)=>{
+      baslat();
+      const el=e.target as HTMLElement|null;
+      if(el?.closest("button,a")?.textContent?.toLocaleLowerCase("tr").includes("harita"))haritayiCanlandir();
+    };
+    const resume=()=>haritayiCanlandir();
+    const visibility=()=>{if(document.visibilityState==="visible")resume()};
+
+    document.addEventListener("click",click,true);
     window.addEventListener("trafo-harita-gecmis-ac",baslat as EventListener);
+    window.addEventListener("trafo-app-resume",resume as EventListener);
+    window.addEventListener("pageshow",resume);
+    document.addEventListener("visibilitychange",visibility);
+    haritayiCanlandir();
+
     return()=>{
-      document.removeEventListener("click",baslat,true);
+      document.removeEventListener("click",click,true);
       window.removeEventListener("trafo-harita-gecmis-ac",baslat as EventListener);
+      window.removeEventListener("trafo-app-resume",resume as EventListener);
+      window.removeEventListener("pageshow",resume);
+      document.removeEventListener("visibilitychange",visibility);
       if(timer)window.clearInterval(timer);
     };
   },[]);
