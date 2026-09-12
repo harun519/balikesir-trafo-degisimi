@@ -24,3 +24,87 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Yıllık analiz: yatay, yığılmış ve yeni yıl en üstte. */
+#zaman-analizi .yillik-yatay-scroller { overflow-x: auto !important; }
+#zaman-analizi .yillik-yatay-chart { min-width: 700px !important; width: 100% !important; }
+#zaman-analizi .yillik-yatay-plot { height: auto !important; min-height: 0 !important; padding: 8px 0 2px !important; }
+#zaman-analizi .yillik-yatay-plot > .pointer-events-none { display: none !important; }
+#zaman-analizi .yillik-yatay-groups {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  padding: 2px 12px 4px !important;
+}
+#zaman-analizi .yillik-yatay-row {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0,1fr) 46px !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+}
+#zaman-analizi .yillik-yatay-label {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  padding: 0 10px 0 0 !important;
+  border: 0 !important;
+  width: auto !important;
+  text-align: right !important;
+  font-size: 11px !important;
+  color: #334155 !important;
+}
+#zaman-analizi .yillik-yatay-bars {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  height: 27px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+  background: #f1f5f9 !important;
+}
+#zaman-analizi .yillik-yatay-segment {
+  height: 27px !important;
+  min-width: 0 !important;
+  border-radius: 0 !important;
+  flex: none !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: filter .15s ease !important;
+}
+#zaman-analizi .yillik-yatay-value {
+  pointer-events: none;
+  color: white;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(15,23,42,.35);
+}
+#zaman-analizi .yillik-yatay-total {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  justify-self: start !important;
+  background: transparent !important;
+  padding: 0 0 0 9px !important;
+  font-size: 11px !important;
+  color: #0f172a !important;
+}
+
+@media (max-width: 639px) {
+  #zaman-analizi .yillik-yatay-chart { min-width: 560px !important; }
+  #zaman-analizi .yillik-yatay-groups { gap: 8px !important; padding-left: 4px !important; padding-right: 4px !important; }
+  #zaman-analizi .yillik-yatay-row { grid-template-columns: 44px minmax(0,1fr) 38px !important; }
+  #zaman-analizi .yillik-yatay-bars, #zaman-analizi .yillik-yatay-segment { height: 24px !important; }
+}
