@@ -123,7 +123,7 @@ export default function Home() {
   const [mahalleYukleniyor,setMahalleYukleniyor]=useState(false);
   const [mahalleHata,setMahalleHata]=useState("");
   const [logArama,setLogArama]=useState(""); const [gecmisKayit,setGecmisKayit]=useState<TrafoKaydi|null>(null);
-  const [formHatalari,setFormHatalari]=useState<string[]>([]); const [pwaGuncellemeVar,setPwaGuncellemeVar]=useState(false);
+  const [formHatalari,setFormHatalari]=useState<string[]>([]);
   const [dashboardHizliFiltre,setDashboardHizliFiltre]=useState<
     ""|"bu-yil"|"son30"|"ariza"|"donusum"|"guc-degisimi"|"trafo-iptal"|"yatirim"|"yeni-tesis"|"ariza-riski"|"kismi-arizali"|"guc-artisi"|"guc-azalisi"|"ayni-guc"|"tarihi-bos"
   >("");
@@ -258,65 +258,7 @@ export default function Home() {
     return()=>window.removeEventListener("scroll",takip);
   },[sayfa]);
 
-  useEffect(()=>{
-    if(typeof window==="undefined"||!("serviceWorker" in navigator))return;
 
-    let reg:ServiceWorkerRegistration|null=null;
-    let timer:number|undefined;
-    let kapandi=false;
-
-    const workerTakip=(worker:ServiceWorker|null)=>{
-      if(!worker)return;
-      const durumKontrol=()=>{
-        if(worker.state==="installed"&&navigator.serviceWorker.controller&&!kapandi){
-          setPwaGuncellemeVar(true);
-        }
-      };
-      durumKontrol();
-      worker.addEventListener("statechange",durumKontrol);
-    };
-
-    const kayitTakip=(r:ServiceWorkerRegistration)=>{
-      if(r.waiting&&!kapandi)setPwaGuncellemeVar(true);
-      workerTakip(r.installing);
-    };
-
-    const kontrol=async()=>{
-      try{
-        const r=reg??await navigator.serviceWorker.getRegistration();
-        if(!r)return;
-        reg=r;
-        kayitTakip(r);
-        await r.update();
-        kayitTakip(r);
-      }catch{}
-    };
-
-    const gorunurlukKontrol=()=>{
-      if(document.visibilityState==="visible")kontrol();
-    };
-
-    navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>{
-      if(kapandi)return;
-      reg=r;
-      kayitTakip(r);
-      r.addEventListener("updatefound",()=>workerTakip(r.installing));
-      kontrol();
-      timer=window.setInterval(kontrol,60*1000);
-    }).catch(()=>{});
-
-    window.addEventListener("focus",kontrol);
-    window.addEventListener("pageshow",kontrol);
-    document.addEventListener("visibilitychange",gorunurlukKontrol);
-
-    return()=>{
-      kapandi=true;
-      window.removeEventListener("focus",kontrol);
-      window.removeEventListener("pageshow",kontrol);
-      document.removeEventListener("visibilitychange",gorunurlukKontrol);
-      if(timer)window.clearInterval(timer);
-    };
-  },[]);
 
   useEffect(() => {
     if(!supabase){setAuthHata("Supabase bağlantısı kurulamadı.");setAuthKontrol(false);return;}
@@ -405,16 +347,6 @@ export default function Home() {
     await kullanicilariGetir();
     setBasariMesaji("Kullanıcı yetkisi güncellendi.");setTimeout(()=>setBasariMesaji(""),2500);
   }
-  function pwaGuncelle(){
-    navigator.serviceWorker.getRegistration().then(reg=>{
-      if(reg?.waiting){
-        let yenilendi=false;
-        navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!yenilendi){yenilendi=true;window.location.reload();}});
-        reg.waiting.postMessage({type:"SKIP_WAITING"});
-      }else window.location.reload();
-    });
-  }
-
   
   async function arsivKayitlariniGetir(){
     if(!supabase)return;
@@ -1472,7 +1404,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
         <header className="sticky top-0 z-30 flex min-h-[76px] items-center gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-xl sm:px-5 lg:px-7"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 shadow-sm lg:hidden">☰</button><div className="relative min-w-0 flex-1 sm:min-w-[280px] sm:max-w-xl"><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={genelArama} onFocus={()=>setGenelAramaAcik(true)} onChange={e=>{setGenelArama(e.target.value);setGenelAramaAcik(true);}} placeholder="Kayıt, trafo, mahalle, seri no veya form ara..." className="w-full rounded-xl border border-slate-200 bg-[#f8fafc] py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"/></div>{genelAramaAcik&&genelArama.trim().length>=2&&<div className="absolute left-0 right-0 top-[54px] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,.18)]"><div className="max-h-[420px] overflow-y-auto p-2"><div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Trafo Kayıtları</div>{genelAramaSonuclari.kayit.length?genelAramaSonuclari.kayit.map(k=><button key={`k-${k.id}`} type="button" onClick={()=>{setDetayKayit(k);setGenelAramaAcik(false);}} className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-blue-50"><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{k.ilce||"-"} / {k.mahalle||"-"} • {k.trafo_id||k.tr||"Trafo"}</div><div className="mt-1 text-[10px] text-slate-400">{tarihGoster(k.tarih)} • {k.degisim_nedeni||"-"}</div></div><span className="text-blue-600">→</span></button>):<div className="px-3 py-2 text-xs text-slate-400">Kayıt bulunamadı.</div>}<div className="mt-1 border-t border-slate-100 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Arşiv Dosyaları</div>{genelAramaSonuclari.arsiv.length?genelAramaSonuclari.arsiv.map(a=><button key={`a-${a.id}`} type="button" onClick={()=>{if(a.signed_url)window.open(a.signed_url,"_blank");setGenelAramaAcik(false);}} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-blue-50"><span className="text-xl">{a.mime_type.startsWith("image/")?"🖼️":"📄"}</span><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{a.dosya_adi}</div><div className="mt-1 text-[10px] text-slate-400">{a.yil} • {a.ay} {a.ilce?`• ${a.ilce}`:""}</div></div></button>):<div className="px-3 py-2 text-xs text-slate-400">Dosya bulunamadı.</div>}</div></div>}</div><div className="ml-auto flex items-center gap-2"><a href="https://balikesir-sistem-isletme.vercel.app" className="inline-flex items-center gap-2 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2.5 text-[11px] font-black text-white shadow-[0_8px_20px_rgba(249,115,22,.30)] ring-2 ring-orange-100 transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(249,115,22,.38)] sm:px-4" title="Balıkesir Sistem İşletme portalına dön"><span className="text-base">🏠</span><span className="sm:hidden">Portal</span><span className="hidden sm:inline">BALIKESİR SİSTEM İŞLETME</span></a>{session&&duzenleyebilir&&<button type="button" disabled={driveAktariliyor} onClick={googleDriveTumunuAktar} className="hidden rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 md:block">☁ {driveAktariliyor?"Senkronize ediliyor...":"Drive Senkronizasyonu"}</button>}<div className="relative"><button type="button" onClick={()=>setBildirimAcik(x=>!x)} className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm shadow-sm hover:bg-slate-50">🔔{okunmamisBildirimler.length>0&&<span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white">{okunmamisBildirimler.length}</span>}</button>{bildirimAcik&&<div className="absolute right-0 top-12 z-50 w-[330px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,.18)]"><div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"><div><div className="text-sm font-black">Bildirimler</div><div className="text-[10px] text-slate-400">Sistem ve arşiv durumu</div></div><div className="flex items-center gap-2">{okunmamisBildirimler.length>0&&<button type="button" onClick={tumBildirimleriOkunduYap} className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[9px] font-black text-blue-700">Tümünü Oku</button>}<button onClick={()=>setBildirimAcik(false)} className="text-slate-400">×</button></div></div><div className="max-h-[360px] overflow-y-auto p-2">{bildirimler.length?bildirimler.map(b=>{const okundu=okunanBildirimler.includes(b.id);return <button key={b.id} type="button" onClick={()=>{bildirimOkunduYap(b.id);if(b.id.startsWith("arsiv-")){setSayfa("arsiv");}setBildirimAcik(false);}} className={`flex w-full gap-3 rounded-xl p-3 text-left transition hover:bg-slate-50 ${okundu?"opacity-55":"bg-blue-50/35"}`}><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${b.tur==="warn"?"bg-red-50":b.tur==="ok"?"bg-emerald-50":"bg-blue-50"}`}>{b.ikon}</div><div className="min-w-0"><div className="flex items-center gap-2"><div className="truncate text-xs font-black text-slate-800">{b.baslik}</div>{!okundu&&<span className="h-2 w-2 shrink-0 rounded-full bg-blue-500"/>}</div><div className="mt-1 text-[10px] leading-4 text-slate-400">{b.alt}</div></div></button>}):<div className="p-6 text-center text-xs text-slate-400">Yeni bildirim yok.</div>}</div></div>}</div><div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">H</div><div><div className="text-[11px] font-black text-slate-800">{misafirModu?"Misafir":"Admin"}</div><div className="text-[9px] text-slate-400">{misafirModu?"Görüntüleme":kullaniciRolu}</div></div></div></div></header>
 
         <div className="mx-auto w-full min-w-0 max-w-[1700px] p-3 sm:p-5 lg:p-6">
-          {pwaGuncellemeVar&&<div className="mb-5 flex flex-col gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/10 p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black text-orange-300">⚡ Yeni sürüm hazır</div><div className="mt-1 text-xs text-slate-400">Uygulamanın güncel sürümünü yükleyebilirsiniz.</div></div><button onClick={pwaGuncelle} className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-black">Güncelle</button></div>}
+          
           {genelHata&&<HataKutusu>{genelHata}</HataKutusu>}{basariMesaji&&<div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">{basariMesaji}</div>}
 
           {sayfa==="dashboard"&&<>
