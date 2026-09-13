@@ -2332,7 +2332,44 @@ function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:stri
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
-function BarChart({items,max,aylik=false,onBarClick}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean;onBarClick?:(label:string,neden:string)=>void}){return <div className="mt-5 w-full min-w-0 max-w-full overflow-x-auto"><div className={aylik?"min-w-[620px] sm:min-w-[900px]":"w-full min-w-0 sm:min-w-[760px]"}><div className={aylik?"relative h-[270px]":"relative h-[320px] sm:h-[350px]"}><div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">{[1,2,3,4,5].map(i=><div key={i} className="border-t border-dashed border-slate-200"/>)}</div><div className="absolute inset-0 flex items-end gap-1 px-1 sm:gap-3 sm:px-2">{items.map(it=><div key={it.label} className="flex min-w-[34px] flex-1 flex-col items-center justify-end sm:min-w-[62px]"><div className="mb-2 rounded-full bg-slate-100 px-1.5 py-1 text-slate-700 text-[8px] font-black sm:px-2 sm:text-[9px]">{it.total}</div><div className={`flex items-end gap-px sm:gap-[2px] ${aylik?"h-[180px]":"h-[225px] sm:h-[255px]"}`}>{NEDENLER.map(n=>{const v=it.values[n.ad]||0,h=v?Math.max(5,(v/max)*(aylik?160:225)):0;return <button type="button" onClick={()=>v&&onBarClick?.(it.label,n.ad)} key={n.ad} title={`${it.label} - ${n.ad}: ${v}${v?" • Kayıtlara git":""}`} className={`${aylik?"w-[4px] rounded-t sm:w-[5px]":"w-[3px] rounded-t sm:w-[7px] sm:rounded-t-md"} ${v&&onBarClick?"cursor-pointer hover:brightness-125":"cursor-default"}`} style={{height:`${h}px`,backgroundColor:n.renk}}/>})}</div><div className="mt-3 w-full border-t border-slate-200 pt-2 text-center text-[9px] font-black text-slate-500 sm:text-[10px]">{it.label}</div></div>)}</div></div></div></div>}
+function BarChart({items,max,aylik=false,onBarClick}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean;onBarClick?:(label:string,neden:string)=>void}){
+  const kaydirma=useRef<HTMLDivElement>(null);
+  const kaydir=(yon:-1|1)=>{
+    const alan=kaydirma.current;
+    if(!alan)return;
+    alan.scrollBy({left:yon*Math.max(240,alan.clientWidth*.72),behavior:"smooth"});
+  };
+  const minGenislik=aylik?Math.max(760,items.length*66):Math.max(760,items.length*82);
+
+  return <div className="mt-5 w-full min-w-0 max-w-full">
+    <div ref={kaydirma} className="w-full max-w-full overflow-x-auto overscroll-x-contain pb-2" style={{scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}}>
+      <div style={{minWidth:`${minGenislik}px`}}>
+        <div className={aylik?"relative h-[270px]":"relative h-[320px] sm:h-[350px]"}>
+          <div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">
+            {[1,2,3,4,5].map(i=><div key={i} className="border-t border-dashed border-slate-200"/>)}
+          </div>
+          <div className="absolute inset-0 flex items-end gap-2 px-2 sm:gap-3">
+            {items.map(it=><div key={it.label} className="flex min-w-[62px] flex-1 flex-col items-center justify-end">
+              <div className="mb-2 rounded-full bg-slate-100 px-2 py-1 text-[9px] font-black text-slate-700">{it.total}</div>
+              <div className={`flex items-end justify-center gap-[2px] ${aylik?"h-[180px]":"h-[225px] sm:h-[255px]"}`}>
+                {NEDENLER.filter(n=>(it.values[n.ad]||0)>0).map(n=>{
+                  const v=it.values[n.ad]||0,h=Math.max(5,(v/max)*(aylik?160:225));
+                  return <button type="button" onClick={()=>onBarClick?.(it.label,n.ad)} key={n.ad} title={`${it.label} - ${n.ad}: ${v} • Kayıtlara git`} aria-label={`${it.label}, ${n.ad}, ${v} kayıt`} className={`${aylik?"w-[5px] rounded-t":"w-[7px] rounded-t-md"} ${onBarClick?"cursor-pointer hover:brightness-125":"cursor-default"}`} style={{height:`${h}px`,backgroundColor:n.renk}}/>
+                })}
+              </div>
+              <div className="mt-3 w-full border-t border-slate-200 pt-2 text-center text-[10px] font-black text-slate-500">{it.label}</div>
+            </div>)}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="mt-2 flex items-center justify-center gap-3 sm:hidden">
+      <button type="button" onClick={()=>kaydir(-1)} aria-label="Grafiği sola kaydır" className="flex h-10 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-black text-slate-600 shadow-sm active:bg-slate-100">←</button>
+      <span className="text-[10px] font-bold text-slate-400">Grafiği sağa–sola kaydır</span>
+      <button type="button" onClick={()=>kaydir(1)} aria-label="Grafiği sağa kaydır" className="flex h-10 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-black text-slate-600 shadow-sm active:bg-slate-100">→</button>
+    </div>
+  </div>
+}
 function NedenGucHucre({sayi,oran,ton}:{sayi:number;oran:number;ton:"emerald"|"blue"|"red"}){
   const bar={
     emerald:"bg-emerald-500",
