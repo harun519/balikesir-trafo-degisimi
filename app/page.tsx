@@ -1490,16 +1490,16 @@ const filtrelenmisKayitlar=useMemo(()=>{
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><KpiKart baslik={seciliNedenKpi.ad} sayi={nedenSayilari[seciliNedenKpi.ad]||0} renk={seciliNedenKpi.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:seciliNedenKpi.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN YOĞUN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`} onClick={()=>enCokIlce[0]!=="-"&&kayitListesineGit({ilce:String(enCokIlce[0]),yil:dashboardYil,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/></div>
             <div className="mt-3"><button onClick={()=>setDetayliKpiAcik(x=>!x)} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-400 hover:text-white">{detayliKpiAcik?"▲ Detaylı KPI'ları Gizle":"▼ Detaylı KPI'ları Göster"}</button>{detayliKpiAcik&&<div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">{NEDENLER.filter(n=>n.ad!=="ARIZA").map(n=><KpiKart key={n.ad} baslik={n.ad} sayi={nedenSayilari[n.ad]||0} renk={n.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/>)}</div>}</div>
 
-            <div id="degisim-nedenleri" className="mt-5 grid scroll-mt-24 items-stretch gap-5 xl:grid-cols-[.72fr_1.28fr]">
+            <div id="degisim-nedenleri" className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 items-stretch gap-5 xl:grid-cols-[minmax(0,.72fr)_minmax(0,1.28fr)]">
               <Panel baslik="Değişim Nedenleri" altBaslik="Seçili filtreye göre dağılım" className="h-full" daraltilabilir acik={acikAnalizler["degisim-nedenleri"]} onToggle={()=>analizAcKapa("degisim-nedenleri")}>
                 <div className="flex min-h-[430px] flex-col"><div className="flex flex-1 items-center justify-center py-5"><div className="relative h-44 w-44 rounded-full sm:h-48 sm:w-48" style={{background:`conic-gradient(${donutGradient})`}}><div className="absolute inset-7 flex flex-col items-center justify-center rounded-full border border-slate-200 bg-white"><div className="text-3xl font-black">{dashboardKayitlari.length}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Toplam</div></div></div></div>
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">{NEDENLER.map(n=><button type="button" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})} key={n.ad} className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50/60"><div className="flex min-w-0 items-center gap-2.5"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:n.renk}}/><span className="truncate text-[11px] font-bold text-slate-700">{n.ad}</span></div><span className="ml-3 text-sm font-black">{nedenSayilari[n.ad]||0} →</span></button>)}</div>
                 </div>
               </Panel>
-              <div id="zaman-analizi" className="scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
+              <div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
             </div>
 
-            <div className="mt-5"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
+            <div className="mt-5 min-w-0 max-w-full overflow-hidden"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
 
             <div className="mt-5 scroll-mt-24" id="neden-guc-analizi">
               <Panel
@@ -1514,8 +1514,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <GucKpi baslik="KARŞILAŞTIRILABİLEN" sayi={gucAnalizi.karsilastirilabilir} alt={`${dashboardKayitlari.length} toplam kayıttan`} ikon="⚡" ton="orange"/>
                 </div>
 
-                <div className="mt-5 grid gap-5 xl:grid-cols-[1.7fr_.9fr]">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 sm:p-5">
+                <div className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,.9fr)]">
+                  <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-5">
                     <div className="mb-4 flex items-center justify-between gap-4">
                       <div>
                         <div className="text-sm font-black">Değişim Nedenine Göre Güç Dağılımı</div>
@@ -1523,7 +1523,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="w-0 min-w-full max-w-full overflow-x-auto overscroll-x-contain">
                       <div className="min-w-[760px]">
                         <div className="grid grid-cols-[1.35fr_.55fr_1fr_1fr_1fr_.7fr] gap-3 border-b border-slate-200 px-3 pb-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
                           <div>Değişim Nedeni</div>
@@ -1561,7 +1561,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 sm:p-5">
+                  <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-5">
                     <div>
                       <div className="text-sm font-black">Nedene Göre En Sık Güç Geçişleri</div>
                       <div className="mt-1 text-xs text-slate-500">Sökülen → takılan güç</div>
@@ -2341,8 +2341,8 @@ function BarChart({items,max,aylik=false,onBarClick}:{items:{label:string;total:
   };
   const minGenislik=aylik?Math.max(760,items.length*66):Math.max(760,items.length*82);
 
-  return <div className="mt-5 w-full min-w-0 max-w-full">
-    <div ref={kaydirma} className="w-full max-w-full overflow-x-auto overscroll-x-contain pb-2" style={{scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}}>
+  return <div className="mt-5 w-full min-w-0 max-w-full overflow-hidden">
+    <div ref={kaydirma} className="w-0 min-w-full max-w-full overflow-x-auto overscroll-x-contain pb-2" style={{scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}}>
       <div style={{minWidth:`${minGenislik}px`}}>
         <div className={aylik?"relative h-[270px]":"relative h-[320px] sm:h-[350px]"}>
           <div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">
