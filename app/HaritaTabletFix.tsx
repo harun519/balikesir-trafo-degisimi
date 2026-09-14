@@ -19,14 +19,19 @@ function gecmisModaliniDuzelt(){
   return true;
 }
 
+let resizeBekliyor=false;
 function haritayiCanlandir(){
-  const fire=()=>window.dispatchEvent(new Event("resize"));
-  [0,80,220,500,900].forEach(ms=>window.setTimeout(fire,ms));
+  if(resizeBekliyor)return;
+  resizeBekliyor=true;
+  requestAnimationFrame(()=>{
+    window.dispatchEvent(new Event("resize"));
+    window.setTimeout(()=>{resizeBekliyor=false;},180);
+  });
 }
 
 export default function HaritaTabletFix(){
   useEffect(()=>{
-    const cssId="trafo-tablet-history-fix-v2";
+    const cssId="trafo-tablet-history-fix-v3";
     if(!document.getElementById(cssId)){
       const s=document.createElement("style");
       s.id=cssId;
@@ -37,6 +42,9 @@ export default function HaritaTabletFix(){
           [data-trafo-gecmis-header="1"]{position:relative!important;z-index:20!important;background:#fff!important;padding-right:76px!important;flex-shrink:0!important}
           [data-trafo-gecmis-kapat="1"]{position:absolute!important;top:10px!important;right:10px!important;z-index:99999!important;width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important;background:#fee2e2!important;color:#dc2626!important;border:2px solid #fecaca!important;border-radius:14px!important;font-size:30px!important;display:flex!important;align-items:center!important;justify-content:center!important;touch-action:manipulation!important;cursor:pointer!important}
           [data-trafo-gecmis-scroll="1"]{min-height:0!important;max-height:none!important;flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important}
+          .leaflet-map-pane,.leaflet-tile-pane,.leaflet-marker-pane{will-change:transform}
+          .leaflet-marker-icon,.leaflet-marker-shadow{transition:none!important;animation:none!important}
+          .leaflet-popup{will-change:auto!important}
         }
       `;
       document.head.appendChild(s);
@@ -46,18 +54,19 @@ export default function HaritaTabletFix(){
     const baslat=()=>{
       if(timer)window.clearInterval(timer);
       let deneme=0;
+      if(gecmisModaliniDuzelt())return;
       timer=window.setInterval(()=>{
         deneme++;
-        if(gecmisModaliniDuzelt()||deneme>=25){
+        if(gecmisModaliniDuzelt()||deneme>=8){
           if(timer)window.clearInterval(timer);
           timer=undefined;
         }
-      },80);
+      },160);
     };
     const click=(e:MouseEvent)=>{
-      baslat();
       const el=e.target as HTMLElement|null;
-      if(el?.closest("button,a")?.textContent?.toLocaleLowerCase("tr").includes("harita"))haritayiCanlandir();
+      const t=el?.closest("button,a")?.textContent?.toLocaleLowerCase("tr")||"";
+      if(t.includes("trafo haritası")||t.includes("harita"))haritayiCanlandir();
     };
     const resume=()=>haritayiCanlandir();
     const visibility=()=>{if(document.visibilityState==="visible")resume()};
@@ -67,7 +76,6 @@ export default function HaritaTabletFix(){
     window.addEventListener("trafo-app-resume",resume as EventListener);
     window.addEventListener("pageshow",resume);
     document.addEventListener("visibilitychange",visibility);
-    haritayiCanlandir();
 
     return()=>{
       document.removeEventListener("click",click,true);
