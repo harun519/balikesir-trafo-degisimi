@@ -15,21 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch Trafo map performance and sync
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           from pathlib import Path
+
           p=Path('app/TrafoHarita.tsx')
           s=p.read_text(encoding='utf-8')
 
           old='''  const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);'''
           new='''  const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null), buildingKeyRef = useRef(""), fitKeyRef = useRef("");'''
-          if old not in s: raise SystemExit('map refs anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           old='''[degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi'''
           new='''[degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(() => typeof window === "undefined" ? true : !window.matchMedia("(max-width: 1100px), (pointer: coarse)").matches), [noktaSayisi'''
-          if old not in s: raise SystemExit('tablet polygon anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           old='''    yukle(); oturumBilgisi().catch(() => {});
     return () => { kapandi = true; };
@@ -56,8 +56,7 @@ jobs:
       if (kanal) supabase?.removeChannel(kanal);
     };
   }, [supabase]);'''
-          if old not in s: raise SystemExit('sync effect anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           old='''    if (pointLayer.current) { map.removeLayer(pointLayer.current); pointLayer.current = null; }
     if (buildingLayer.current) { map.removeLayer(buildingLayer.current); buildingLayer.current = null; }
@@ -67,16 +66,14 @@ jobs:
     const buildingKey = [ilce, q, mulkiyetFiltre, degisimFiltre, binaAcik ? "1" : "0"].join("|");
     const buildingChanged = buildingKeyRef.current !== buildingKey;
     if (buildingChanged && buildingLayer.current) { map.removeLayer(buildingLayer.current); buildingLayer.current = null; }'''
-          if old not in s: raise SystemExit('layer reset anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           old='''    if (binaAcik && degisimFiltre === "TUMU") buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);'''
           new='''    if (buildingChanged) {
       if (binaAcik && degisimFiltre === "TUMU") buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
       buildingKeyRef.current = buildingKey;
     }'''
-          if old not in s: raise SystemExit('building layer anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           old='''    const layers = [pointLayer.current, buildingLayer.current].filter(Boolean);
     if (layers.length) {
@@ -94,15 +91,24 @@ jobs:
       }
       fitKeyRef.current = fitKey;
     }'''
-          if old not in s: raise SystemExit('fitBounds anchor missing')
-          s=s.replace(old,new,1)
+          if old in s: s=s.replace(old,new,1)
 
           p.write_text(s,encoding='utf-8')
+
+          h=Path('app/HaritaEntegrasyon.tsx')
+          hs=h.read_text(encoding='utf-8')
+          old='<TrafoHarita/>'
+          new='{acik&&<TrafoHarita/>}'
+          if old in hs: hs=hs.replace(old,new,1)
+          h.write_text(hs,encoding='utf-8')
+          PY
+
       - name: Commit optimized map
+        shell: bash
         run: |
-          if git diff --quiet -- app/TrafoHarita.tsx; then exit 0; fi
+          if git diff --quiet -- app/TrafoHarita.tsx app/HaritaEntegrasyon.tsx; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/TrafoHarita.tsx
+          git add app/TrafoHarita.tsx app/HaritaEntegrasyon.tsx
           git commit -m "Speed up tablet map and refresh changes live"
           git push
