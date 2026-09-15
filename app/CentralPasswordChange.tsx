@@ -54,7 +54,7 @@ export default function CentralPasswordChange(){
 }
 
 const s:Record<string,CSSProperties>={
- launch:{position:"fixed",right:18,bottom:18,zIndex:9000,border:"1px solid #cbd5e1",borderRadius:12,background:"#fff",color:"#17345f",padding:"11px 14px",fontWeight:800,boxShadow:"0 10px 28px rgba(15,23,42,.14)",cursor:"pointer",display:"flex",gap:7,alignItems:"center"},
+ launch:{position:"fixed",left:8,bottom:58,zIndex:9000,width:194,border:"1px solid #cbd5e1",borderRadius:12,background:"#fff",color:"#17345f",padding:"9px 12px",fontWeight:800,boxShadow:"0 4px 14px rgba(15,23,42,.08)",cursor:"pointer",display:"flex",gap:7,alignItems:"center",justifyContent:"center",fontSize:12},
  overlay:{position:"fixed",inset:0,zIndex:20000,background:"rgba(8,20,38,.56)",backdropFilter:"blur(5px)",display:"grid",placeItems:"center",padding:16},
  card:{width:"min(560px,96vw)",background:"#fff",borderRadius:20,padding:24,boxShadow:"0 30px 90px rgba(2,12,27,.30)",border:"1px solid #dbe4ef"},
  head:{display:"flex",justifyContent:"space-between",gap:16,alignItems:"flex-start",marginBottom:18},kicker:{fontSize:10,fontWeight:900,letterSpacing:".12em",color:"#2563eb"},title:{margin:"4px 0 5px",fontSize:24,color:"#132642"},sub:{margin:0,fontSize:12,color:"#718096",lineHeight:1.5},close:{width:34,height:34,border:0,borderRadius:10,background:"#f1f5f9",fontSize:22,cursor:"pointer",color:"#52637a"},
