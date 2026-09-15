@@ -1,4 +1,4 @@
-const CACHE_VERSION = "trafo-app-v9-pwa";
+const CACHE_VERSION = "trafo-app-v10-map-ready";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

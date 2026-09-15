@@ -282,7 +282,8 @@ export default function TrafoHarita() {
       finally { if (!kapandi) setDegisimYukleniyor(false); }
     };
     yukle(); oturumBilgisi().catch(() => {});
-    return () => { kapandi = true; };
+    window.addEventListener("trafo-harita-veri-yenile", yukle as EventListener);
+    return () => { kapandi = true; window.removeEventListener("trafo-harita-veri-yenile", yukle as EventListener); };
   }, [supabase]);
 
   useEffect(() => {
@@ -337,6 +338,35 @@ export default function TrafoHarita() {
       : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap' });
     tileLayer.current.addTo(map); tileLayer.current.bringToBack?.(); setTimeout(() => map.invalidateSize(), 80);
   }, [haritaTipi, hazir]);
+
+  useEffect(() => {
+    if (!hazir || !mapRef.current || !mapEl.current) return;
+    const map = mapRef.current, el = mapEl.current;
+    let frame = 0, timer = 0;
+    const canlandir = () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      frame = requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false });
+        timer = window.setTimeout(() => map.invalidateSize({ pan: false }), 240);
+      });
+    };
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(canlandir) : null;
+    observer?.observe(el);
+    window.addEventListener("trafo-harita-gorundu", canlandir);
+    window.addEventListener("orientationchange", canlandir);
+    const visibility = () => { if (document.visibilityState === "visible") canlandir(); };
+    document.addEventListener("visibilitychange", visibility);
+    canlandir();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("trafo-harita-gorundu", canlandir);
+      window.removeEventListener("orientationchange", canlandir);
+      document.removeEventListener("visibilitychange", visibility);
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [hazir]);
 
   useEffect(() => {
     if (!hazir || !veriHazir || !mapRef.current || !window.L || !pointData.current || !buildingData.current) return;
@@ -402,6 +432,7 @@ export default function TrafoHarita() {
       if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
       else if (bounds.isValid()) map.fitBounds(bounds.pad(.04), { maxZoom: 11 });
     }
+    requestAnimationFrame(() => map.invalidateSize({ pan: false }));
   }, [hazir, veriHazir, ilce, arama, tipFiltre, mulkiyetFiltre, degisimFiltre, noktaAcik, binaAcik, degisimKayitlari]);
 
   const adminGuncelle = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -444,11 +475,11 @@ export default function TrafoHarita() {
           <button onClick={() => setHaritaTipi(x => x === "standart" ? "uydu" : "standart")} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">{haritaTipi === "standart" ? "🛰️ Uydu Görünümü" : "🗺️ Standart Harita"}</button>
           <span className="ml-auto text-[11px] font-bold text-slate-400">Görünen toplam: {toplam}</span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-bold text-slate-600">
-          <span>▲ Direk tipi</span><span>■ Bina tipi</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />Değişim yok</span>
-          {NEDEN_RENKLERI.map(x => <span key={x.ad}><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: x.renk }} />{x.ad}</span>)}
-        </div>
       </>}
+      <div data-trafo-harita-lejant="1" className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-slate-100 pt-3 text-[10px] font-bold text-slate-600">
+        <span>▲ Direk tipi</span><span>■ Bina tipi</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />Değişim yok</span>
+        {NEDEN_RENKLERI.map(x => <span key={x.ad}><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: x.renk }} />{x.ad}</span>)}
+      </div>
     </div>
 
     {hata && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{hata}</div>}

@@ -13,16 +13,17 @@ const deger=(v:any)=>v===null||v===undefined||String(v).trim()===""?"—":String
 const NEDENLER=["ARIZA","DÖNÜŞÜM","GÜÇ DEĞİŞİMİ","TRAFO İPTAL","YATIRIM","YENİ TESİS","ARIZA RİSKİ","KISMİ ARIZALI"];
 
 export default function HaritaEntegrasyon(){
- const [acik,setAcik]=useState(false),[haritaRev,setHaritaRev]=useState(0),[gecmis,setGecmis]=useState<any[]|null>(null),[gecmisLok,setGecmisLok]=useState(""),[gecmisYukleniyor,setGecmisYukleniyor]=useState(false),[gecmisHata,setGecmisHata]=useState("");
+ const [acik,setAcik]=useState(false),[haritaBaslatildi,setHaritaBaslatildi]=useState(false),[gecmis,setGecmis]=useState<any[]|null>(null),[gecmisLok,setGecmisLok]=useState(""),[gecmisYukleniyor,setGecmisYukleniyor]=useState(false),[gecmisHata,setGecmisHata]=useState("");
  const [duzenlenenId,setDuzenlenenId]=useState<any>(null),[form,setForm]=useState<any>({}),[kaydediliyor,setKaydediliyor]=useState(false),[duzenlemeHata,setDuzenlemeHata]=useState("");
  const supabase=useMemo(getSupabaseBrowserClient,[]);
 
- useEffect(()=>{const ac=()=>setAcik(true);window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
+ useEffect(()=>{const ac=()=>{setHaritaBaslatildi(true);setAcik(true);};window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);
+ useEffect(()=>{if(!acik)return;let a=0,b=0;a=requestAnimationFrame(()=>window.dispatchEvent(new Event("trafo-harita-gorundu")));b=window.setTimeout(()=>window.dispatchEvent(new Event("trafo-harita-gorundu")),260);return()=>{cancelAnimationFrame(a);window.clearTimeout(b);};},[acik]);
  useEffect(()=>{const f=(e:MouseEvent)=>{const b=(e.target as HTMLElement|null)?.closest("nav button") as HTMLButtonElement|null;if(!b||b.dataset.trafoHaritaMenu==="1")return;setAcik(false);setGecmis(null);};document.addEventListener("click",f,true);return()=>document.removeEventListener("click",f,true);},[]);
  useEffect(()=>{
   if(!supabase)return;
   let timer:number|undefined;
-  const yenile=()=>{window.clearTimeout(timer);timer=window.setTimeout(()=>setHaritaRev(x=>x+1),120);};
+  const yenile=()=>{window.clearTimeout(timer);timer=window.setTimeout(()=>window.dispatchEvent(new Event("trafo-harita-veri-yenile")),120);};
   window.addEventListener("trafo-kayit-guncellendi",yenile as EventListener);
   const kanal=supabase.channel("trafo-harita-ekran-canli").on("postgres_changes",{event:"*",schema:"public",table:"trafo_degisim"},yenile).subscribe();
   return()=>{window.clearTimeout(timer);window.removeEventListener("trafo-kayit-guncellendi",yenile as EventListener);supabase.removeChannel(kanal);};
@@ -55,7 +56,7 @@ export default function HaritaEntegrasyon(){
   </div>,document.body):null;
  return <div aria-hidden={!acik} className={`fixed inset-x-0 bottom-0 top-[76px] z-[29] overflow-y-auto bg-[#f4f7fb] lg:left-[248px] ${acik?"visible opacity-100 pointer-events-auto":"invisible opacity-0 pointer-events-none"}`}>
   <style jsx global>{`.leaflet-popup-content-wrapper{box-shadow:0 8px 28px rgba(15,23,42,.28)!important}.leaflet-popup-tip{box-shadow:3px 3px 8px rgba(15,23,42,.15)!important}`}</style>
-  <div className="mx-auto w-full max-w-[1700px] p-3 sm:p-5 lg:p-6"><div className="mb-5"><div className="text-[10px] font-black uppercase tracking-[.18em] text-blue-500">Şebeke Envanteri</div><h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">🗺️ Trafo Haritası</h1><p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">Balıkesir trafo noktaları ve trafo bina envanteri.</p></div>{acik&&<TrafoHarita key={haritaRev}/>}</div>
+  <div className="mx-auto w-full max-w-[1700px] p-3 sm:p-5 lg:p-6"><div className="mb-5"><div className="text-[10px] font-black uppercase tracking-[.18em] text-blue-500">Şebeke Envanteri</div><h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">🗺️ Trafo Haritası</h1><p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">Balıkesir trafo noktaları ve trafo bina envanteri.</p></div>{haritaBaslatildi&&<TrafoHarita/>}</div>
   {gecmisModal}
  </div>;
 }
