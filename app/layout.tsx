@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
 import HaritaNedenFiltresi from "./HaritaNedenFiltresi";
