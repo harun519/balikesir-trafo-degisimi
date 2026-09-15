@@ -72,7 +72,8 @@ export async function POST(req:NextRequest){
     const action=String(body.action||"save");
     if(action==="delete"){
       const id=String(body.id||"");if(!id)return fail("Kullanıcı kimliği gerekli.");
-      await Promise.all([client.from("app_users").delete().eq("id",id),client.from("scada_users").delete().eq("id",id)]);
+      const [{error:ae},{error:se}]=await Promise.all([client.from("app_users").delete().eq("id",id),client.from("scada_users").delete().eq("id",id)]);
+      if(ae)throw ae;if(se)throw se;
       if(body.deleteAccount===true){const {error}=await client.auth.admin.deleteUser(id);if(error)throw error}
       return NextResponse.json({ok:true,users:await combined(client)});
     }
@@ -80,8 +81,14 @@ export async function POST(req:NextRequest){
     const password=String(body.password||"");
     const trafoRole=role(body.trafoRole),scadaRole=role(body.scadaRole);
     if(!email||!email.includes("@"))return fail("Geçerli bir e-posta gerekli.");
-    if(!trafoRole&&!scadaRole)return fail("Trafo veya SCADA için en az bir yetki seçilmeli.");
     let user=await findUser(client,email);
+    if(!trafoRole&&!scadaRole){
+      if(user)await Promise.all([
+        setAccess(client,"app_users",user.id,email,null),
+        setAccess(client,"scada_users",user.id,email,null)
+      ]);
+      return NextResponse.json({ok:true,user:user?{id:user.id,email,trafoRole:null,scadaRole:null}:null,users:await combined(client)},{headers:{"Cache-Control":"no-store"}});
+    }
     if(!user){
       if(password.length<6)return fail("Yeni kullanıcı şifresi en az 6 karakter olmalı.");
       const {data,error}=await client.auth.admin.createUser({email,password,email_confirm:true});if(error||!data.user)throw error||new Error("Kullanıcı oluşturulamadı.");user=data.user;
