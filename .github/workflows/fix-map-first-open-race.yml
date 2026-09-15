@@ -1,0 +1,46 @@
+name: Fix map first open race
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-map-first-open-race.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Harden map first-open initialization
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('app/TrafoHarita.tsx')
+          s=p.read_text(encoding='utf-8')
+
+          old='''function scriptYukle(id: string, src: string, test: () => boolean) {\n  return new Promise<void>((ok, no) => {\n    if (test()) return ok();\n    const eski = document.getElementById(id) as HTMLScriptElement | null;\n    if (eski) {\n      eski.addEventListener("load", () => ok(), { once: true });\n      eski.addEventListener("error", () => no(new Error("Kütüphane yüklenemedi")), { once: true });\n      return;\n    }\n    const s = document.createElement("script");\n    s.id = id; s.src = src; s.onload = () => ok(); s.onerror = () => no(new Error("Kütüphane yüklenemedi"));\n    document.body.appendChild(s);\n  });\n}'''
+          new='''function scriptYukle(id: string, src: string, test: () => boolean) {\n  return new Promise<void>((ok, no) => {\n    if (test()) return ok();\n    const hazirMi = () => { if (test()) { ok(); return true; } return false; };\n    let eski = document.getElementById(id) as HTMLScriptElement | null;\n    if (eski) {\n      // SPA/PWA ilk acilista script etiketi DOM'da olup load olayi daha once kacmis olabilir.\n      // Bu durumda sadece load eventini beklemek haritayi sonsuza kadar bos birakiyordu.\n      if (hazirMi()) return;\n      const baslangic = Date.now();\n      const timer = window.setInterval(() => {\n        if (hazirMi()) { window.clearInterval(timer); return; }\n        if (Date.now() - baslangic > 8000) {\n          window.clearInterval(timer);\n          eski?.remove();\n          eski = null;\n          const yenisi = document.createElement("script");\n          yenisi.id = id; yenisi.src = src; yenisi.async = true;\n          yenisi.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));\n          yenisi.onerror = () => no(new Error("Kütüphane yüklenemedi"));\n          document.body.appendChild(yenisi);\n        }\n      }, 100);\n      eski.addEventListener("load", () => { window.clearInterval(timer); hazirMi(); }, { once: true });\n      eski.addEventListener("error", () => { window.clearInterval(timer); no(new Error("Kütüphane yüklenemedi")); }, { once: true });\n      return;\n    }\n    const sc = document.createElement("script");\n    sc.id = id; sc.src = src; sc.async = true;\n    sc.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));\n    sc.onerror = () => no(new Error("Kütüphane yüklenemedi"));\n    document.body.appendChild(sc);\n  });\n}'''
+          if old not in s: raise SystemExit('scriptYukle anchor bulunamadi')
+          s=s.replace(old,new,1)
+
+          old='''        if (kapandi || !mapEl.current) return;\n        const L = window.L;\n        const map = L.map(mapEl.current, { zoomControl: true, preferCanvas: true, renderer: L.canvas({ padding: .5, tolerance: 12 }) }).setView([39.65, 27.9], 9);'''
+          new='''        if (kapandi) return;\n        // Harita sekmesi ilk acilirken React portal/DOM yerlesimi bir frame gecikebiliyor.\n        // Container gercekten DOM'a ve olcuye kavusana kadar kisa sure bekle.\n        for (let i=0; i<30 && !kapandi; i++) {\n          const el=mapEl.current;\n          if (el && el.isConnected && el.clientWidth>0 && el.clientHeight>0) break;\n          await new Promise(r=>window.setTimeout(r,50));\n        }\n        if (kapandi || !mapEl.current || !mapEl.current.isConnected) return;\n        const L = window.L;\n        if (!L) throw new Error("Harita kütüphanesi hazır değil");\n        if (mapRef.current) { try { mapRef.current.remove(); } catch {} mapRef.current=null; }\n        const map = L.map(mapEl.current, { zoomControl: true, preferCanvas: true, renderer: L.canvas({ padding: .5, tolerance: 12 }) }).setView([39.65, 27.9], 9);'''
+          if old not in s: raise SystemExit('map init anchor bulunamadi')
+          s=s.replace(old,new,1)
+
+          old='''        mapRef.current = map; setHazir(true);'''
+          new='''        mapRef.current = map;\n        // Ilk gorunumde gizli/yeniden boyutlanan container kaynakli gri-bos haritayi engelle.\n        requestAnimationFrame(()=>{ try { map.invalidateSize({pan:false}); } catch {} });\n        window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },120);\n        window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },450);\n        setHazir(true);'''
+          if old not in s: raise SystemExit('setHazir anchor bulunamadi')
+          s=s.replace(old,new,1)
+
+          p.write_text(s,encoding='utf-8')
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/TrafoHarita.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix intermittent Trafo map first-open race"
+          git push
