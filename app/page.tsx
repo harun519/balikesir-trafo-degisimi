@@ -263,8 +263,24 @@ export default function Home() {
 
   useEffect(() => {
     if(!supabase){setAuthHata("Supabase bağlantısı kurulamadı.");setAuthKontrol(false);return;}
-    supabase.auth.getSession().then(({data})=>{setSession(data.session);if(data.session)setMisafirModu(false);setAuthKontrol(false);});
+    let aktif=true;
+    const beklemeSiniri=window.setTimeout(()=>{
+      if(aktif)setAuthKontrol(false);
+    },2500);
+    void supabase.auth.getSession()
+      .then(({data})=>{
+        if(!aktif)return;
+        setSession(data.session);
+        if(data.session)setMisafirModu(false);
+        setAuthKontrol(false);
+      })
+      .catch(()=>{
+        if(aktif)setAuthKontrol(false);
+      })
+      .finally(()=>window.clearTimeout(beklemeSiniri));
     const {data:{subscription}}=supabase.auth.onAuthStateChange((event,s)=>{
+      if(!aktif)return;
+      window.clearTimeout(beklemeSiniri);
       setSession(s);
       if(s)setMisafirModu(false);
       if(event==="PASSWORD_RECOVERY"){
@@ -273,7 +289,7 @@ export default function Home() {
       }
       setAuthKontrol(false);
     });
-    return()=>subscription.unsubscribe();
+    return()=>{aktif=false;window.clearTimeout(beklemeSiniri);subscription.unsubscribe();};
   },[supabase]);
 
   useEffect(()=>{ if(session&&yetkiHazir) kayitlariGetir(); else setKayitlar([]); },[session,yetkiHazir]);
