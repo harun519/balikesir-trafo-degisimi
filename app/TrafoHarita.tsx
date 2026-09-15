@@ -85,15 +85,35 @@ async function okuBlob() {
 function scriptYukle(id: string, src: string, test: () => boolean) {
   return new Promise<void>((ok, no) => {
     if (test()) return ok();
-    const eski = document.getElementById(id) as HTMLScriptElement | null;
+    const hazirMi = () => { if (test()) { ok(); return true; } return false; };
+    let eski = document.getElementById(id) as HTMLScriptElement | null;
     if (eski) {
-      eski.addEventListener("load", () => ok(), { once: true });
-      eski.addEventListener("error", () => no(new Error("Kütüphane yüklenemedi")), { once: true });
+      // SPA/PWA ilk acilista script etiketi DOM'da olup load olayi daha once kacmis olabilir.
+      // Bu durumda sadece load eventini beklemek haritayi sonsuza kadar bos birakiyordu.
+      if (hazirMi()) return;
+      const baslangic = Date.now();
+      const timer = window.setInterval(() => {
+        if (hazirMi()) { window.clearInterval(timer); return; }
+        if (Date.now() - baslangic > 8000) {
+          window.clearInterval(timer);
+          eski?.remove();
+          eski = null;
+          const yenisi = document.createElement("script");
+          yenisi.id = id; yenisi.src = src; yenisi.async = true;
+          yenisi.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));
+          yenisi.onerror = () => no(new Error("Kütüphane yüklenemedi"));
+          document.body.appendChild(yenisi);
+        }
+      }, 100);
+      eski.addEventListener("load", () => { window.clearInterval(timer); hazirMi(); }, { once: true });
+      eski.addEventListener("error", () => { window.clearInterval(timer); no(new Error("Kütüphane yüklenemedi")); }, { once: true });
       return;
     }
-    const s = document.createElement("script");
-    s.id = id; s.src = src; s.onload = () => ok(); s.onerror = () => no(new Error("Kütüphane yüklenemedi"));
-    document.body.appendChild(s);
+    const sc = document.createElement("script");
+    sc.id = id; sc.src = src; sc.async = true;
+    sc.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));
+    sc.onerror = () => no(new Error("Kütüphane yüklenemedi"));
+    document.body.appendChild(sc);
   });
 }
 function koleksiyonlar(x: any): GeoJSON[] {
@@ -297,11 +317,26 @@ export default function TrafoHarita() {
           scriptYukle("leaflet-js-trafo", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", () => !!window.L),
           scriptYukle("shpjs-trafo", "https://unpkg.com/shpjs@6.1.0/dist/shp.js", () => !!window.shp)
         ]);
-        if (kapandi || !mapEl.current) return;
+        if (kapandi) return;
+        // Harita sekmesi ilk acilirken React portal/DOM yerlesimi bir frame gecikebiliyor.
+        // Container gercekten DOM'a ve olcuye kavusana kadar kisa sure bekle.
+        for (let i=0; i<30 && !kapandi; i++) {
+          const el=mapEl.current;
+          if (el && el.isConnected && el.clientWidth>0 && el.clientHeight>0) break;
+          await new Promise(r=>window.setTimeout(r,50));
+        }
+        if (kapandi || !mapEl.current || !mapEl.current.isConnected) return;
         const L = window.L;
+        if (!L) throw new Error("Harita kütüphanesi hazır değil");
+        if (mapRef.current) { try { mapRef.current.remove(); } catch {} mapRef.current=null; }
         const map = L.map(mapEl.current, { zoomControl: true, preferCanvas: true, renderer: L.canvas({ padding: .5, tolerance: 12 }) }).setView([39.65, 27.9], 9);
         tileLayer.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap' }).addTo(map);
-        mapRef.current = map; setHazir(true);
+        mapRef.current = map;
+        // Ilk gorunumde gizli/yeniden boyutlanan container kaynakli gri-bos haritayi engelle.
+        requestAnimationFrame(()=>{ try { map.invalidateSize({pan:false}); } catch {} });
+        window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },120);
+        window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },450);
+        setHazir(true);
         let merkezVar = false;
         try {
           const r = await fetch("/api/harita-envanter", { cache: "no-store" });
