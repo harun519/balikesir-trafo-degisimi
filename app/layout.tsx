@@ -11,6 +11,7 @@ import HaritaMenuSaglamlastirma from "./HaritaMenuSaglamlastirma";
 import HaritaKayitSenkron from "./HaritaKayitSenkron";
 import PwaSaglamlastirma from "./PwaSaglamlastirma";
 import PortalLoginCleanup from "./PortalLoginCleanup";
+import CentralPasswordChange from "./CentralPasswordChange";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#07111f", width: "device-width", initialScale: 1, viewportFit: "cover" };
 export default function RootLayout({children}:{children:React.ReactNode}) {
-  return <html lang="tr"><body>{children}<PortalLoginCleanup /><HaritaEntegrasyon /><HaritaMenuSaglamlastirma /><HaritaKayitSenkron /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /><HaritaSenkronDurumu /><HaritaTabletFix /><PwaSaglamlastirma /></body></html>;
+  return <html lang="tr"><body>{children}<CentralPasswordChange /><PortalLoginCleanup /><HaritaEntegrasyon /><HaritaMenuSaglamlastirma /><HaritaKayitSenkron /><HaritaCikisFix /><HaritaNedenFiltresi /><HaritaUyduEtiketleri /><HaritaGelismisIslemler /><HaritaSenkronDurumu /><HaritaTabletFix /><PwaSaglamlastirma /></body></html>;
 }
 
 // Kullanıcılar artık Balıkesir Sistem İşletme portalından merkezi olarak yönetilir.
