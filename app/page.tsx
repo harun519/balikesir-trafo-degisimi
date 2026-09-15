@@ -28,7 +28,7 @@ const NEDENLER = [
 const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
-type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "veri-kalite" | "yedekleme" | "loglar" | "kullanicilar" | "markalar";
+type Sayfa = "dashboard" | "yeni" | "kayitlar" | "arsiv" | "veri-kalite" | "yedekleme" | "loglar" | "markalar";
 type ArsivKaydi = {
   id:string; kayit_id:number|null; yil:number; ay:string; ilce:string|null; mahalle:string|null;
   tr:string|null; lokasyon_id:string|null; trafo_id:string|null; dosya_adi:string; dosya_yolu:string;
@@ -37,7 +37,6 @@ type ArsivKaydi = {
 };
 type TrafoMarkasi = { id:number; ad:string; aktif:boolean; sira:number; created_at?:string; updated_at?:string; };
 type KullaniciRolu = "admin" | "editor" | "viewer";
-type AppUser = { id:string; email:string|null; role:KullaniciRolu; created_at?:string; updated_at?:string; };
 type AuditLog = { id:number; table_name:string; record_id:number|null; action:"INSERT"|"UPDATE"|"DELETE"; user_id:string|null; user_email:string|null; old_data:Record<string,unknown>|null; new_data:Record<string,unknown>|null; created_at:string; };
 type DriveSyncLog = { id:number; baslangic:string; bitis:string|null; kaynak:string; durum:"running"|"success"|"error"; yil_sayisi:number; ay_klasoru_sayisi:number; bulunan:number; aktarilan:number; atlanan:number; hatali:number; mesaj:string|null; kullanici_email:string|null; created_at:string; };
 type ListeFiltreleri = { yil?:string; ay?:string; ilce?:string; neden?:string; arama?:string; baslangic?:string; bitis?:string; };
@@ -115,7 +114,7 @@ export default function Home() {
   const [dashboardBaslangic,setDashboardBaslangic]=useState(""); const [dashboardBitis,setDashboardBitis]=useState("");
   const [kullaniciRolu,setKullaniciRolu]=useState<KullaniciRolu>("viewer");
   const [yetkiHazir,setYetkiHazir]=useState(false);
-  const [kullanicilar,setKullanicilar]=useState<AppUser[]>([]); const [auditLoglar,setAuditLoglar]=useState<AuditLog[]>([]);
+  const [auditLoglar,setAuditLoglar]=useState<AuditLog[]>([]);
   const [trafoMarkalari,setTrafoMarkalari]=useState<TrafoMarkasi[]>([]);
   const [markaYeniAd,setMarkaYeniAd]=useState("");
   const [markaDuzenlenenId,setMarkaDuzenlenenId]=useState<number|null>(null);
@@ -281,9 +280,9 @@ export default function Home() {
   useEffect(()=>{ if(session&&yetkiHazir){arsivKayitlariniGetir();driveSyncLoglariniGetir();} else {setArsivKayitlari([]);setDriveSyncLoglar([]);} },[session,yetkiHazir]);
   useEffect(()=>{
     setYetkiHazir(false);
-    if(session){void kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setKullanicilar([]);setAuditLoglar([]);}
+    if(session){void kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setAuditLoglar([]);}
   },[session]);
-  useEffect(()=>{if(yonetici){auditLoglariGetir();kullanicilariGetir();}},[yonetici]);
+  useEffect(()=>{if(yonetici)auditLoglariGetir();},[yonetici]);
   useEffect(()=>{if(session&&yetkiHazir)trafoMarkalariniGetir();else setTrafoMarkalari([]);},[session,yetkiHazir]);
 
   async function kullaniciProfiliniGetir(){
@@ -299,11 +298,6 @@ export default function Home() {
     }
     setKullaniciRolu(rol as KullaniciRolu);
     setYetkiHazir(true);
-  }
-  async function kullanicilariGetir(){
-    if(!supabase)return;
-    const {data}=await supabase.from("app_users").select("id,email,role,created_at,updated_at").order("email");
-    setKullanicilar((data||[]) as AppUser[]);
   }
   async function trafoMarkalariniGetir(){
     if(!supabase)return;
@@ -351,14 +345,6 @@ export default function Home() {
     const {data}=await supabase.from("drive_sync_logs").select("*").order("created_at",{ascending:false}).limit(20);
     setDriveSyncLoglar((data||[]) as DriveSyncLog[]);
   }
-  async function rolDegistir(id:string,role:KullaniciRolu){
-    if(!supabase||!yonetici)return;
-    const {error}=await supabase.from("app_users").update({role,updated_at:new Date().toISOString()}).eq("id",id);
-    if(error){setGenelHata(error.message);return;}
-    await kullanicilariGetir();
-    setBasariMesaji("Kullanıcı yetkisi güncellendi.");setTimeout(()=>setBasariMesaji(""),2500);
-  }
-  
   async function arsivKayitlariniGetir(){
     if(!supabase)return;
     setArsivYukleniyor(true);
@@ -587,7 +573,7 @@ async function kayitlariGetir(){
     setMobilMenuAcik(false);
   }
   function sayfayaGit(s:Sayfa){
-    if((s==="loglar"||s==="kullanicilar"||s==="markalar")&&!yonetici)return;
+    if((s==="loglar"||s==="markalar")&&!yonetici)return;
     if(s==="yeni"&&!duzenleyebilir)return;
     setSayfa(s);setMobilMenuAcik(false);if(s==="dashboard")setAktifAnaliz("dashboard");window.scrollTo({top:0,behavior:"smooth"});
   }
@@ -2116,9 +2102,6 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </Panel>
           </>}
 
-          {sayfa==="kullanicilar"&&yonetici&&<>
-            <Panel baslik="Kullanıcı Yetkileri" altBaslik="Admin: tüm işlemler • Editor: ekleme/düzenleme • Viewer: yalnız görüntüleme"><div className="mt-5 space-y-3">{kullanicilar.map(u=><div key={u.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm p-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black">{u.email||u.id}</div><div className="mt-1 text-[10px] text-slate-500">Kullanıcı ID: {u.id}</div></div><select disabled={u.id===session?.user.id} title={u.id===session?.user.id?"Kendi yönetici yetkiniz buradan değiştirilemez.":"Kullanıcı yetkisini değiştir"} value={u.role} onChange={e=>rolDegistir(u.id,e.target.value as KullaniciRolu)} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50"><option value="admin">Yönetici (Admin)</option><option value="editor">Düzenleyici (Editor)</option><option value="viewer">Görüntüleyici (Viewer)</option></select></div>)}</div><div className="mt-5 rounded-xl border border-amber-800/50 bg-amber-950/20 p-4 text-xs leading-6 text-amber-200">Yeni kullanıcı hesabını Supabase Authentication bölümünden oluşturduğunuzda kullanıcı burada otomatik görünür ve başlangıç yetkisi <b>viewer</b> olur.</div></Panel>
-          </>}
         </div>
       </section>
     </div>
@@ -2156,7 +2139,7 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,aktifAnaliz,misafirMo
 {duzenleyebilir&&<MenuButonu aktif={sayfa==="yeni"&&!duzenlenenId} onClick={()=>{formTemizle();git("yeni");}}>➕ Yeni Kayıt</MenuButonu>}
 <MenuButonu aktif={sayfa==="kayitlar"} onClick={()=>git("kayitlar")}>📋 Trafo Kayıtları</MenuButonu>
 <MenuButonu aktif={sayfa==="arsiv"} onClick={()=>git("arsiv")}>📁 Trafo Form Arşivi</MenuButonu>
-{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="markalar"} onClick={()=>git("markalar")}>🏷️ Trafo Markaları</MenuButonu><MenuButonu aktif={sayfa==="veri-kalite"} onClick={()=>git("veri-kalite")}>🛡️ Veri Kalitesi</MenuButonu><MenuButonu aktif={sayfa==="yedekleme"} onClick={()=>git("yedekleme")}>💾 Yedekleme Merkezi</MenuButonu><MenuButonu aktif={sayfa==="kullanicilar"} onClick={()=>git("kullanicilar")}>👥 Kullanıcı Yetkileri</MenuButonu></div>}</nav>;
+{admin&&<div className="my-2 border-t border-slate-200 pt-2"><div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">YÖNETİM</div><MenuButonu aktif={sayfa==="markalar"} onClick={()=>git("markalar")}>🏷️ Trafo Markaları</MenuButonu><MenuButonu aktif={sayfa==="veri-kalite"} onClick={()=>git("veri-kalite")}>🛡️ Veri Kalitesi</MenuButonu><MenuButonu aktif={sayfa==="yedekleme"} onClick={()=>git("yedekleme")}>💾 Yedekleme Merkezi</MenuButonu></div>}</nav>;
 }
 function HizliFiltre({children,onClick,aktif}:{children:ReactNode;onClick:()=>void;aktif:boolean}){return <button type="button" onClick={onClick} className={`rounded-lg border px-3 py-2 text-[10px] font-black transition ${aktif?"border-orange-500 bg-orange-500/15 text-orange-300":"border-slate-300 text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
 function MenuAlt({children,onClick,aktif=false}:{children:ReactNode;onClick:()=>void;aktif?:boolean}){return <button onClick={onClick} className={`mb-0.5 block w-full rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition ${aktif?"border-orange-500/30 bg-orange-500/15 text-orange-300":"border-transparent text-slate-400 hover:bg-slate-200 hover:text-white"}`}>{children}</button>}
