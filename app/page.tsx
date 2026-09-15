@@ -113,6 +113,7 @@ export default function Home() {
   const [dashboardYil,setDashboardYil]=useState(""); const [dashboardIlce,setDashboardIlce]=useState("");
   const [dashboardBaslangic,setDashboardBaslangic]=useState(""); const [dashboardBitis,setDashboardBitis]=useState("");
   const [kullaniciRolu,setKullaniciRolu]=useState<KullaniciRolu>("viewer");
+  const [yetkiHazir,setYetkiHazir]=useState(false);
   const [kullanicilar,setKullanicilar]=useState<AppUser[]>([]); const [auditLoglar,setAuditLoglar]=useState<AuditLog[]>([]);
   const [trafoMarkalari,setTrafoMarkalari]=useState<TrafoMarkasi[]>([]);
   const [markaYeniAd,setMarkaYeniAd]=useState("");
@@ -275,19 +276,28 @@ export default function Home() {
     return()=>subscription.unsubscribe();
   },[supabase]);
 
-  useEffect(()=>{ if(session||misafirModu) kayitlariGetir(); else setKayitlar([]); },[session,misafirModu]);
-  useEffect(()=>{ if(session||misafirModu){arsivKayitlariniGetir();driveSyncLoglariniGetir();} else {setArsivKayitlari([]);setDriveSyncLoglar([]);} },[session,misafirModu]);
+  useEffect(()=>{ if(session&&yetkiHazir) kayitlariGetir(); else setKayitlar([]); },[session,yetkiHazir]);
+  useEffect(()=>{ if(session&&yetkiHazir){arsivKayitlariniGetir();driveSyncLoglariniGetir();} else {setArsivKayitlari([]);setDriveSyncLoglar([]);} },[session,yetkiHazir]);
   useEffect(()=>{
-    if(session){kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setKullanicilar([]);setAuditLoglar([]);}
+    setYetkiHazir(false);
+    if(session){void kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setKullanicilar([]);setAuditLoglar([]);}
   },[session]);
   useEffect(()=>{if(yonetici){auditLoglariGetir();kullanicilariGetir();}},[yonetici]);
-  useEffect(()=>{if(session||misafirModu)trafoMarkalariniGetir();else setTrafoMarkalari([]);},[session,misafirModu]);
+  useEffect(()=>{if(session&&yetkiHazir)trafoMarkalariniGetir();else setTrafoMarkalari([]);},[session,yetkiHazir]);
 
   async function kullaniciProfiliniGetir(){
     if(!supabase||!session)return;
     const {data,error}=await supabase.from("app_users").select("id,email,role,created_at,updated_at").eq("id",session.user.id).maybeSingle();
-    if(error){setKullaniciRolu("viewer");return;}
-    setKullaniciRolu((data?.role||"viewer") as KullaniciRolu);
+    const rol=data?.role;
+    if(error||!data||!["admin","editor","viewer"].includes(String(rol))){
+      setYetkiHazir(false);
+      setKullaniciRolu("viewer");
+      setAuthHata("Bu kullanıcıya Trafo Değişimi erişimi tanımlı değil. Portal Kullanıcı Yönetimi üzerinden yetki verilmelidir.");
+      await supabase.auth.signOut();
+      return;
+    }
+    setKullaniciRolu(rol as KullaniciRolu);
+    setYetkiHazir(true);
   }
   async function kullanicilariGetir(){
     if(!supabase)return;
