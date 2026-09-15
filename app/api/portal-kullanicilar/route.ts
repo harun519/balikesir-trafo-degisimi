@@ -6,7 +6,6 @@ export const dynamic="force-dynamic";
 
 type Role="admin"|"editor"|"viewer";
 type AppRole=Role|null;
-
 type AppName="trafo"|"scada";
 
 function sb(){
@@ -59,14 +58,9 @@ async function combined(client:ReturnType<typeof sb>){
   for(const u of users){
     const md=(u.user_metadata||{}) as Record<string,any>;
     map.set(u.id,{
-      id:u.id,
-      email:u.email||"",
-      trafoRole:null,
-      scadaRole:null,
-      trafoManaged:!!md.portal_trafo_managed,
-      scadaManaged:!!md.portal_scada_managed,
-      lastSignIn:u.last_sign_in_at||null,
-      createdAt:u.created_at||null
+      id:u.id,email:u.email||"",trafoRole:null,scadaRole:null,
+      trafoManaged:!!md.portal_trafo_managed,scadaManaged:!!md.portal_scada_managed,
+      lastSignIn:u.last_sign_in_at||null,createdAt:u.created_at||null
     });
   }
   for(const x of trafo||[]){const cur=map.get(x.id)||{id:x.id,email:x.email||"",trafoRole:null,scadaRole:null,trafoManaged:false,scadaManaged:false};cur.email=cur.email||x.email||"";cur.trafoRole=x.role;cur.trafoManaged=true;map.set(x.id,cur)}
@@ -150,6 +144,10 @@ export async function POST(req:NextRequest){
     const currentMd=(user.user_metadata||{}) as Record<string,any>;
     const trafoManaged=Object.prototype.hasOwnProperty.call(body,"trafoManaged")?bool(body.trafoManaged):Object.prototype.hasOwnProperty.call(body,"trafoRole")?true:!!currentMd.portal_trafo_managed;
     const scadaManaged=Object.prototype.hasOwnProperty.call(body,"scadaManaged")?bool(body.scadaManaged):Object.prototype.hasOwnProperty.call(body,"scadaRole")?true:!!currentMd.portal_scada_managed;
+
+    if(user.id===admin.id&&!(trafoManaged&&trafoRole==="admin")&&!(scadaManaged&&scadaRole==="admin")){
+      return fail("Kendi yönetici hesabında Trafo veya SCADA tarafında en az bir Admin yetkisi kalmalı.",400);
+    }
 
     await Promise.all([
       setAccess(client,"app_users",user.id,email,trafoManaged?trafoRole:null),
