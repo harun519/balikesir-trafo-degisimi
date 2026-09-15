@@ -82,38 +82,39 @@ async function okuBlob() {
   db.close();
   return v as Blob | undefined;
 }
-function scriptYukle(id: string, src: string, test: () => boolean) {
+function scriptYukle(id: string, kaynaklar: string[], test: () => boolean) {
   return new Promise<void>((ok, no) => {
     if (test()) return ok();
-    const hazirMi = () => { if (test()) { ok(); return true; } return false; };
+    let bitti = false, sira = 0, kontrol: number | undefined;
+    const tamam = () => { if (bitti) return; bitti = true; if (kontrol) window.clearInterval(kontrol); ok(); };
+    const hata = () => { if (bitti) return; bitti = true; if (kontrol) window.clearInterval(kontrol); no(new Error("Kütüphane yüklenemedi")); };
+    const hazirMi = () => { if (test()) { tamam(); return true; } return false; };
+    const siradakiniYukle = () => {
+      if (hazirMi()) return;
+      document.getElementById(id)?.remove();
+      const src = kaynaklar[sira++];
+      if (!src) { hata(); return; }
+      const sc = document.createElement("script");
+      sc.id = id; sc.src = src; sc.async = true;
+      sc.onload = () => { if (!hazirMi()) siradakiniYukle(); };
+      sc.onerror = siradakiniYukle;
+      document.body.appendChild(sc);
+    };
     let eski = document.getElementById(id) as HTMLScriptElement | null;
     if (eski) {
       // SPA/PWA ilk acilista script etiketi DOM'da olup load olayi daha once kacmis olabilir.
       // Bu durumda sadece load eventini beklemek haritayi sonsuza kadar bos birakiyordu.
       if (hazirMi()) return;
-      const baslangic = Date.now();
-      const timer = window.setInterval(() => {
-        if (hazirMi()) { window.clearInterval(timer); return; }
-        if (Date.now() - baslangic > 8000) {
-          window.clearInterval(timer);
-          eski?.remove();
-          eski = null;
-          const yenisi = document.createElement("script");
-          yenisi.id = id; yenisi.src = src; yenisi.async = true;
-          yenisi.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));
-          yenisi.onerror = () => no(new Error("Kütüphane yüklenemedi"));
-          document.body.appendChild(yenisi);
-        }
+      let deneme = 0;
+      kontrol = window.setInterval(() => {
+        if (hazirMi()) return;
+        if (++deneme >= 30) { if (kontrol) window.clearInterval(kontrol); kontrol = undefined; siradakiniYukle(); }
       }, 100);
-      eski.addEventListener("load", () => { window.clearInterval(timer); hazirMi(); }, { once: true });
-      eski.addEventListener("error", () => { window.clearInterval(timer); no(new Error("Kütüphane yüklenemedi")); }, { once: true });
+      eski.addEventListener("load", hazirMi, { once: true });
+      eski.addEventListener("error", siradakiniYukle, { once: true });
       return;
     }
-    const sc = document.createElement("script");
-    sc.id = id; sc.src = src; sc.async = true;
-    sc.onload = () => test() ? ok() : no(new Error("Kütüphane hazır olmadı"));
-    sc.onerror = () => no(new Error("Kütüphane yüklenemedi"));
-    document.body.appendChild(sc);
+    siradakiniYukle();
   });
 }
 function koleksiyonlar(x: any): GeoJSON[] {
@@ -238,7 +239,7 @@ function binaPopup(p: any) {
 }
 
 export default function TrafoHarita() {
-  const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);
+  const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), labelLayers = useRef<any[]>([]), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);
   const [hazir, setHazir] = useState(false), [veriHazir, setVeriHazir] = useState(false), [hata, setHata] = useState(""), [durum, setDurum] = useState("Merkezi envanter kontrol ediliyor..."), [dosyaAdi, setDosyaAdi] = useState("");
   const [ilce, setIlce] = useState(""), [arama, setArama] = useState(""), [tipFiltre, setTipFiltre] = useState<"" | "DIREK" | "BINA">(""), [mulkiyetFiltre, setMulkiyetFiltre] = useState<"" | "EDAS" | "DEVIRLI">(""), [degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi, setNoktaSayisi] = useState(0), [binaSayisi, setBinaSayisi] = useState(0), [direkTipiSayisi, setDirekTipiSayisi] = useState(0), [binaTipiSayisi, setBinaTipiSayisi] = useState(0), [uyumsuzSayisi, setUyumsuzSayisi] = useState(0), [haritaTipi, setHaritaTipi] = useState<"standart" | "uydu">("standart");
   const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>([]), [degisimYukleniyor, setDegisimYukleniyor] = useState(true), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
@@ -310,13 +311,11 @@ export default function TrafoHarita() {
     let kapandi = false;
     const baslat = async () => {
       try {
-        if (!document.getElementById("leaflet-css-trafo")) {
-          const l = document.createElement("link"); l.id = "leaflet-css-trafo"; l.rel = "stylesheet"; l.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(l);
-        }
-        await Promise.all([
-          scriptYukle("leaflet-js-trafo", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", () => !!window.L),
-          scriptYukle("shpjs-trafo", "https://unpkg.com/shpjs@6.1.0/dist/shp.js", () => !!window.shp)
-        ]);
+        // shpjs does not publish TypeScript declarations, but its runtime export is stable.
+        // @ts-expect-error shpjs has no bundled declaration file
+        const [leafletMod, shpMod] = await Promise.all([import("leaflet"), import("shpjs")]);
+        window.L = leafletMod.default || leafletMod;
+        window.shp = (shpMod.default || shpMod.parseZip) as typeof window.shp;
         if (kapandi) return;
         // Harita sekmesi ilk acilirken React portal/DOM yerlesimi bir frame gecikebiliyor.
         // Container gercekten DOM'a ve olcuye kavusana kadar kisa sure bekle.
@@ -368,10 +367,27 @@ export default function TrafoHarita() {
     if (!hazir || !mapRef.current || !window.L) return;
     const L = window.L, map = mapRef.current;
     if (tileLayer.current) map.removeLayer(tileLayer.current);
-    tileLayer.current = haritaTipi === "uydu"
-      ? L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Tiles © Esri" })
-      : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap' });
-    tileLayer.current.addTo(map); tileLayer.current.bringToBack?.(); setTimeout(() => map.invalidateSize(), 80);
+    labelLayers.current.forEach(layer => { try { map.removeLayer(layer); } catch {} });
+    labelLayers.current = [];
+    const tileOlustur = L.tileLayer.__orj || L.tileLayer.bind(L);
+    if (haritaTipi === "uydu") {
+      tileLayer.current = tileOlustur("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Tiles © Esri", updateWhenIdle: true, keepBuffer: 2 }).addTo(map);
+      if (!map.getPane("uyduEtiketPane")) {
+        const pane = map.createPane("uyduEtiketPane");
+        pane.style.zIndex = "450";
+        pane.style.pointerEvents = "none";
+      }
+      labelLayers.current = [
+        tileOlustur("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, pane: "uyduEtiketPane", opacity: 1, updateWhenIdle: true, keepBuffer: 2 }),
+        tileOlustur("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, pane: "uyduEtiketPane", opacity: 1, attribution: "Labels © Esri", updateWhenIdle: true, keepBuffer: 2 })
+      ];
+      labelLayers.current.forEach(layer => layer.addTo(map));
+    } else {
+      tileLayer.current = tileOlustur("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap', updateWhenIdle: true, keepBuffer: 2 }).addTo(map);
+    }
+    tileLayer.current.bringToBack?.();
+    requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    window.setTimeout(() => { map.invalidateSize({ pan: false }); tileLayer.current?.redraw?.(); labelLayers.current.forEach(layer => layer.redraw?.()); }, 180);
   }, [haritaTipi, hazir]);
 
   useEffect(() => {
