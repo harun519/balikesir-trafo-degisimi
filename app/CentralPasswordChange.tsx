@@ -1,6 +1,6 @@
 "use client";
 
-import {FormEvent,useEffect,useState} from "react";
+import {FormEvent,useEffect,useState,type CSSProperties} from "react";
 
 const API="https://balikesir-sistem-isletme.vercel.app/api/sifre-degistir";
 
@@ -47,13 +47,13 @@ export default function CentralPasswordChange(){
     <div style={s.grid}><label style={s.label}>Yeni şifre<input style={s.input} type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} autoComplete="new-password"/></label><label style={s.label}>Yeni şifre tekrar<input style={s.input} type="password" value={repeat} onChange={e=>setRepeat(e.target.value)} autoComplete="new-password"/></label></div>
     <div style={s.rule}>✓ En az 8 karakter &nbsp;·&nbsp; Mail kodu gerekmez &nbsp;·&nbsp; Rolleriniz değişmez</div>
     {error&&<div style={s.error}>{error}</div>}{msg&&<div style={s.success}>{msg}</div>}
-    <button disabled={busy} style={{...s.submit,opacity:busy?.65:1}}>{busy?"Güncelleniyor…":"Şifreyi Güncelle"}</button>
+    <button disabled={busy} style={{...s.submit,opacity:busy ? .65 : 1}}>{busy?"Güncelleniyor…":"Şifreyi Güncelle"}</button>
    </form>
   </div>}
  </>;
 }
 
-const s:Record<string,React.CSSProperties>={
+const s:Record<string,CSSProperties>={
  launch:{position:"fixed",right:18,bottom:18,zIndex:9000,border:"1px solid #cbd5e1",borderRadius:12,background:"#fff",color:"#17345f",padding:"11px 14px",fontWeight:800,boxShadow:"0 10px 28px rgba(15,23,42,.14)",cursor:"pointer",display:"flex",gap:7,alignItems:"center"},
  overlay:{position:"fixed",inset:0,zIndex:20000,background:"rgba(8,20,38,.56)",backdropFilter:"blur(5px)",display:"grid",placeItems:"center",padding:16},
  card:{width:"min(560px,96vw)",background:"#fff",borderRadius:20,padding:24,boxShadow:"0 30px 90px rgba(2,12,27,.30)",border:"1px solid #dbe4ef"},
