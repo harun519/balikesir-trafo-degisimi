@@ -1,0 +1,72 @@
+name: Fix viewer map permissions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-viewer-map-permissions.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply viewer permission and header fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          # 1) Harita gecmisinde viewer icin duzenlemeyi tamamen kapat.
+          p = Path('app/HaritaEntegrasyon.tsx')
+          s = p.read_text(encoding='utf-8')
+
+          old = ' const [duzenlenenId,setDuzenlenenId]=useState<any>(null),[form,setForm]=useState<any>({}),[kaydediliyor,setKaydediliyor]=useState(false),[duzenlemeHata,setDuzenlemeHata]=useState("");\n const supabase=useMemo(getSupabaseBrowserClient,[]);'
+          new = ' const [duzenlenenId,setDuzenlenenId]=useState<any>(null),[form,setForm]=useState<any>({}),[kaydediliyor,setKaydediliyor]=useState(false),[duzenlemeHata,setDuzenlemeHata]=useState("");\n const [kullaniciRolu,setKullaniciRolu]=useState<"admin"|"editor"|"viewer">("viewer");\n const supabase=useMemo(getSupabaseBrowserClient,[]);\n const duzenleyebilir=kullaniciRolu==="admin"||kullaniciRolu==="editor";'
+          if old not in s:
+              raise SystemExit('Harita role state anchor bulunamadi')
+          s = s.replace(old, new, 1)
+
+          anchor = ' useEffect(()=>{const ac=()=>{setHaritaBaslatildi(true);setAcik(true);};window.addEventListener(EVENT_AC,ac);return()=>window.removeEventListener(EVENT_AC,ac);},[]);'
+          role_effect = ''' useEffect(()=>{\n  if(!supabase)return;\n  let iptal=false;\n  const rolGetir=async()=>{\n   const {data:{session}}=await supabase.auth.getSession();\n   if(!session){if(!iptal)setKullaniciRolu("viewer");return;}\n   const {data}=await supabase.from("app_users").select("role").eq("id",session.user.id).maybeSingle();\n   const rol=String(data?.role||"viewer");\n   if(!iptal)setKullaniciRolu(rol==="admin"||rol==="editor"?rol:"viewer");\n  };\n  void rolGetir();\n  const {data:{subscription}}=supabase.auth.onAuthStateChange(()=>{void rolGetir();});\n  return()=>{iptal=true;subscription.unsubscribe();};\n },[supabase]);\n'''
+          if anchor not in s:
+              raise SystemExit('Harita effect anchor bulunamadi')
+          s = s.replace(anchor, role_effect + anchor, 1)
+
+          old = ' const duzenle=(k:any)=>{setDuzenlemeHata("");setDuzenlenenId(k.id);setForm({...k,tarih:tarihInput(k.tarih)});};'
+          new = ' const duzenle=(k:any)=>{if(!duzenleyebilir)return;setDuzenlemeHata("");setDuzenlenenId(k.id);setForm({...k,tarih:tarihInput(k.tarih)});};'
+          if old not in s:
+              raise SystemExit('duzenle anchor bulunamadi')
+          s = s.replace(old, new, 1)
+
+          old = ' const kaydet=async()=>{if(!supabase||duzenlenenId==null)return;'
+          new = ' const kaydet=async()=>{if(!supabase||duzenlenenId==null||!duzenleyebilir){setDuzenlemeHata("Bu işlem için düzenleme yetkiniz yok.");return;}'
+          if old not in s:
+              raise SystemExit('kaydet anchor bulunamadi')
+          s = s.replace(old, new, 1)
+
+          old = '<button onClick={()=>duzenle(k)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-black text-white active:bg-blue-700">✏️ Düzenle</button>'
+          new = '{duzenleyebilir&&<button onClick={()=>duzenle(k)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-black text-white active:bg-blue-700">✏️ Düzenle</button>}'
+          if old not in s:
+              raise SystemExit('Düzenle butonu anchor bulunamadi')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          # 2) Sag ust kullanici kartinda sabit Admin/H bilgisini kaldir.
+          p = Path('app/page.tsx')
+          s = p.read_text(encoding='utf-8')
+          old = '<div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">H</div><div><div className="text-[11px] font-black text-slate-800">{misafirModu?"Misafir":"Admin"}</div><div className="text-[9px] text-slate-400">{misafirModu?"Görüntüleme":kullaniciRolu}</div></div></div>'
+          new = '<div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">{misafirModu?"M":(session?.user.email?.charAt(0).toUpperCase()||"K")}</div><div className="min-w-0"><div className="max-w-[150px] truncate text-[11px] font-black text-slate-800">{misafirModu?"Misafir":(session?.user.email||"Kullanıcı")}</div><div className="text-[9px] text-slate-400">{misafirModu?"Görüntüleme":kullaniciRolu}</div></div></div>'
+          if old not in s:
+              raise SystemExit('Header kullanici karti anchor bulunamadi')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/HaritaEntegrasyon.tsx app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix viewer permissions in transformer history"
+          git push
