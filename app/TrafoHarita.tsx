@@ -296,9 +296,23 @@ export default function TrafoHarita() {
       setDegisimYukleniyor(true);
       try {
         if (!supabase) throw new Error("Supabase ayarları bulunamadı");
-        const { data, error } = await supabase.from("trafo_degisim").select("id,trafo_id,lokasyon_id,tr,tarih,degisim_nedeni,aciklama").order("tarih", { ascending: false, nullsFirst: false });
-        if (error) throw error;
-        if (!kapandi) setDegisimKayitlari((data || []) as DegisimKaydi[]);
+        let sonHata: unknown = null;
+        for (let deneme = 0; deneme < 3; deneme++) {
+          try {
+            const { data, error } = await supabase.from("trafo_degisim").select("id,trafo_id,lokasyon_id,tr,tarih,degisim_nedeni,aciklama").order("tarih", { ascending: false, nullsFirst: false });
+            if (error) throw error;
+            if (!kapandi) {
+              setDegisimKayitlari((data || []) as DegisimKaydi[]);
+              setHata(h => h.startsWith("Değişim kayıtları eşleştirilemedi:") ? "" : h);
+            }
+            sonHata = null;
+            break;
+          } catch (e) {
+            sonHata = e;
+            if (deneme < 2) await new Promise(ok => window.setTimeout(ok, 700 * (deneme + 1)));
+          }
+        }
+        if (sonHata) throw sonHata;
       } catch (e: any) { if (!kapandi) setHata(h => h || `Değişim kayıtları eşleştirilemedi: ${e?.message || "bilinmeyen hata"}`); }
       finally { if (!kapandi) setDegisimYukleniyor(false); }
     };
