@@ -1,0 +1,4 @@
+/* Dashboard sadeleştirme: üstteki 4 özet kartı kaldır */
+main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{
+  display:none!important;
+}
