@@ -1,49 +1,76 @@
 @import "tailwindcss";
 
-:root{--background:#f7f8fa;--foreground:#172033;--ink:#14213d;--navy:#17365d;--orange:#ff6b1a;--orange2:#ff8a3d;--line:#e7eaf0;--muted:#718096;--card:#fff}
+:root{--background:#f8fafc;--foreground:#0f172a;--navy:#13213b;--navy2:#1d2d49;--orange:#ff6b1a;--line:#e2e8f0;--muted:#64748b;--card:#fff}
 @theme inline{--color-background:var(--background);--color-foreground:var(--foreground);--font-sans:var(--font-geist-sans);--font-mono:var(--font-geist-mono)}
-*{box-sizing:border-box}html,body{background:var(--background)}body{margin:0;color:var(--foreground);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{transition:.18s ease}button:active{transform:scale(.985)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--background);color:var(--foreground)}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{transition:.15s ease}button:active{transform:scale(.985)}
 
-/* MODERN LIGHT APP SHELL */
-main{background:radial-gradient(circle at 85% 0%,#fff3e9 0,transparent 24%),linear-gradient(180deg,#fafbfc 0,#f5f7fa 100%)!important;color:var(--foreground)!important}
-.rounded-2xl{border-radius:18px!important}.rounded-xl{border-radius:13px!important}.border-slate-200{border-color:var(--line)!important}.shadow-sm{box-shadow:0 1px 2px rgba(16,24,40,.025),0 8px 24px rgba(16,24,40,.045)!important}
+/* v0-like application shell */
+main{background:#f8fafc!important;color:#0f172a!important}
+.rounded-2xl{border-radius:12px!important}.rounded-xl{border-radius:9px!important}.shadow-sm{box-shadow:0 1px 2px rgba(15,23,42,.04)!important}
 
-/* Sidebar becomes a bright retail-like navigation rail */
-aside{background:rgba(255,255,255,.98)!important;border-right:1px solid #e8ebf0!important;box-shadow:6px 0 24px rgba(16,24,40,.035)!important}
-aside>div:first-child{background:#fff!important;border-color:#edf0f4!important}aside *{border-color:#edf0f4}aside .text-slate-900,aside .text-slate-800,aside .text-slate-700{color:#172033!important}aside .text-slate-600,aside .text-slate-500{color:#697386!important}aside .text-slate-400{color:#9aa4b2!important}aside .bg-white{background:#fff!important}aside .bg-slate-50,aside .bg-slate-100{background:#f7f8fa!important}aside button,aside a{border-radius:12px!important;transition:.16s ease}aside button:hover,aside a:hover{background:#fff4ec!important;color:#d94f00!important}aside .bg-blue-600,aside button.bg-blue-600{background:linear-gradient(135deg,#ff6b1a,#ff8533)!important;color:#fff!important;box-shadow:0 7px 18px rgba(255,107,26,.22)!important}aside .bg-blue-600 *,aside button.bg-blue-600 *{color:#fff!important}aside .border-t{border-color:#edf0f4!important}
+/* desktop sidebar */
+@media(min-width:1024px){
+  aside.fixed.lg\:flex{width:264px!important;background:#13213b!important;border-right:0!important;color:#d7deea!important;box-shadow:none!important}
+  section.lg\:ml-\[248px\]{margin-left:264px!important}
+  aside.fixed.lg\:flex>div:first-child{background:#13213b!important;border-color:#263752!important;padding:20px 20px!important}
+  aside.fixed.lg\:flex>div:first-child .bg-gradient-to-br{background:#ff6b1a!important;border-radius:8px!important;box-shadow:none!important}
+  aside.fixed.lg\:flex>div:first-child .text-slate-900{color:#fff!important}
+  aside.fixed.lg\:flex>div:first-child .text-slate-500{color:#91a0b8!important}
+  aside.fixed.lg\:flex nav{padding:12px 12px!important}
+  aside.fixed.lg\:flex nav button,aside.fixed.lg\:flex nav a{color:#aeb9cb!important;border-color:transparent!important;border-radius:7px!important;box-shadow:none!important}
+  aside.fixed.lg\:flex nav button:hover,aside.fixed.lg\:flex nav a:hover{background:#1d2d49!important;color:#fff!important}
+  aside.fixed.lg\:flex nav .bg-blue-600,aside.fixed.lg\:flex nav button.bg-blue-600{background:#223553!important;color:#fff!important;border-left:3px solid #ff6b1a!important;border-radius:7px!important;box-shadow:none!important}
+  aside.fixed.lg\:flex nav .text-slate-400,aside.fixed.lg\:flex nav .text-slate-500,aside.fixed.lg\:flex nav .text-slate-600{color:#7889a4!important}
+  aside.fixed.lg\:flex>div:last-child{background:#13213b!important;border-color:#263752!important}
+  aside.fixed.lg\:flex>div:last-child>div{background:#1a2a45!important;border-color:#263752!important}
+  aside.fixed.lg\:flex>div:last-child .text-slate-700{color:#fff!important}
+  aside.fixed.lg\:flex>div:last-child button{background:#1a2a45!important;border-color:#2a3b58!important;color:#d7deea!important}
+}
 
-/* Header */
-header{background:rgba(255,255,255,.94)!important;border-bottom:1px solid #eaedf1!important;box-shadow:0 3px 18px rgba(16,24,40,.035)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-header input{height:44px!important;border-radius:14px!important;background:#f7f8fa!important;border:1px solid #e6e9ef!important;box-shadow:none!important}header input:focus{background:#fff!important;border-color:#ffad7a!important;box-shadow:0 0 0 4px rgba(255,107,26,.08)!important}header a[href*="balikesir-sistem-isletme"]{background:linear-gradient(135deg,#ff6b1a,#ff943f)!important;border:0!important;color:#fff!important;border-radius:13px!important;box-shadow:0 7px 18px rgba(255,107,26,.18)!important}
+/* header */
+header{min-height:64px!important;background:#fff!important;border-bottom:1px solid #e5e7eb!important;box-shadow:none!important;padding-left:24px!important;padding-right:24px!important}
+header input{height:40px!important;max-width:580px;background:#f8fafc!important;border:1px solid #dfe4ea!important;border-radius:8px!important;box-shadow:none!important}
+header input:focus{background:#fff!important;border-color:#94a3b8!important;box-shadow:0 0 0 3px rgba(148,163,184,.12)!important}
+header a[href*="balikesir-sistem-isletme"]{background:#ff6b1a!important;border:0!important;color:#fff!important;border-radius:8px!important;box-shadow:none!important}
 
-/* Main content */
-section>div.mx-auto{max-width:1500px!important;padding:24px 30px 34px!important}h1{letter-spacing:-.045em!important;color:#121a2b!important}.font-black{letter-spacing:-.026em}main .grid{column-gap:16px;row-gap:16px}
+/* content width and typography */
+section>div.mx-auto{max-width:none!important;padding:26px 24px 40px!important}
+h1{letter-spacing:-.035em!important;color:#0f172a!important}.font-black{letter-spacing:-.018em}
+main .text-blue-500,main .text-blue-600,main .text-blue-700{color:#f05b12!important}
+main .bg-blue-600{background:#13213b!important}.hover\:bg-blue-700:hover{background:#1d2d49!important}
+main .bg-blue-50,main .bg-blue-100{background:#fff5ef!important}.border-blue-200{border-color:#fed7c2!important}
 
-/* Cards: clean storefront/dashboard hybrid */
-main .bg-white.border,main .border.bg-white{background:rgba(255,255,255,.97)!important;border:1px solid #e7eaf0!important;box-shadow:0 2px 4px rgba(16,24,40,.02),0 10px 28px rgba(16,24,40,.045)!important}
-main .grid>.rounded-2xl,main .grid>.border{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-main .grid>.rounded-2xl:hover,main .grid>.border:hover{transform:translateY(-2px);border-color:#ffd6bd!important;box-shadow:0 14px 34px rgba(16,24,40,.075)!important}
+/* cards */
+main .bg-white.border,main .border.bg-white{background:#fff!important;border:1px solid #dfe4ea!important;box-shadow:0 1px 2px rgba(15,23,42,.025)!important}
+main .grid>.rounded-2xl,main .grid>.border{transition:border-color .15s ease,box-shadow .15s ease}
+main .grid>.rounded-2xl:hover,main .grid>.border:hover{transform:none!important;border-color:#cbd5e1!important;box-shadow:0 5px 18px rgba(15,23,42,.05)!important}
 
-/* Inputs and action buttons */
-input,select,textarea{border-color:#dfe4eb!important;background:#fff!important}input:focus,select:focus,textarea:focus{border-color:#ff9d62!important;box-shadow:0 0 0 4px rgba(255,107,26,.075)!important}.bg-blue-600{background:var(--navy)!important}.hover\:bg-blue-700:hover{background:#0f2948!important}.text-blue-500,.text-blue-600,.text-blue-700{color:#e95c0c!important}.bg-blue-50,.bg-blue-100{background:#fff3ea!important}.border-blue-200{border-color:#ffd4b8!important}main select,main input[type=date]{min-height:42px;border-radius:12px!important}
+/* compact controls like v0 */
+input,select,textarea{border-color:#dfe4ea!important;background:#fff!important}input:focus,select:focus,textarea:focus{border-color:#94a3b8!important;box-shadow:0 0 0 3px rgba(148,163,184,.12)!important}
+main select,main input[type=date]{min-height:38px!important;border-radius:8px!important}
+main button.border{background:#fff!important;border-color:#dfe4ea!important;box-shadow:none!important}main button.border:hover{background:#f8fafc!important;border-color:#cbd5e1!important;color:#0f172a!important}
+main .gap-6{gap:1rem!important}main .gap-5{gap:.9rem!important}main .gap-4{gap:.8rem!important}main .p-6{padding:1.15rem!important}main .p-5{padding:1rem!important}
 
-/* Dashboard controls: premium filter tray */
-main .gap-4{gap:.8rem!important}main .gap-5{gap:1rem!important}main .gap-6{gap:1.1rem!important}main .p-6{padding:1.25rem!important}main .p-5{padding:1.05rem!important}main .py-5{padding-top:1rem!important;padding-bottom:1rem!important}
-main button.border{background:#fff!important;border-color:#e1e6ed!important;box-shadow:0 1px 2px rgba(16,24,40,.02)}main button.border:hover{background:#fff7f2!important;border-color:#ffc59f!important;color:#d9540b!important}
+/* dashboard: reduce the old oversized filter tray and KPI visual noise */
+main .ring-1.ring-slate-100{box-shadow:none!important;border-color:#dfe4ea!important}
+main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{gap:16px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5>div{min-height:112px!important}
+main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{display:none!important}
+main button:has(+ div.grid.grid-cols-2.gap-3.sm\:grid-cols-3.xl\:grid-cols-6){display:none!important}
 
-/* KPI cards get visual hierarchy without changing markup/data */
-main .grid.grid-cols-1.sm\:grid-cols-2.xl\:grid-cols-4>div{overflow:hidden;position:relative}main .grid.grid-cols-1.sm\:grid-cols-2.xl\:grid-cols-4>div:after{content:"";position:absolute;right:-28px;top:-30px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.09),transparent 70%);pointer-events:none}
+/* charts */
+main svg{overflow:visible}main .rounded-2xl svg text{font-family:inherit}.bg-orange-500{background:#ff6b1a!important}.text-orange-500,.text-orange-600{color:#f05b12!important}
+#degisim-nedenleri{grid-template-columns:minmax(0,2fr) minmax(0,3fr)!important;gap:16px!important}
+#degisim-nedenleri>div,#zaman-analizi>div{border-radius:12px!important}
 
-/* Charts */
-main svg{overflow:visible}main .rounded-2xl svg text{font-family:inherit}.bg-orange-500{background:#ff6b1a!important}.text-orange-500,.text-orange-600{color:#ef5f0d!important}
+/* tables */
+table{border-collapse:separate;border-spacing:0;background:#fff}thead th{background:#f8fafc!important;color:#64748b!important;font-size:10px!important;text-transform:uppercase;letter-spacing:.05em;font-weight:700!important;border-bottom:1px solid #e2e8f0!important}tbody td{border-color:#eef2f7!important}tbody tr:hover{background:#f8fafc!important}
 
-/* Tables */
-table{border-collapse:separate;border-spacing:0;background:#fff}thead th{background:#f8f9fb!important;color:#697386!important;font-size:10px!important;text-transform:uppercase;letter-spacing:.06em;font-weight:800!important;border-bottom:1px solid #e8ebf0!important}tbody td{border-color:#eef1f4!important}tbody tr{transition:.12s ease}tbody tr:hover{background:#fff7f1!important}
+/* yearly chart remains responsive */
+#zaman-analizi .yillik-yatay-scroller{overflow-x:auto!important;padding-bottom:4px}#zaman-analizi .yillik-yatay-chart{min-width:700px!important;width:100%!important}#zaman-analizi .yillik-yatay-plot{height:auto!important;min-height:0!important;padding:8px 0 2px!important}#zaman-analizi .yillik-yatay-plot>.pointer-events-none{display:none!important}#zaman-analizi .yillik-yatay-groups{position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important;padding:2px 12px 4px!important}#zaman-analizi .yillik-yatay-row{display:grid!important;grid-template-columns:52px minmax(0,1fr) 46px!important;align-items:center!important;width:100%!important}.yillik-yatay-bars{border-radius:6px!important;overflow:hidden!important}
 
-/* Analysis chart layout retained */
-#zaman-analizi .yillik-yatay-scroller{overflow-x:auto!important;padding-bottom:4px}#zaman-analizi .yillik-yatay-chart{min-width:700px!important;width:100%!important}#zaman-analizi .yillik-yatay-plot{height:auto!important;min-height:0!important;padding:8px 0 2px!important}#zaman-analizi .yillik-yatay-plot>.pointer-events-none{display:none!important}#zaman-analizi .yillik-yatay-groups{position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important;padding:2px 12px 4px!important}#zaman-analizi .yillik-yatay-row{display:grid!important;grid-template-columns:52px minmax(0,1fr) 46px!important;align-items:center!important;width:100%!important}.yillik-yatay-bars{border-radius:8px!important;overflow:hidden!important}
+*{scrollbar-width:thin;scrollbar-color:#94a3b8 transparent}::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:999px}
 
-*{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
-
-@media(max-width:1023px){section>div.mx-auto{padding:18px!important}header{position:sticky;top:0;z-index:30}aside{box-shadow:8px 0 30px rgba(16,24,40,.10)!important}main .grid{column-gap:11px;row-gap:11px}main .p-6,main .p-5{padding:15px!important}}
-@media(max-width:639px){body{font-size:14px}main{overflow-x:hidden;background:#f7f8fa!important}.rounded-2xl{border-radius:15px!important}.rounded-xl{border-radius:12px!important}section>div.mx-auto{padding:13px!important}.text-3xl{font-size:1.55rem!important;line-height:1.85rem!important}button{min-height:40px}input,select,textarea{min-height:42px;font-size:16px!important}header input{height:42px!important}main .grid{gap:11px!important}#zaman-analizi .yillik-yatay-chart{min-width:560px!important}}
+@media(max-width:1279px){main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important}#degisim-nedenleri{grid-template-columns:1fr!important}}
+@media(max-width:1023px){section>div.mx-auto{padding:18px!important}header{position:sticky;top:0;z-index:30;padding-left:16px!important;padding-right:16px!important}main .grid{column-gap:11px;row-gap:11px}main .p-6,main .p-5{padding:15px!important}}
+@media(max-width:639px){body{font-size:14px}main{overflow-x:hidden}.rounded-2xl{border-radius:11px!important}.rounded-xl{border-radius:9px!important}section>div.mx-auto{padding:13px!important}.text-3xl{font-size:1.55rem!important;line-height:1.85rem!important}button{min-height:40px}input,select,textarea{min-height:42px;font-size:16px!important}header input{height:42px!important}main .grid{gap:11px!important}main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{grid-template-columns:1fr 1fr!important}#zaman-analizi .yillik-yatay-chart{min-width:560px!important}}
