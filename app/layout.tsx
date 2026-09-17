@@ -30,38 +30,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const desktopViewBootstrap = `
-(() => {
-  try {
-    if (window.localStorage.getItem("trafo-force-desktop") !== "1") return;
-    const apply = () => {
-      const meta = document.querySelector('meta[name="viewport"]');
-      if (!meta) {
-        setTimeout(apply, 0);
-        return;
-      }
-      const shortSide = Math.min(window.screen.width || 390, window.screen.height || 844);
-      const desktopWidth = 1180;
-      const scale = Math.max(0.25, Math.min(1, shortSide / desktopWidth));
-      meta.setAttribute(
-        "content",
-        "width=" + desktopWidth +
-          ", initial-scale=" + scale.toFixed(3) +
-          ", minimum-scale=0.2, maximum-scale=3, viewport-fit=cover"
-      );
-      document.documentElement.setAttribute("data-trafo-desktop", "1");
-    };
-    apply();
-  } catch (_) {}
-})();
-`;
-
 export default function RootLayout({children}:{children:React.ReactNode}) {
   return (
     <html lang="tr">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: desktopViewBootstrap }} />
-      </head>
       <body>
         {children}
         <DesktopViewToggle />
