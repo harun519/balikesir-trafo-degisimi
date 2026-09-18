@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./dashboard-tweaks.css";
 import "./new-record-premium.css";
+import "./new-record-redesign.css";
 import "leaflet/dist/leaflet.css";
 import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
@@ -15,6 +16,7 @@ import HaritaKayitSenkron from "./HaritaKayitSenkron";
 import PwaSaglamlastirma from "./PwaSaglamlastirma";
 import PortalLoginCleanup from "./PortalLoginCleanup";
 import DesktopViewToggle from "./DesktopViewToggle";
+import NewRecordRedesign from "./NewRecordRedesign";
 
 export const metadata: Metadata = {
   title: "BALIKESİR TRAFO DEĞİŞİMİ",
@@ -37,6 +39,7 @@ export default function RootLayout({children}:{children:React.ReactNode}) {
     <html lang="tr">
       <body>
         {children}
+        <NewRecordRedesign />
         <DesktopViewToggle />
         <PortalLoginCleanup />
         <HaritaEntegrasyon />
