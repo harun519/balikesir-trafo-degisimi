@@ -1,251 +1,71 @@
 /* TRAFO UI REFRESH — modern operasyon paneli */
 
 /* Gereksiz üst 4 özet kartını kaldır */
-main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{
-  display:none!important;
-}
+main .grid.grid-cols-2.gap-2.sm\:grid-cols-2.sm\:gap-3.xl\:grid-cols-5{display:none!important}
 
-/* Genel yüzey */
-body{
-  background:
-    radial-gradient(circle at 82% 0%,rgba(59,130,246,.10),transparent 27%),
-    radial-gradient(circle at 18% 16%,rgba(14,165,233,.07),transparent 23%),
-    #f5f7fb!important;
-}
-main{
-  background:transparent!important;
-}
+body{background:radial-gradient(circle at 82% 0%,rgba(59,130,246,.08),transparent 27%),radial-gradient(circle at 18% 16%,rgba(14,165,233,.05),transparent 23%),#f4f7fb!important;color:#0f172a!important}
+main{background:transparent!important}
 
-/* Masaüstü sol menü: daha premium ve kompakt */
 @media(min-width:1024px){
-  aside.fixed.lg\:flex{
-    width:252px!important;
-    background:
-      radial-gradient(circle at 50% -8%,rgba(59,130,246,.24),transparent 28%),
-      linear-gradient(180deg,#0b1324 0%,#0b1427 45%,#091120 100%)!important;
-    border-right:1px solid rgba(148,163,184,.10)!important;
-    box-shadow:18px 0 42px rgba(15,23,42,.12)!important;
-  }
+  aside.fixed.lg\:flex{width:252px!important;background:linear-gradient(180deg,#0b1930 0%,#0d203d 52%,#09182d 100%)!important;border-right:1px solid rgba(148,163,184,.10)!important;box-shadow:18px 0 42px rgba(15,23,42,.12)!important}
   section.lg\:ml-\[248px\]{margin-left:252px!important}
-
-  aside.fixed.lg\:flex>div:first-child{
-    min-height:88px!important;
-    padding:18px 17px!important;
-    background:rgba(255,255,255,.025)!important;
-    border-bottom:1px solid rgba(148,163,184,.12)!important;
-  }
-  aside.fixed.lg\:flex>div:first-child .bg-gradient-to-br{
-    width:42px!important;
-    height:42px!important;
-    border-radius:14px!important;
-    background:linear-gradient(135deg,#2563eb 0%,#06b6d4 100%)!important;
-    box-shadow:0 10px 28px rgba(37,99,235,.35)!important;
-  }
-  aside.fixed.lg\:flex nav{
-    padding:17px 12px!important;
-  }
-  aside.fixed.lg\:flex nav button,
-  aside.fixed.lg\:flex nav a{
-    min-height:42px!important;
-    margin-bottom:5px!important;
-    padding:0 12px!important;
-    border-radius:12px!important;
-    color:#a7b4c8!important;
-    border:1px solid transparent!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-  aside.fixed.lg\:flex nav button:hover,
-  aside.fixed.lg\:flex nav a:hover{
-    color:#fff!important;
-    background:rgba(255,255,255,.065)!important;
-    border-color:rgba(148,163,184,.10)!important;
-    transform:translateX(3px)!important;
-  }
-  aside.fixed.lg\:flex nav button.bg-blue-600,
-  aside.fixed.lg\:flex nav .bg-blue-600{
-    color:#fff!important;
-    background:linear-gradient(135deg,#2563eb,#3b82f6)!important;
-    border-color:rgba(147,197,253,.18)!important;
-    box-shadow:0 10px 26px rgba(37,99,235,.28)!important;
-  }
-  aside.fixed.lg\:flex>div:last-child{
-    padding:13px!important;
-    border-top:1px solid rgba(148,163,184,.12)!important;
-    background:rgba(0,0,0,.08)!important;
-  }
-  aside.fixed.lg\:flex>div:last-child>div,
-  aside.fixed.lg\:flex>div:last-child button{
-    background:rgba(255,255,255,.055)!important;
-    border-color:rgba(148,163,184,.13)!important;
-    color:#e7edf6!important;
-  }
+  aside.fixed.lg\:flex>div:first-child{min-height:82px!important;padding:16px 17px!important;background:rgba(255,255,255,.025)!important;border-bottom:1px solid rgba(148,163,184,.12)!important}
+  aside.fixed.lg\:flex>div:first-child .bg-gradient-to-br{width:42px!important;height:42px!important;border-radius:13px!important;background:linear-gradient(135deg,#f97316,#fb923c)!important;box-shadow:0 10px 25px rgba(249,115,22,.28)!important}
+  aside.fixed.lg\:flex nav{padding:14px 11px!important}
+  aside.fixed.lg\:flex nav button,aside.fixed.lg\:flex nav a{min-height:42px!important;margin-bottom:4px!important;padding:0 12px!important;border-radius:10px!important;color:#aebbd0!important;border:1px solid transparent!important;background:transparent!important;box-shadow:none!important;font-weight:650!important;transition:all .18s ease!important}
+  aside.fixed.lg\:flex nav button:hover,aside.fixed.lg\:flex nav a:hover{color:#fff!important;background:rgba(255,255,255,.075)!important;border-color:rgba(148,163,184,.12)!important;transform:translateX(2px)!important}
+  aside.fixed.lg\:flex nav button.bg-blue-600,aside.fixed.lg\:flex nav .bg-blue-600{color:#fff!important;background:linear-gradient(135deg,#1d4ed8,#2563eb)!important;border-color:rgba(147,197,253,.18)!important;box-shadow:0 9px 22px rgba(37,99,235,.25)!important}
+  aside.fixed.lg\:flex>div:last-child{padding:12px!important;border-top:1px solid rgba(148,163,184,.12)!important;background:rgba(0,0,0,.08)!important}
+  aside.fixed.lg\:flex>div:last-child>div,aside.fixed.lg\:flex>div:last-child button{background:rgba(255,255,255,.055)!important;border-color:rgba(148,163,184,.13)!important;color:#e7edf6!important;border-radius:11px!important}
 }
 
-/* Üst bar */
-header{
-  min-height:72px!important;
-  padding:0 24px!important;
-  background:rgba(255,255,255,.78)!important;
-  border-bottom:1px solid rgba(226,232,240,.85)!important;
-  box-shadow:0 8px 28px rgba(15,23,42,.045)!important;
-  backdrop-filter:blur(20px) saturate(160%)!important;
-  -webkit-backdrop-filter:blur(20px) saturate(160%)!important;
-}
-header input{
-  height:43px!important;
-  border-radius:13px!important;
-  background:rgba(248,250,252,.94)!important;
-  border:1px solid #e2e8f0!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8)!important;
-}
-header a[href*="balikesir-sistem-isletme"]{
-  background:linear-gradient(135deg,#111827,#1f2937)!important;
-  color:#fff!important;
-  border:1px solid rgba(255,255,255,.06)!important;
-  box-shadow:0 8px 20px rgba(15,23,42,.16)!important;
-}
+header{min-height:68px!important;padding:0 24px!important;background:rgba(255,255,255,.90)!important;border-bottom:1px solid #e5eaf1!important;box-shadow:0 6px 24px rgba(15,23,42,.045)!important;backdrop-filter:blur(18px) saturate(150%)!important;-webkit-backdrop-filter:blur(18px) saturate(150%)!important}
+header input{height:42px!important;border-radius:12px!important;background:#f8fafc!important;border:1px solid #dfe6ef!important;box-shadow:0 1px 2px rgba(15,23,42,.03)!important}
+header input:focus{background:#fff!important;border-color:#93c5fd!important;box-shadow:0 0 0 4px rgba(59,130,246,.09)!important}
+header a[href*="balikesir-sistem-isletme"]{background:linear-gradient(135deg,#0f172a,#1e293b)!important;color:#fff!important;border:1px solid rgba(255,255,255,.06)!important;border-radius:11px!important;box-shadow:0 7px 18px rgba(15,23,42,.15)!important}
 
-/* İçerik alanı */
-section>div.mx-auto{
-  max-width:1560px!important;
-  padding:30px 34px 56px!important;
-}
+section>div.mx-auto{max-width:1560px!important;padding:28px 32px 54px!important}
+section>div.mx-auto>div:has(>div>h1),section>div.mx-auto>div:has(>h1){position:relative!important;overflow:hidden!important;padding:22px 24px!important;margin-bottom:18px!important;border:1px solid #e1e7ef!important;border-radius:18px!important;background:radial-gradient(circle at 92% 20%,rgba(37,99,235,.11),transparent 24%),linear-gradient(135deg,#fff,#f8fbff)!important;box-shadow:0 10px 30px rgba(15,23,42,.055)!important}
+section>div.mx-auto>div:has(>div>h1)::after,section>div.mx-auto>div:has(>h1)::after{content:"";position:absolute;width:220px;height:220px;border-radius:999px;right:-90px;top:-105px;background:radial-gradient(circle,rgba(14,165,233,.10),transparent 66%);pointer-events:none}
+section>div.mx-auto h1{font-size:clamp(25px,2.3vw,35px)!important;letter-spacing:-.045em!important}
 
-/* Sayfa başlık alanı — hero hissi */
-section>div.mx-auto>div:has(>div>h1),
-section>div.mx-auto>div:has(>h1){
-  position:relative!important;
-  overflow:hidden!important;
-  padding:23px 24px!important;
-  margin-bottom:20px!important;
-  border:1px solid rgba(219,227,238,.95)!important;
-  border-radius:22px!important;
-  background:
-    radial-gradient(circle at 92% 20%,rgba(37,99,235,.14),transparent 24%),
-    linear-gradient(135deg,rgba(255,255,255,.98),rgba(246,249,255,.96))!important;
-  box-shadow:0 14px 36px rgba(15,23,42,.07)!important;
-}
-section>div.mx-auto>div:has(>div>h1)::after,
-section>div.mx-auto>div:has(>h1)::after{
-  content:"";
-  position:absolute;
-  width:220px;
-  height:220px;
-  border-radius:999px;
-  right:-90px;
-  top:-105px;
-  background:radial-gradient(circle,rgba(14,165,233,.12),transparent 66%);
-  pointer-events:none;
-}
-section>div.mx-auto h1{
-  font-size:clamp(25px,2.3vw,36px)!important;
-  letter-spacing:-.045em!important;
-}
+/* Filtre alanı: e-ticaret yönetim paneli gibi kompakt */
+main .ring-1.ring-slate-100{border:1px solid #dfe6ef!important;border-radius:16px!important;padding:16px!important;background:rgba(255,255,255,.97)!important;box-shadow:0 8px 24px rgba(15,23,42,.05)!important}
+main .ring-1.ring-slate-100 select,main .ring-1.ring-slate-100 input{min-height:42px!important;background:#f8fafc!important;border:1px solid #dbe3ed!important;border-radius:10px!important;transition:all .16s ease!important}
+main .ring-1.ring-slate-100 select:hover,main .ring-1.ring-slate-100 input:hover{border-color:#b8c5d6!important;background:#fff!important}
+main .ring-1.ring-slate-100 button{min-height:40px!important;border-radius:9px!important;font-weight:700!important;transition:all .16s ease!important}
 
-/* Filtre/komut merkezi */
-main .ring-1.ring-slate-100{
-  border:1px solid #e2e8f0!important;
-  border-radius:22px!important;
-  padding:18px!important;
-  background:rgba(255,255,255,.95)!important;
-  box-shadow:0 12px 32px rgba(15,23,42,.06)!important;
-}
-main .ring-1.ring-slate-100 select,
-main .ring-1.ring-slate-100 input{
-  min-height:44px!important;
-  background:#f8fafc!important;
-  border:1px solid #dfe6ef!important;
-  border-radius:12px!important;
-}
-main .ring-1.ring-slate-100 button{
-  min-height:42px!important;
-  border-radius:12px!important;
-}
+main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{gap:14px!important}
+main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div,main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button{min-height:112px!important;position:relative!important;overflow:hidden!important;border:1px solid #e0e7ef!important;border-radius:16px!important;background:linear-gradient(160deg,#fff 0%,#f9fbfe 100%)!important;box-shadow:0 7px 22px rgba(15,23,42,.055)!important;transition:all .18s ease!important}
+main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div:hover,main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button:hover{transform:translateY(-2px)!important;border-color:#cbd5e1!important;box-shadow:0 13px 30px rgba(15,23,42,.09)!important}
 
-/* Ana KPI'lar — daha belirgin */
-main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{
-  gap:16px!important;
-}
-main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div,
-main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button{
-  min-height:118px!important;
-  position:relative!important;
-  overflow:hidden!important;
-  border:1px solid #e2e8f0!important;
-  border-radius:20px!important;
-  background:linear-gradient(160deg,#ffffff 0%,#f8fbff 100%)!important;
-  box-shadow:0 10px 28px rgba(15,23,42,.065)!important;
-}
-main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div:hover,
-main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button:hover{
-  transform:translateY(-2px)!important;
-  box-shadow:0 16px 36px rgba(15,23,42,.10)!important;
-}
+main .rounded-2xl.border.border-slate-200.bg-white{border-color:#e0e7ef!important;background:rgba(255,255,255,.98)!important;box-shadow:0 8px 24px rgba(15,23,42,.05)!important}
 
-/* Panel kartları */
-main .rounded-2xl.border.border-slate-200.bg-white{
-  border-color:#e1e7ef!important;
-  background:rgba(255,255,255,.97)!important;
-  box-shadow:0 10px 28px rgba(15,23,42,.055)!important;
-}
+/* Grafik oranı: Değişim Nedenleri büyük, yıllık grafik daha dar */
+#degisim-nedenleri{gap:16px!important;margin-top:18px!important}
+@media(min-width:1280px){#degisim-nedenleri{grid-template-columns:minmax(0,3fr) minmax(0,2fr)!important}}
+#degisim-nedenleri>div,#zaman-analizi>div{border-radius:18px!important;border:1px solid #e0e7ef!important;background:#fff!important;box-shadow:0 9px 26px rgba(15,23,42,.055)!important}
 
-/* Analiz alanı daha dengeli */
-#degisim-nedenleri{
-  gap:18px!important;
-  margin-top:20px!important;
-}
-#degisim-nedenleri>div,
-#zaman-analizi>div{
-  border-radius:22px!important;
-  border:1px solid #e1e7ef!important;
-  background:rgba(255,255,255,.98)!important;
-  box-shadow:0 12px 32px rgba(15,23,42,.06)!important;
-}
+/* Tüm aksiyonlar daha modern ve tutarlı */
+main button{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background-color .16s ease,color .16s ease!important}
+main button.border{border-color:#dce4ee!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)!important;border-radius:9px!important}
+main button.border:hover{border-color:#b9c8da!important;background:#f8fafc!important;color:#0f4fa8!important;box-shadow:0 4px 12px rgba(15,23,42,.06)!important}
+main button.bg-blue-600{background:linear-gradient(135deg,#0f4fa8,#1769c2)!important;border-color:rgba(23,105,194,.55)!important;border-radius:10px!important;box-shadow:0 7px 18px rgba(23,105,194,.20)!important}
+main button.bg-blue-600:hover{transform:translateY(-1px)!important;box-shadow:0 10px 23px rgba(23,105,194,.26)!important}
 
-/* Küçük butonlar / hızlı filtreler */
-main button.border{
-  border-color:#dde4ed!important;
-  background:#fff!important;
-  box-shadow:0 1px 2px rgba(15,23,42,.035)!important;
-}
-main button.border:hover{
-  border-color:#bfdbfe!important;
-  background:#f8fbff!important;
-  color:#1d4ed8!important;
-}
-main button.bg-blue-600{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;
-  border-color:rgba(37,99,235,.55)!important;
-  box-shadow:0 8px 20px rgba(37,99,235,.22)!important;
-}
+/* Hızlı filtre chip'leri */
+main .ring-1.ring-slate-100 .mt-3.flex.flex-wrap.gap-2 button{min-height:34px!important;padding:6px 12px!important;border-radius:999px!important;font-size:11px!important;background:#fff!important;border:1px solid #dbe3ed!important;box-shadow:none!important}
+main .ring-1.ring-slate-100 .mt-3.flex.flex-wrap.gap-2 button:hover{background:#f1f5f9!important;border-color:#b8c5d6!important;transform:translateY(-1px)!important}
 
-/* Mobil görünüm */
+/* Grafik içi neden butonları */
+#degisim-nedenleri button{border-radius:10px!important;box-shadow:none!important}
+#degisim-nedenleri button:hover{transform:translateY(-1px)!important;box-shadow:0 5px 14px rgba(15,23,42,.06)!important}
+
 @media(max-width:1023px){
-  section>div.mx-auto{
-    padding:18px 14px 40px!important;
-  }
-  header{
-    min-height:66px!important;
-    padding:0 12px!important;
-  }
-  section>div.mx-auto>div:has(>div>h1),
-  section>div.mx-auto>div:has(>h1){
-    padding:19px 18px!important;
-    border-radius:19px!important;
-  }
-  main .ring-1.ring-slate-100{
-    padding:14px!important;
-    border-radius:18px!important;
-  }
+  section>div.mx-auto{padding:18px 14px 40px!important}
+  header{min-height:64px!important;padding:0 12px!important}
+  section>div.mx-auto>div:has(>div>h1),section>div.mx-auto>div:has(>h1){padding:18px!important;border-radius:16px!important}
+  main .ring-1.ring-slate-100{padding:13px!important;border-radius:14px!important}
 }
 
-/* Masaüstü mod düğmesini sade tut */
-button[aria-label="Mobil görünüme geç"],
-button[aria-label="Masaüstü görünüme geç"]{
-  border-radius:12px!important;
-  padding:9px 12px!important;
-  font-size:11px!important;
-  min-height:38px!important;
-  box-shadow:0 10px 26px rgba(15,23,42,.20)!important;
-}
+button[aria-label="Mobil görünüme geç"],button[aria-label="Masaüstü görünüme geç"]{border-radius:10px!important;padding:9px 12px!important;font-size:11px!important;min-height:38px!important;box-shadow:0 8px 22px rgba(15,23,42,.18)!important}
