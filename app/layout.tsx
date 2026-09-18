@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./dashboard-tweaks.css";
 import "./dashboard-final.css";
+import "./mobile-dashboard-fix.css";
 import "./new-record-premium.css";
 import "./new-record-redesign.css";
 import "leaflet/dist/leaflet.css";
@@ -16,7 +17,6 @@ import HaritaMenuSaglamlastirma from "./HaritaMenuSaglamlastirma";
 import HaritaKayitSenkron from "./HaritaKayitSenkron";
 import PwaSaglamlastirma from "./PwaSaglamlastirma";
 import PortalLoginCleanup from "./PortalLoginCleanup";
-import DesktopViewToggle from "./DesktopViewToggle";
 import NewRecordRedesign from "./NewRecordRedesign";
 
 export const metadata: Metadata = {
@@ -41,7 +41,6 @@ export default function RootLayout({children}:{children:React.ReactNode}) {
       <body>
         {children}
         <NewRecordRedesign />
-        <DesktopViewToggle />
         <PortalLoginCleanup />
         <HaritaEntegrasyon />
         <HaritaMenuSaglamlastirma />
