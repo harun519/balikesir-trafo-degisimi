@@ -1,66 +1,79 @@
-/* Real responsive dashboard fix — no scaled desktop iframe */
+/* Mobile dashboard rebuild: preserve desktop, make phone UI genuinely responsive */
 html,body{max-width:100%;overflow-x:hidden}
 
-/* Dashboard analytics: small donut + large yearly chart on desktop */
-#degisim-nedenleri{display:grid!important;grid-template-columns:minmax(300px,.72fr) minmax(0,1.55fr)!important;gap:18px!important;align-items:stretch!important}
+/* Desktop analytics proportions: reasons compact, yearly analysis dominant */
+#degisim-nedenleri{display:grid!important;grid-template-columns:minmax(320px,.72fr) minmax(0,1.55fr)!important;gap:18px!important;align-items:stretch!important}
 #degisim-nedenleri>div:first-child{min-width:0!important}
 #degisim-nedenleri>#zaman-analizi{min-width:0!important;margin-top:0!important}
-#degisim-nedenleri>div:first-child .min-h-\[430px\]{min-height:360px!important}
+#zaman-analizi button[title*="Kayıtlara git"]{opacity:1!important;filter:none!important;box-shadow:none!important;border:0!important;padding:0!important;background-image:none!important}
 
-/* Keep chart bars vivid. Generic button rules must not wash them out. */
-#zaman-analizi button[title*="Kayıtlara git"]{opacity:1!important;filter:none!important;box-shadow:none!important;border:0!important;min-height:5px!important;padding:0!important;background-image:none!important}
-#zaman-analizi .overflow-x-auto{scrollbar-color:#94a3b8 transparent}
-
-@media(max-width:1279px){
-  #degisim-nedenleri{grid-template-columns:1fr!important}
-  #degisim-nedenleri>#zaman-analizi{margin-top:0!important}
+@media (max-width:1279px){
+  #degisim-nedenleri{grid-template-columns:minmax(270px,.75fr) minmax(0,1.35fr)!important}
 }
 
-@media(max-width:1023px){
-  /* Main app uses its own mobile drawer; do not preserve desktop offsets. */
-  section.lg\:ml-\[248px\]{margin-left:0!important;width:100%!important;min-width:0!important}
-  section>div.mx-auto{width:100%!important;max-width:100%!important;padding:16px 14px 36px!important}
-  header{width:100%!important;max-width:100vw!important;padding:0 12px!important}
-  header input{max-width:100%!important}
-  #degisim-nedenleri{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;width:100%!important;max-width:100%!important}
-  #degisim-nedenleri>div:first-child .min-h-\[430px\]{min-height:0!important}
-  #degisim-nedenleri>div:first-child .flex-1{flex:none!important}
-  #zaman-analizi{width:100%!important;max-width:100%!important;overflow:hidden!important}
-  #zaman-analizi section{width:100%!important;max-width:100%!important}
-  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
-}
-
-@media(max-width:639px){
+@media (max-width:1023px){
+  html,body{width:100%!important;min-width:0!important;overflow-x:hidden!important}
   body{font-size:14px!important}
-  main{width:100%!important;max-width:100vw!important;overflow-x:hidden!important}
-  section>div.mx-auto{padding:12px 10px 30px!important}
-  header{min-height:60px!important;padding:0 10px!important}
 
-  /* KPI cards stay useful instead of desktop cards being miniaturized. */
-  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
-  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div,
-  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button{min-height:94px!important;border-radius:14px!important}
+  /* Kill desktop canvas sizing. Sidebar remains the app's native drawer. */
+  aside:not([role="dialog"]){max-width:86vw!important}
+  section.lg\:ml-\[248px\],section[class*="lg:ml-"]{margin-left:0!important;width:100%!important;max-width:100%!important;min-width:0!important}
+  main{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}
+  section>div.mx-auto{width:100%!important;max-width:100%!important;min-width:0!important;padding:14px 12px 32px!important}
+  header{width:100%!important;max-width:100%!important;min-width:0!important;padding-left:12px!important;padding-right:12px!important}
 
-  /* Analytics become full-width cards. */
-  #degisim-nedenleri{margin-top:14px!important;gap:12px!important}
-  #degisim-nedenleri>div,#zaman-analizi>div,#zaman-analizi section{border-radius:15px!important}
-  #degisim-nedenleri section,#zaman-analizi section{padding:14px!important}
-  #degisim-nedenleri>div:first-child .relative.h-44{height:132px!important;width:132px!important}
-  #degisim-nedenleri>div:first-child .absolute.inset-7{inset:21px!important}
-  #degisim-nedenleri>div:first-child .text-3xl{font-size:1.35rem!important}
-  #degisim-nedenleri>div:first-child .grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
-  #degisim-nedenleri>div:first-child button{min-height:40px!important;padding:7px 9px!important}
+  /* Dashboard analytics stack as real full-width mobile cards. */
+  #degisim-nedenleri{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:14px!important}
+  #degisim-nedenleri>div,#degisim-nedenleri>#zaman-analizi,#zaman-analizi,#zaman-analizi>div,#zaman-analizi section{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important}
+  #degisim-nedenleri>div:first-child{order:1!important}
+  #zaman-analizi{order:2!important}
 
-  /* Yearly chart remains a real chart; only the chart itself may scroll. */
-  #zaman-analizi .mt-5.w-full{margin-top:12px!important}
-  #zaman-analizi .w-0.min-w-full{width:100%!important;min-width:100%!important;overflow-x:auto!important}
-  #zaman-analizi .relative.h-\[320px\]{height:300px!important}
-  #zaman-analizi button[title*="Kayıtlara git"]{min-height:5px!important;min-width:7px!important;width:7px!important;border-radius:4px 4px 0 0!important;opacity:1!important}
+  /* Remove desktop minimum heights that create huge blank areas. */
+  #degisim-nedenleri .min-h-\[430px\]{min-height:0!important}
+  #degisim-nedenleri>div:first-child .flex-1{flex:none!important}
 
-  /* Other dashboard cards: page never scrolls sideways. */
+  /* Other dashboard sections cannot force page width. */
   #neden-guc-analizi,#neden-guc-analizi section{width:100%!important;max-width:100%!important;min-width:0!important}
-  #neden-guc-analizi .overflow-x-auto{max-width:100%!important}
+  #neden-guc-analizi .overflow-x-auto{width:100%!important;max-width:100%!important}
+}
 
-  /* Form step strip may scroll internally, not the whole page. */
-  form .overflow-x-auto{max-width:100%!important;-webkit-overflow-scrolling:touch}
+@media (max-width:639px){
+  section>div.mx-auto{padding:10px 9px 28px!important}
+  header{min-height:58px!important;padding:0 9px!important}
+  header input{max-width:100%!important;min-width:0!important}
+
+  /* Premium compact cards instead of miniaturized desktop. */
+  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important}
+  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>div,
+  main .grid.grid-cols-2.gap-3\.5.xl\:grid-cols-4>button{min-width:0!important;min-height:92px!important;border-radius:16px!important;padding:12px!important}
+
+  /* Analytics cards */
+  #degisim-nedenleri{gap:11px!important;margin-top:12px!important}
+  #degisim-nedenleri>div,#zaman-analizi section{border-radius:16px!important;overflow:hidden!important}
+  #degisim-nedenleri section,#zaman-analizi section{padding:13px!important}
+
+  /* Reasons card: compact donut + two-column legend */
+  #degisim-nedenleri>div:first-child .relative.h-44{width:128px!important;height:128px!important;min-width:128px!important;margin-left:auto!important;margin-right:auto!important}
+  #degisim-nedenleri>div:first-child .absolute.inset-7{inset:20px!important}
+  #degisim-nedenleri>div:first-child .text-3xl{font-size:1.35rem!important;line-height:1.1!important}
+  #degisim-nedenleri>div:first-child .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;width:100%!important}
+  #degisim-nedenleri>div:first-child button{min-width:0!important;min-height:38px!important;padding:7px 8px!important;border-radius:10px!important;font-size:10px!important}
+
+  /* Yearly card: card is phone width; chart alone scrolls horizontally. */
+  #zaman-analizi{overflow:hidden!important}
+  #zaman-analizi .mt-5.w-full{width:100%!important;max-width:100%!important;margin-top:10px!important;overflow:hidden!important}
+  #zaman-analizi .w-0.min-w-full{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important}
+  #zaman-analizi .relative.h-\[320px\]{height:270px!important;min-width:720px!important;width:720px!important}
+  #zaman-analizi button[title*="Kayıtlara git"]{opacity:1!important;filter:none!important;min-width:7px!important;width:7px!important;min-height:4px!important;border-radius:4px 4px 0 0!important}
+
+  /* Tables/forms scroll internally when genuinely wider than the phone. */
+  table{max-width:none}
+  form .overflow-x-auto,.overflow-x-auto{max-width:100%!important;-webkit-overflow-scrolling:touch}
+}
+
+@media (max-width:390px){
+  section>div.mx-auto{padding-left:7px!important;padding-right:7px!important}
+  #degisim-nedenleri section,#zaman-analizi section{padding:11px!important}
+  #degisim-nedenleri>div:first-child .grid{grid-template-columns:1fr!important}
+  #degisim-nedenleri>div:first-child button{min-height:36px!important}
 }
