@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./dashboard-tweaks.css";
+import "./dashboard-final.css";
 import "./new-record-premium.css";
 import "./new-record-redesign.css";
 import "leaflet/dist/leaflet.css";
