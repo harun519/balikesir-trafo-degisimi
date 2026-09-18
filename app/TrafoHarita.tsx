@@ -352,7 +352,7 @@ export default function TrafoHarita() {
         setHazir(true);
         let merkezVar = false;
         try {
-          const r = await fetch("/api/harita-envanter", { cache: "no-store" });
+          const r = await fetch("/api/harita-envanter");
           if (r.ok) {
             const blob = await r.blob();
             if (!kapandi) { await zipOku(blob, "Merkezi trafo envanteri"); setMerkezi(true); merkezVar = true; try { await kaydetBlob(blob); } catch {} }
