@@ -731,15 +731,6 @@ async function kayitlariGetir(){
   const yillar=useMemo(()=>Array.from(new Set(kayitlar.map(k=>k.yil).filter(Boolean) as number[])).sort((a,b)=>b-a),[kayitlar]);
   const ilceler=useMemo(()=>Array.from(new Set([...ILCE_SECENEKLERI,...kayitlar.map(x=>x.ilce?.trim()).filter(Boolean) as string[]])).sort((a,b)=>a.localeCompare(b,"tr")),[kayitlar]);
   const markaSecenekleri=useMemo(()=>{const aktif=trafoMarkalari.filter(x=>x.aktif).map(x=>x.ad);return aktif.length?aktif:MARKA_SECENEKLERI;},[trafoMarkalari]);
-  const sonKullanilanlar=useMemo(()=>{
-    const son=[...kayitlar].sort((a,b)=>(b.updated_at||b.created_at||"").localeCompare(a.updated_at||a.created_at||"")).slice(0,80);
-    const uniq=(arr:(string|null)[])=>Array.from(new Set(arr.filter(Boolean) as string[])).slice(0,6);
-    return {
-      ilce:uniq(son.map(x=>x.ilce)), marka:uniq(son.flatMap(x=>[x.sokulen_markasi,x.takilan_markasi])),
-      guc:uniq(son.flatMap(x=>[x.sokulen_gucu,x.takilan_gucu])), gerilim:uniq(son.flatMap(x=>[x.sokulen_gerilim,x.takilan_gerilim]))
-    };
-  },[kayitlar]);
-
   const veriKaliteUyarilari=useMemo(()=>{
     const u:string[]=[];
     if(form.tarih&&new Date(form.tarih+"T00:00:00").getTime()>Date.now())u.push("Değişim tarihi gelecekte görünüyor.");
@@ -1856,7 +1847,6 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 {formAdim===2&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">🔴</div><div><h2 className="text-lg font-black text-slate-900">Sökülen Trafo</h2><p className="mt-1 text-xs text-slate-500">Sahadan sökülen mevcut trafonun bilgilerini girin.</p></div></div>
                   <div className="mt-6"><FormGrid><ComboAlani baslik="Gücü" deger={form.sokulen_gucu} degistir={v=>formDegistir("sokulen_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="sguc"/><ComboAlani baslik="Gerilim" deger={form.sokulen_gerilim} degistir={v=>formDegistir("sokulen_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="sger"/><ComboAlani baslik="Markası" deger={form.sokulen_markasi} degistir={v=>formDegistir("sokulen_markasi",v)} secenekler={markaSecenekleri} listeId="smarka"/><MetinAlani baslik="Seri No" deger={form.sokulen_seri_no} degistir={v=>formDegistir("sokulen_seri_no",v)}/><MetinAlani baslik="İmal Yılı" deger={form.sokulen_imal_yili} degistir={v=>formDegistir("sokulen_imal_yili",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.sokulen_trafo_tipi} degistir={v=>formDegistir("sokulen_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="stip"/><MetinAlani baslik="Tamir Yılı" deger={form.sokulen_tamir_yili} degistir={v=>formDegistir("sokulen_tamir_yili",v)}/><MetinAlani baslik="Tamir Firması" deger={form.sokulen_tamir_firmasi} degistir={v=>formDegistir("sokulen_tamir_firmasi",v)}/><MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/></FormGrid></div>
-                  <div className="mt-4 space-y-2"><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son güçler</span>{sonKullanilanlar.guc.map(x=><button type="button" key={x} onClick={()=>formDegistir("sokulen_gucu",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600">{x}</button>)}</div><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son markalar</span>{sonKullanilanlar.marka.map(x=><button type="button" key={x} onClick={()=>formDegistir("sokulen_markasi",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600">{x}</button>)}</div></div>
                 </div>}
 
                 {formAdim===3&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
