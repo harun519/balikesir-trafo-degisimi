@@ -1864,7 +1864,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
                         <ComboAlani baslik="Trafo Tipi" deger={form.sokulen_trafo_tipi} degistir={v=>formDegistir("sokulen_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="stip"/>
                         <MetinAlani baslik="Tamir Yılı" deger={form.sokulen_tamir_yili} degistir={v=>formDegistir("sokulen_tamir_yili",v)}/>
                         <MetinAlani baslik="Tamir Firması" deger={form.sokulen_tamir_firmasi} degistir={v=>formDegistir("sokulen_tamir_firmasi",v)}/>
-                          </div>
+                        <MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/>
+                      </div>
                     </section>
 
                     <section className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
@@ -1889,7 +1890,6 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     <Alan baslik="Tarih (Opsiyonel)"><input type="date" value={form.tarih} onChange={e=>formDegistir("tarih",e.target.value)} className={inputSinif}/><span className="mt-1 block text-[10px] text-slate-400">Tarih seçilirse Yıl ve Ay otomatik doldurulur.</span></Alan>
                     <ComboAlani baslik="Değişim Nedeni *" deger={form.degisim_nedeni} degistir={v=>formDegistir("degisim_nedeni",v)} secenekler={NEDENLER.map(n=>n.ad)} listeId="degisim-nedeni" gerekli/>
-                    <MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/>
                     <div className="sm:col-span-2"><Alan baslik="Açıklama"><textarea rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan></div>
                   </div>
 
