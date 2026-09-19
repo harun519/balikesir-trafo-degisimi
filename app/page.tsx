@@ -618,7 +618,7 @@ async function kayitlariGetir(){
       const raw=localStorage.getItem("trafo_yeni_kayit_taslak");
       if(!raw)return;
       const x=JSON.parse(raw);
-      if(x?.form){setForm({...BOS_FORM,...x.form});setFormAdim(Number(x.formAdim)||1);setTaslakVar(true);setBasariMesaji("Taslak geri yüklendi.");setTimeout(()=>setBasariMesaji(""),2500);}
+      if(x?.form){const eskiAdim=Number(x.formAdim)||1;setForm({...BOS_FORM,...x.form});setFormAdim(eskiAdim<=1?1:eskiAdim<=3?2:3);setTaslakVar(true);setBasariMesaji("Taslak geri yüklendi.");setTimeout(()=>setBasariMesaji(""),2500);}
     }catch{setGenelHata("Taslak okunamadı.");}
   }
   function taslakSil(){
@@ -671,7 +671,7 @@ async function kayitlariGetir(){
 
   async function kaydet(e:FormEvent<HTMLFormElement>){
     e.preventDefault(); if(!supabase)return;
-    if(formAdim!==5){setFormAdim(5);setKontrolOnayi(false);return;}
+    if(formAdim!==3){setFormAdim(3);setKontrolOnayi(false);return;}
     if(!kontrolOnayi){setGenelHata("Kaydetmeden önce Kontrol & Kaydet ekranındaki kontrol onayını işaretleyin.");return;}
     if(!duzenleyebilir){setGenelHata("Bu işlem için düzenleme yetkiniz yok.");return;}
     const hatalar:string[]=[];
@@ -681,7 +681,7 @@ async function kayitlariGetir(){
       setFormHatalari(hatalar);
       setGenelHata("Zorunlu alanları kontrol edin: "+hatalar.join(", "));
       const konumHatasi=hatalar.some(h=>["Yıl","Ay","İlçe","Trafo ID / Lokasyon ID / TR alanlarından en az biri"].includes(h));
-      setFormAdim(konumHatasi?1:4);
+      setFormAdim(konumHatasi?1:3);
       window.scrollTo({top:0,behavior:"smooth"});
       return;
     }
@@ -1802,27 +1802,24 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"}</h1>
                   <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-700">{duzenlenenId?"Düzenleniyor":"Taslak"}</span>
                 </div>
-                <p className="mt-2 text-sm text-slate-500">Bilgileri 5 kısa adımda tamamlayın. Girdiğiniz değerler adımlar arasında korunur.</p>{taslakVar&&!duzenlenenId&&<div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-black text-blue-700">💾 Kaydedilmiş taslak var</span><button type="button" onClick={taslakYukle} className="rounded-lg border border-blue-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-blue-700">Taslağı Yükle</button><button type="button" onClick={taslakSil} className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-red-600">Sil</button></div>}
+                <p className="mt-2 text-sm text-slate-500">Bilgileri 3 net adımda tamamlayın. Sökülen ve takılan trafoyu aynı ekranda karşılaştırın.</p>{taslakVar&&!duzenlenenId&&<div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-black text-blue-700">💾 Kaydedilmiş taslak var</span><button type="button" onClick={taslakYukle} className="rounded-lg border border-blue-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-blue-700">Taslağı Yükle</button><button type="button" onClick={taslakSil} className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-[10px] font-black text-red-600">Sil</button></div>}
               </div>
               <div className="flex flex-wrap gap-2">
                 {duzenlenenId&&<button type="button" onClick={()=>{formTemizle();sayfayaGit("kayitlar");}} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-600 shadow-sm hover:bg-slate-50">Vazgeç</button>}
-                <button type="button" onClick={()=>setFormAdim(5)} className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">✓ Kontrol & Kaydet</button>
               </div>
             </div>
 
             <div id="new-record-stepper" className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_10px_32px_rgba(15,23,42,.07)]">
-              <div className="grid min-w-[760px] grid-cols-5">
+              <div className="grid min-w-[620px] grid-cols-3">
                 {[
-                  ["1","Konum Bilgileri","İlçe, mahalle ve lokasyon"],
-                  ["2","Sökülen Trafo","Mevcut trafo bilgileri"],
-                  ["3","Takılan Trafo","Yeni trafo bilgileri"],
-                  ["4","Değişim Bilgisi","Tarih, neden ve açıklama"],
-                  ["5","Kontrol & Kaydet","Özet ve son kontrol"],
+                  ["1","Konum & Kayıt","Yer ve sistem bilgileri"],
+                  ["2","Trafo Değişimi","Sökülen ve takılan trafo"],
+                  ["3","Değişim & Onay","Tarih, neden ve kayıt onayı"],
                 ].map((a,i)=>{
                   const n=i+1,aktif=formAdim===n,tamam=formAdim>n;
-                  return <button type="button" key={n} onClick={()=>setFormAdim(n)} className={`relative flex min-h-[92px] items-center gap-3 border-b-4 px-4 text-left transition ${aktif?"border-blue-600 bg-blue-50/60":"border-transparent hover:bg-slate-50"}`}>
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black ${aktif?"bg-blue-600 text-white shadow-md shadow-blue-200":tamam?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{tamam?"✓":a[0]}</span>
-                    <span className="min-w-0"><span className={`block text-xs font-black ${aktif?"text-blue-700":"text-slate-800"}`}>{a[1]}</span><span className="mt-1 block text-[9px] leading-4 text-slate-400">{a[2]}</span></span>
+                  return <button type="button" key={n} onClick={()=>setFormAdim(n)} className={`relative flex min-h-[84px] items-center gap-3 border-b-4 px-5 text-left transition ${aktif?"border-orange-500 bg-orange-50/70":"border-transparent hover:bg-slate-50"}`}>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black ${aktif?"bg-orange-500 text-white shadow-md shadow-orange-200":tamam?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{tamam?"✓":a[0]}</span>
+                    <span className="min-w-0"><span className={`block text-xs font-black ${aktif?"text-orange-700":"text-slate-800"}`}>{a[1]}</span><span className="mt-1 block text-[9px] leading-4 text-slate-400">{a[2]}</span></span>
                   </button>
                 })}
               </div>
@@ -1844,40 +1841,71 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
 
-                {formAdim===2&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
-                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">🔴</div><div><h2 className="text-lg font-black text-slate-900">Sökülen Trafo</h2><p className="mt-1 text-xs text-slate-500">Sahadan sökülen mevcut trafonun bilgilerini girin.</p></div></div>
-                  <div className="mt-6"><FormGrid><ComboAlani baslik="Gücü" deger={form.sokulen_gucu} degistir={v=>formDegistir("sokulen_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="sguc"/><ComboAlani baslik="Gerilim" deger={form.sokulen_gerilim} degistir={v=>formDegistir("sokulen_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="sger"/><ComboAlani baslik="Markası" deger={form.sokulen_markasi} degistir={v=>formDegistir("sokulen_markasi",v)} secenekler={markaSecenekleri} listeId="smarka"/><MetinAlani baslik="Seri No" deger={form.sokulen_seri_no} degistir={v=>formDegistir("sokulen_seri_no",v)}/><MetinAlani baslik="İmal Yılı" deger={form.sokulen_imal_yili} degistir={v=>formDegistir("sokulen_imal_yili",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.sokulen_trafo_tipi} degistir={v=>formDegistir("sokulen_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="stip"/><MetinAlani baslik="Tamir Yılı" deger={form.sokulen_tamir_yili} degistir={v=>formDegistir("sokulen_tamir_yili",v)}/><MetinAlani baslik="Tamir Firması" deger={form.sokulen_tamir_firmasi} degistir={v=>formDegistir("sokulen_tamir_firmasi",v)}/><MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/></FormGrid></div>
+                {formAdim===2&&<div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div><div className="text-[10px] font-black uppercase tracking-[.14em] text-orange-500">Adım 2</div><h2 className="mt-1 text-lg font-black text-slate-900">Trafo Değişimi</h2><p className="mt-1 text-xs text-slate-500">Sökülen ve takılan trafoyu aynı ekranda karşılaştırarak girin.</p></div>
+                      <div className={`rounded-xl border px-4 py-3 ${gucDurumu.includes("Artışı")?"border-emerald-200 bg-emerald-50":gucDurumu.includes("Azalışı")?"border-red-200 bg-red-50":"border-blue-200 bg-blue-50"}`}>
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">Güç Karşılaştırması</div>
+                        <div className="mt-1 flex items-center gap-3 text-sm font-black"><span>{form.sokulen_gucu||"-"} kVA</span><span className="text-slate-300">→</span><span>{form.takilan_gucu||"-"} kVA</span>{gucDurumu&&<span className="ml-2 text-[10px]">{gucDurumu}</span>}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
+                      <div className="flex items-start gap-3 border-b border-red-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-lg">🔴</div><div><h3 className="text-base font-black text-slate-900">Sökülen Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahadan sökülen mevcut trafo.</p></div></div>
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <ComboAlani baslik="Gücü" deger={form.sokulen_gucu} degistir={v=>formDegistir("sokulen_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="sguc"/>
+                        <ComboAlani baslik="Gerilim" deger={form.sokulen_gerilim} degistir={v=>formDegistir("sokulen_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="sger"/>
+                        <ComboAlani baslik="Markası" deger={form.sokulen_markasi} degistir={v=>formDegistir("sokulen_markasi",v)} secenekler={markaSecenekleri} listeId="smarka"/>
+                        <MetinAlani baslik="Seri No" deger={form.sokulen_seri_no} degistir={v=>formDegistir("sokulen_seri_no",v)}/>
+                        <MetinAlani baslik="İmal Yılı" deger={form.sokulen_imal_yili} degistir={v=>formDegistir("sokulen_imal_yili",v)}/>
+                        <ComboAlani baslik="Trafo Tipi" deger={form.sokulen_trafo_tipi} degistir={v=>formDegistir("sokulen_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="stip"/>
+                        <MetinAlani baslik="Tamir Yılı" deger={form.sokulen_tamir_yili} degistir={v=>formDegistir("sokulen_tamir_yili",v)}/>
+                        <MetinAlani baslik="Tamir Firması" deger={form.sokulen_tamir_firmasi} degistir={v=>formDegistir("sokulen_tamir_firmasi",v)}/>
+                      </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
+                      <div className="flex items-start gap-3 border-b border-emerald-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-lg">🟢</div><div><h3 className="text-base font-black text-slate-900">Takılan Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahaya takılan yeni trafo.</p></div></div>
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <ComboAlani baslik="Gücü" deger={form.takilan_gucu} degistir={v=>formDegistir("takilan_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="tguc"/>
+                        <ComboAlani baslik="Gerilim" deger={form.takilan_gerilim} degistir={v=>formDegistir("takilan_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="tger"/>
+                        <ComboAlani baslik="Markası" deger={form.takilan_markasi} degistir={v=>formDegistir("takilan_markasi",v)} secenekler={markaSecenekleri} listeId="tmarka"/>
+                        <MetinAlani baslik="Seri No" deger={form.takilan_seri_no} degistir={v=>formDegistir("takilan_seri_no",v)}/>
+                        <MetinAlani baslik="İmal Yılı" deger={form.takilan_imal_yili} degistir={v=>formDegistir("takilan_imal_yili",v)}/>
+                        <ComboAlani baslik="Trafo Tipi" deger={form.takilan_trafo_tipi} degistir={v=>formDegistir("takilan_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="ttip"/>
+                        <MetinAlani baslik="Tamir Yılı" deger={form.takilan_tamir_yili} degistir={v=>formDegistir("takilan_tamir_yili",v)}/>
+                        <MetinAlani baslik="Tamir Firması" deger={form.takilan_tamir_firmasi} degistir={v=>formDegistir("takilan_tamir_firmasi",v)}/>
+                      </div>
+                    </section>
+                  </div>
                 </div>}
 
                 {formAdim===3&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
-                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl">🟢</div><div><h2 className="text-lg font-black text-slate-900">Takılan Trafo</h2><p className="mt-1 text-xs text-slate-500">Sahaya takılan yeni trafonun bilgilerini girin.</p></div></div>
-                  <div className="mt-6"><FormGrid><ComboAlani baslik="Gücü" deger={form.takilan_gucu} degistir={v=>formDegistir("takilan_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="tguc"/><ComboAlani baslik="Gerilim" deger={form.takilan_gerilim} degistir={v=>formDegistir("takilan_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="tger"/><ComboAlani baslik="Markası" deger={form.takilan_markasi} degistir={v=>formDegistir("takilan_markasi",v)} secenekler={markaSecenekleri} listeId="tmarka"/><MetinAlani baslik="Seri No" deger={form.takilan_seri_no} degistir={v=>formDegistir("takilan_seri_no",v)}/><MetinAlani baslik="İmal Yılı" deger={form.takilan_imal_yili} degistir={v=>formDegistir("takilan_imal_yili",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.takilan_trafo_tipi} degistir={v=>formDegistir("takilan_trafo_tipi",v)} secenekler={TRAFO_TIP_SECENEKLERI} listeId="ttip"/><MetinAlani baslik="Tamir Yılı" deger={form.takilan_tamir_yili} degistir={v=>formDegistir("takilan_tamir_yili",v)}/><MetinAlani baslik="Tamir Firması" deger={form.takilan_tamir_firmasi} degistir={v=>formDegistir("takilan_tamir_firmasi",v)}/></FormGrid></div>
-                  {gucDurumu&&<div className={`mt-6 rounded-xl border p-4 ${gucDurumu.includes("Artışı")?"border-emerald-200 bg-emerald-50":gucDurumu.includes("Azalışı")?"border-red-200 bg-red-50":"border-blue-200 bg-blue-50"}`}><div className="text-xs font-black text-slate-800">⚡ Otomatik Güç Karşılaştırması</div><div className="mt-2 flex items-center gap-4 text-sm"><span><b>{form.sokulen_gucu||"-"}</b> kVA</span><span>→</span><span><b>{form.takilan_gucu||"-"}</b> kVA</span><span className="ml-auto font-black">{gucDurumu}</span></div></div>}
-                </div>}
+                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Değişim & Onay</h2><p className="mt-1 text-xs text-slate-500">İşlem bilgilerini tamamlayın ve kaydı son kez kontrol edin.</p></div></div>
 
-                {formAdim===4&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
-                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl">📅</div><div><h2 className="text-lg font-black text-slate-900">Değişim Bilgisi</h2><p className="mt-1 text-xs text-slate-500">İşlemin tarihini, değişim nedenini ve açıklamayı tamamlayın.</p></div></div>
-                  <div className="mt-6"><FormGrid><Alan baslik="Tarih (Opsiyonel)"><input type="date" value={form.tarih} onChange={e=>formDegistir("tarih",e.target.value)} className={inputSinif}/><span className="mt-1 block text-[10px] text-slate-400">Boş bırakabilirsiniz. Tarih seçilirse Yıl ve Ay otomatik doldurulur.</span></Alan><ComboAlani baslik="Değişim Nedeni *" deger={form.degisim_nedeni} degistir={v=>formDegistir("degisim_nedeni",v)} secenekler={NEDENLER.map(n=>n.ad)} listeId="degisim-nedeni" gerekli/></FormGrid><div className="mt-4"><Alan baslik="Açıklama"><textarea rows={5} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan></div></div>
-                </div>}
-
-                {formAdim===5&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
-                  <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Kontrol & Kaydet</h2><p className="mt-1 text-xs text-slate-500">Kaydetmeden önce temel bilgileri son kez kontrol edin.</p></div></div><div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4"><label className="flex cursor-pointer items-start gap-3"><input type="checkbox" checked={kontrolOnayi} onChange={e=>setKontrolOnayi(e.target.checked)} className="mt-0.5 h-5 w-5 rounded border-slate-300 text-emerald-600"/><div><div className="text-sm font-black text-amber-900">Bilgileri kontrol ettim</div><div className="mt-1 text-xs leading-5 text-amber-700">Aşağıdaki özet bilgileri kontrol ettim ve kaydı tamamlamaya hazırım.</div></div></label></div>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {[
-                      ["Konum",`${form.ilce||"-"}${form.mahalle?` / ${form.mahalle}`:""}`],
-                      ["Yıl / Ay",`${form.yil||"-"} / ${form.ay||"-"}`],
-                      ["TR",form.tr||"-"],
-                      ["Lokasyon ID",form.lokasyon_id||"-"],
-                      ["Trafo ID",form.trafo_id||"-"],
-                      ["Değişim Tarihi",form.tarih? tarihGoster(form.tarih):"-"],
-                      ["Sökülen Trafo",`${form.sokulen_markasi||"-"} • ${form.sokulen_gucu||"-"} kVA`],
-                      ["Takılan Trafo",`${form.takilan_markasi||"-"} • ${form.takilan_gucu||"-"} kVA`],
-                      ["Değişim Nedeni",form.degisim_nedeni||"-"],
-                      ["Güç Durumu",gucDurumu||"-"],
-                    ].map(([b,d])=><div key={b} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{b}</div><div className="mt-1 text-sm font-black text-slate-800">{d}</div></div>)}
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <Alan baslik="Tarih (Opsiyonel)"><input type="date" value={form.tarih} onChange={e=>formDegistir("tarih",e.target.value)} className={inputSinif}/><span className="mt-1 block text-[10px] text-slate-400">Tarih seçilirse Yıl ve Ay otomatik doldurulur.</span></Alan>
+                    <ComboAlani baslik="Değişim Nedeni *" deger={form.degisim_nedeni} degistir={v=>formDegistir("degisim_nedeni",v)} secenekler={NEDENLER.map(n=>n.ad)} listeId="degisim-nedeni" gerekli/>
+                    <MetinAlani baslik="Yüklenici" deger={form.sokulen_yuklenici} degistir={v=>formDegistir("sokulen_yuklenici",v)}/>
+                    <div className="sm:col-span-2"><Alan baslik="Açıklama"><textarea rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan></div>
                   </div>
-                  {form.aciklama&&<div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Açıklama</div><div className="mt-2 text-sm leading-6 text-slate-600">{form.aciklama}</div></div>}
-                  <button type="submit" disabled={kaydediliyor} className="mt-6 w-full rounded-xl bg-blue-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"✓ Değişiklikleri Kaydet":"✓ Trafo Kaydını Kaydet"}</button>
+
+                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {[
+                        ["Konum",`${form.ilce||"-"}${form.mahalle?` / ${form.mahalle}`:""}`],
+                        ["Yıl / Ay",`${form.yil||"-"} / ${form.ay||"-"}`],
+                        ["Trafo",form.tr||form.trafo_id||form.lokasyon_id||"-"],
+                        ["Değişim Tarihi",form.tarih?tarihGoster(form.tarih):"-"],
+                        ["Sökülen",`${form.sokulen_markasi||"-"} • ${form.sokulen_gucu||"-"} kVA`],
+                        ["Takılan",`${form.takilan_markasi||"-"} • ${form.takilan_gucu||"-"} kVA`],
+                      ].map(([b,d])=><div key={b} className="rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{b}</div><div className="mt-1 text-xs font-black text-slate-800">{d}</div></div>)}
+                    </div>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"><input type="checkbox" checked={kontrolOnayi} onChange={e=>setKontrolOnayi(e.target.checked)} className="mt-0.5 h-5 w-5 rounded border-slate-300 text-emerald-600"/><div><div className="text-sm font-black text-amber-900">Bilgileri kontrol ettim</div><div className="mt-1 text-xs leading-5 text-amber-700">Kaydı tamamlamak için bu onayı işaretleyin.</div></div></label>
+                  </div>
                 </div>}
               </div>
 
@@ -1906,8 +1934,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             <div id="new-record-actions" className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
               <button type="button" disabled={formAdim===1} onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.max(1,x-1));}} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
-              <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 5</div>
-              {formAdim<5?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(5,x+1));}} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===4?"Kontrol Et →":"Devam Et →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
+              <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 3</div>
+              {formAdim<3?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(3,x+1));}} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===1?"Trafo Değişimine Geç →":"Değişim & Onay →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
             </div>
           </form>}
 
