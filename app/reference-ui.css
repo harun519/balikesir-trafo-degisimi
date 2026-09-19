@@ -427,7 +427,7 @@ main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-60
 
 #new-record-stepper>div{
   min-width:0!important;
-  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
 }
 
 #new-record-stepper button{
@@ -461,7 +461,7 @@ main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-60
 }
 
 #new-record-stepper button:last-child:after{display:none}
-#new-record-stepper button[class*="border-blue"]:after{background:#ff7a24}
+#new-record-stepper button[class*="border-orange"]:after{background:#ff7a24}
 
 #new-record-stepper button>span:first-child{
   position:relative;
@@ -476,7 +476,7 @@ main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-60
   box-shadow:none!important;
 }
 
-#new-record-stepper button[class*="border-blue"]>span:first-child{
+#new-record-stepper button[class*="border-orange"]>span:first-child{
   border-color:#ff7a24!important;
   background:linear-gradient(135deg,#ff812f,#f25d0a)!important;
   color:#fff!important;
@@ -497,7 +497,7 @@ main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-60
   font-weight:850!important;
 }
 
-#new-record-stepper button[class*="border-blue"]>span:last-child>span:first-child{
+#new-record-stepper button[class*="border-orange"]>span:last-child>span:first-child{
   color:#f05a09!important;
 }
 
@@ -617,6 +617,47 @@ main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-60
   border-color:#cfe4ff!important;
   border-radius:11px!important;
   background:#f3f8ff!important;
+}
+
+/* Three-step transformer change workspace */
+#new-record-main>div>.space-y-4{
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#new-record-main>div>.space-y-4:before{display:none!important}
+#new-record-main>div>.space-y-4>div:first-child{
+  padding:16px 18px!important;
+  border:1px solid #dce6f1!important;
+  border-radius:15px!important;
+  background:#fff!important;
+  box-shadow:0 8px 25px rgba(29,55,92,.05)!important;
+}
+#new-record-main>div>.space-y-4>div:first-child>div:first-child{
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+#new-record-main>div>.space-y-4>div:nth-child(2){
+  border:0!important;
+  padding:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#new-record-main>div>.space-y-4>div:nth-child(2)>section{
+  min-width:0!important;
+}
+#new-record-main>div>.space-y-4 h3{
+  color:#0d1b33!important;
+  font-size:15px!important;
+}
+@media(max-width:1023px){
+  #new-record-main>div>.space-y-4>div:nth-child(2){grid-template-columns:1fr!important}
 }
 
 /* ---------- New record summary ---------- */
@@ -744,7 +785,7 @@ main>button[title="Yukarı çık"]:hover{
 
 @media(max-width:900px){
   #new-record-stepper{overflow-x:auto!important}
-  #new-record-stepper>div{min-width:720px!important}
+  #new-record-stepper>div{min-width:620px!important}
 }
 
 @media(max-width:700px){
@@ -780,7 +821,7 @@ main>button[title="Yukarı çık"]:hover{
   }
   #new-record-hero>div:last-child button{width:100%!important}
   #new-record-stepper{border-radius:13px!important}
-  #new-record-stepper>div{min-width:650px!important}
+  #new-record-stepper>div{min-width:560px!important}
   #new-record-stepper button{min-height:72px!important;padding:8px 10px!important}
   #new-record-stepper button:after{top:36px!important}
   #new-record-stepper button>span:first-child{
