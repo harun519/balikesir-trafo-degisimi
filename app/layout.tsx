@@ -5,6 +5,7 @@ import "./dashboard-final.css";
 import "./mobile-dashboard-fix.css";
 import "./new-record-premium.css";
 import "./new-record-redesign.css";
+import "./reference-ui.css";
 import "leaflet/dist/leaflet.css";
 import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
