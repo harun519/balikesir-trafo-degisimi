@@ -48,7 +48,7 @@
 .trafo-new-record>div:first-child h1{
   margin:0!important;
   color:#fff!important;
-  font-size:27px!important;
+  font-size:23px!important;
   line-height:1.12!important;
   letter-spacing:-.035em!important;
 }
@@ -268,7 +268,7 @@
 @media(max-width:700px){
   .trafo-new-record{gap:12px!important;padding:0 0 24px!important}
   .trafo-new-record>div:first-child{min-height:0;border-radius:15px!important;padding:18px!important}
-  .trafo-new-record>div:first-child h1{font-size:22px!important}
+  .trafo-new-record>div:first-child h1{font-size:20px!important}
   .trafo-new-record>div:first-child p{font-size:12px!important}
   .trafo-new-record>div:first-child>div:last-child{margin:10px 0 0!important;width:100%!important}
   .trafo-new-record>div:first-child button{width:100%!important}
@@ -281,4 +281,25 @@
   .trafo-new-record textarea,
   .trafo-new-record [role="combobox"]{min-height:49px!important;font-size:16px!important}
   .trafo-new-record>div:last-child{bottom:6px!important;border-radius:13px!important}
+}
+
+
+/* Always-visible page-to-top control */
+main button[title="Yukarı çık"]{
+  width:48px!important;
+  height:48px!important;
+  min-height:48px!important;
+  border:2px solid #fff!important;
+  border-radius:999px!important;
+  background:linear-gradient(135deg,#ff7a1a,#ea580c)!important;
+  color:#fff!important;
+  font-size:22px!important;
+  line-height:1!important;
+  box-shadow:0 10px 28px rgba(234,88,12,.38),0 0 0 3px rgba(249,115,22,.14)!important;
+  opacity:1!important;
+}
+main button[title="Yukarı çık"]:hover{
+  background:linear-gradient(135deg,#fb923c,#f97316)!important;
+  color:#fff!important;
+  transform:translateY(-2px)!important;
 }
