@@ -1419,7 +1419,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
           {genelHata&&<HataKutusu>{genelHata}</HataKutusu>}{basariMesaji&&<div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300">{basariMesaji}</div>}
 
           {sayfa==="dashboard"&&<>
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div id="dashboard-hero" className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="text-[10px] font-black uppercase tracking-[.18em] text-blue-500">Genel Bakış</div>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Dashboard</h1>
@@ -1430,7 +1430,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 {duzenleyebilir&&<button type="button" onClick={()=>{formTemizle();sayfayaGit("yeni");}} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-blue-200 hover:bg-blue-700">+ Yeni Kayıt</button>}
               </div>
             </div>
-            <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
+            <div id="dashboard-kpis" className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
               <OzetKart ikon="⚡" baslik="TOPLAM DEĞİŞİM" deger={String(kayitlar.length)} alt="Tüm zamanlar"/>
               <OzetKart ikon="📅" baslik="BU AY" deger={String(buAyKayitSayisi)} alt={`${AYLAR[new Date().getMonth()]} ${new Date().getFullYear()}`}/>
               <OzetKart ikon="🚨" baslik="ARIZA" deger={String(kayitlar.filter(k=>norm(k.degisim_nedeni)==="ARIZA").length)} alt="Toplam arıza kaydı"/>
@@ -1438,7 +1438,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 <OzetKart ikon={yilKarsilastirma.oran===null?"↔":yilKarsilastirma.oran>=0?"↗":"↘"} baslik="GEÇEN YILA GÖRE" deger={yilKarsilastirma.oran===null?"—":`${yilKarsilastirma.oran>=0?"+":""}${yilKarsilastirma.oran.toFixed(1)}%`} alt={`${yilKarsilastirma.y-1}: ${yilKarsilastirma.once} • ${yilKarsilastirma.y}: ${yilKarsilastirma.simdi}`}/>
               </div>
             </div>
-            <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,.07)] ring-1 ring-slate-100">
+            <div id="dashboard-filters" className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,.07)] ring-1 ring-slate-100">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto] 2xl:items-end">
                 <Alan baslik="YIL"><select value={dashboardYil} onChange={e=>setDashboardYil(e.target.value)} className={inputSinif}><option value="">Tüm Yıllar</option>{yillar.map(y=><option key={y}>{y}</option>)}</select></Alan>
                 <Alan baslik="İLÇE"><select value={dashboardIlce} onChange={e=>setDashboardIlce(e.target.value)} className={inputSinif}><option value="">Tüm İlçeler</option>{ilceler.map(i=><option key={i}>{i}</option>)}</select></Alan>
@@ -1805,7 +1805,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
           </>}
 
           {sayfa==="yeni"&&duzenleyebilir&&<form onSubmit={kaydet} className="space-y-5">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div id="new-record-hero" className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{duzenlenenId?"Trafo Kaydını Düzenle":"Yeni Trafo Değişim Kaydı"}</h1>
@@ -1819,7 +1819,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_10px_32px_rgba(15,23,42,.07)]">
+            <div id="new-record-stepper" className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_10px_32px_rgba(15,23,42,.07)]">
               <div className="grid min-w-[760px] grid-cols-5">
                 {[
                   ["1","Konum Bilgileri","İlçe, mahalle ve lokasyon"],
@@ -1841,7 +1841,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             {akilliFormEslesme&&!duzenlenenId&&<div className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div><div className="font-black text-blue-800">🧠 Bu trafo daha önce kayıtlı</div><div className="mt-1 text-xs text-slate-500">Son kayıt: {tarihGoster(akilliFormEslesme.tarih)} • {akilliFormEslesme.ilce||"-"} / {akilliFormEslesme.mahalle||"-"}</div></div><div className="flex gap-2"><button type="button" onClick={()=>setGecmisKayit(akilliFormEslesme)} className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-black text-blue-700">Geçmişi Gör</button><button type="button" onClick={()=>setForm(x=>({...x,ilce:x.ilce||akilliFormEslesme.ilce||"",mahalle:x.mahalle||akilliFormEslesme.mahalle||"",tr:x.tr||akilliFormEslesme.tr||"",lokasyon_id:x.lokasyon_id||akilliFormEslesme.lokasyon_id||"",trafo_tipi:x.trafo_tipi||akilliFormEslesme.trafo_tipi||""}))} className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white">Konumu Doldur</button></div></div>}
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div id="new-record-main" className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0">
                 {formAdim===1&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5">
@@ -1849,7 +1849,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                     <div><h2 className="text-lg font-black text-slate-900">Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Trafo değişiminin gerçekleştiği konum ve sistem bilgilerini girin.</p></div>
                   </div>
                   <div className="mt-6"><FormGrid><ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/><ComboAlani baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} listeId="ay" gerekli/><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><div><ComboAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)} secenekler={mahalleSecenekleri} listeId="mahalle"/><div className="mt-1 text-[10px] text-slate-400">{!form.ilce?"Önce ilçe seçin.":mahalleYukleniyor?"Mahalleler yükleniyor...":mahalleSecenekleri.length?`${mahalleSecenekleri.length} mahalle hazır.`:"Hazır mahalle bulunamazsa elle yazabilirsiniz."}</div></div><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase text-slate-400">Son kullanılan ilçeler</span>{sonKullanilanlar.ilce.map(x=><button type="button" key={x} onClick={()=>formDegistir("ilce",x)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:bg-blue-50">{x}</button>)}</div>
+                  
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
 
@@ -1891,7 +1891,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 </div>}
               </div>
 
-              <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] xl:sticky xl:top-[96px]">
+              <aside id="new-record-summary" className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] xl:sticky xl:top-[96px]">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-lg">🗂️</div><div><div className="text-base font-black text-slate-900">Kayıt Özeti</div><div className="mt-0.5 text-[10px] text-slate-400">Girdiğiniz bilgiler anlık görünür.</div></div></div>
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><span className="text-xs font-bold text-slate-600">Kayıt Durumu</span><span className="flex items-center gap-2 text-xs font-black text-amber-700"><span className="h-2 w-2 rounded-full bg-amber-400"/> {duzenlenenId?"Düzenleniyor":"Taslak"}</span></div>
                 <div className="mt-5 space-y-3 text-xs">
@@ -1914,7 +1914,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             {veriKaliteUyarilari.length>0&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><div className="text-sm font-black text-amber-800">🛡️ Veri Kalite Kontrolü</div><div className="mt-2 grid gap-2 sm:grid-cols-2">{veriKaliteUyarilari.map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700">⚠ {x}</div>)}</div></div>}
 
-            <div className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
+            <div id="new-record-actions" className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
               <button type="button" disabled={formAdim===1} onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.max(1,x-1));}} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
               <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 5</div>
               {formAdim<5?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(5,x+1));}} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===4?"Kontrol Et →":"Devam Et →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
