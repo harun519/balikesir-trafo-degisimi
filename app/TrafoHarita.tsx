@@ -33,6 +33,15 @@ type PoligonAday = {
 
 const ILCE_LISTESI = ["Altıeylül", "Karesi", "Balya", "Bigadiç", "Dursunbey", "İvrindi", "Kepsut", "Savaştepe", "Sındırgı", "Susurluk"];
 const DB = "trafo-harita-db", STORE = "dosyalar", KEY = "shp-zip";
+const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
+function cacheDegisimleriniOku():DegisimKaydi[]{
+  if(typeof window==="undefined")return [];
+  try{
+    const v=JSON.parse(localStorage.getItem(TRAFO_CACHE_KEY)||"[]");
+    if(!Array.isArray(v))return [];
+    return v.map((x:any)=>({id:Number(x?.id||0),trafo_id:x?.trafo_id??null,lokasyon_id:x?.lokasyon_id??null,tr:x?.tr??null,tarih:x?.tarih??null,degisim_nedeni:x?.degisim_nedeni??null,aciklama:x?.aciklama??null}));
+  }catch{return [];}
+}
 const NEDEN_RENKLERI = [
   { ad: "ARIZA", renk: "#ef4444" },
   { ad: "DÖNÜŞÜM", renk: "#3b82f6" },
@@ -242,7 +251,7 @@ export default function TrafoHarita() {
   const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), labelLayers = useRef<any[]>([]), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);
   const [hazir, setHazir] = useState(false), [veriHazir, setVeriHazir] = useState(false), [hata, setHata] = useState(""), [durum, setDurum] = useState("Merkezi envanter kontrol ediliyor..."), [dosyaAdi, setDosyaAdi] = useState("");
   const [ilce, setIlce] = useState(""), [arama, setArama] = useState(""), [tipFiltre, setTipFiltre] = useState<"" | "DIREK" | "BINA">(""), [mulkiyetFiltre, setMulkiyetFiltre] = useState<"" | "EDAS" | "DEVIRLI">(""), [degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi, setNoktaSayisi] = useState(0), [binaSayisi, setBinaSayisi] = useState(0), [direkTipiSayisi, setDirekTipiSayisi] = useState(0), [binaTipiSayisi, setBinaTipiSayisi] = useState(0), [uyumsuzSayisi, setUyumsuzSayisi] = useState(0), [haritaTipi, setHaritaTipi] = useState<"standart" | "uydu">("standart");
-  const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>([]), [degisimYukleniyor, setDegisimYukleniyor] = useState(true), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
+  const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>(()=>cacheDegisimleriniOku()), [degisimYukleniyor, setDegisimYukleniyor] = useState(false), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
   const [merkezi, setMerkezi] = useState(false), [adminMi, setAdminMi] = useState(false), [envanterIslem, setEnvanterIslem] = useState(false);
 
   const supabase = useMemo(getSupabaseBrowserClient, []);
@@ -292,33 +301,30 @@ export default function TrafoHarita() {
 
   useEffect(() => {
     let kapandi = false;
-    const yukle = async () => {
+    const cacheYukle = () => {
+      if(kapandi)return;
       setDegisimYukleniyor(true);
-      try {
-        if (!supabase) throw new Error("Supabase ayarları bulunamadı");
-        let sonHata: unknown = null;
-        for (let deneme = 0; deneme < 3; deneme++) {
-          try {
-            const { data, error } = await supabase.from("trafo_degisim").select("id,trafo_id,lokasyon_id,tr,tarih,degisim_nedeni,aciklama").order("tarih", { ascending: false, nullsFirst: false });
-            if (error) throw error;
-            if (!kapandi) {
-              setDegisimKayitlari((data || []) as DegisimKaydi[]);
-              setHata(h => h.startsWith("Değişim kayıtları eşleştirilemedi:") ? "" : h);
-            }
-            sonHata = null;
-            break;
-          } catch (e) {
-            sonHata = e;
-            if (deneme < 2) await new Promise(ok => window.setTimeout(ok, 700 * (deneme + 1)));
-          }
-        }
-        if (sonHata) throw sonHata;
-      } catch (e: any) { if (!kapandi) setHata(h => h || `Değişim kayıtları eşleştirilemedi: ${e?.message || "bilinmeyen hata"}`); }
-      finally { if (!kapandi) setDegisimYukleniyor(false); }
+      setDegisimKayitlari(cacheDegisimleriniOku());
+      setDegisimYukleniyor(false);
+      setHata(h => h.startsWith("Değişim kayıtları eşleştirilemedi:") ? "" : h);
     };
-    yukle(); oturumBilgisi().catch(() => {});
-    window.addEventListener("trafo-harita-veri-yenile", yukle as EventListener);
-    return () => { kapandi = true; window.removeEventListener("trafo-harita-veri-yenile", yukle as EventListener); };
+    const manuelGuncelleme = (e:Event) => {
+      if(kapandi)return;
+      const liste=(e as CustomEvent).detail?.kayitlar;
+      if(Array.isArray(liste)){
+        setDegisimKayitlari(liste.map((x:any)=>({id:Number(x?.id||0),trafo_id:x?.trafo_id??null,lokasyon_id:x?.lokasyon_id??null,tr:x?.tr??null,tarih:x?.tarih??null,degisim_nedeni:x?.degisim_nedeni??null,aciklama:x?.aciklama??null})));
+        setDegisimYukleniyor(false);
+      }else cacheYukle();
+    };
+    cacheYukle();
+    oturumBilgisi().catch(() => {});
+    window.addEventListener("trafo-harita-veri-yenile", cacheYukle as EventListener);
+    window.addEventListener("trafo-manuel-veri-guncellendi", manuelGuncelleme as EventListener);
+    return () => {
+      kapandi = true;
+      window.removeEventListener("trafo-harita-veri-yenile", cacheYukle as EventListener);
+      window.removeEventListener("trafo-manuel-veri-guncellendi", manuelGuncelleme as EventListener);
+    };
   }, [supabase]);
 
   useEffect(() => {
