@@ -53,6 +53,24 @@ async function sistemYedekleriniTemizle(sb:ReturnType<typeof adminClient>){
   return files.slice(0,KEEP);
 }
 
+async function eskiOtomatikYedekleriTemizle(sb:ReturnType<typeof adminClient>){
+  const {data:years}=await sb.storage.from(BUCKET).list("otomatik",{limit:100});
+  const paths:string[]=[];
+  for(const y of years||[]){
+    if(!/^\d{4}$/.test(y.name||""))continue;
+    const {data:months}=await sb.storage.from(BUCKET).list(`otomatik/${y.name}`,{limit:24});
+    for(const m of months||[]){
+      if(!/^\d{2}$/.test(m.name||""))continue;
+      const {data:files}=await sb.storage.from(BUCKET).list(`otomatik/${y.name}/${m.name}`,{limit:1000});
+      for(const x of files||[])if(x.name?.endsWith(".json"))paths.push(`otomatik/${y.name}/${m.name}/${x.name}`);
+    }
+  }
+  if(paths.length){
+    const {error}=await sb.storage.from(BUCKET).remove(paths);
+    if(error)throw error;
+  }
+}
+
 async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   const sb=adminClient();
   await bucketHazirla(sb);
@@ -94,6 +112,7 @@ async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:"application/json",upsert:false});
   if(error)throw error;
   await sistemYedekleriniTemizle(sb);
+  await eskiOtomatikYedekleriTemizle(sb);
   return {name,path,size:new TextEncoder().encode(body).length,created_at:now.toISOString(),kaynak,retention:KEEP};
 }
 
