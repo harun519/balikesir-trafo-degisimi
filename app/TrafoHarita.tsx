@@ -32,7 +32,8 @@ type PoligonAday = {
 };
 
 const ILCE_LISTESI = ["Altıeylül", "Karesi", "Balya", "Bigadiç", "Dursunbey", "İvrindi", "Kepsut", "Savaştepe", "Sındırgı", "Susurluk"];
-const DB = "trafo-harita-db", STORE = "dosyalar", KEY = "shp-zip";
+const DB = "trafo-harita-db", STORE = "dosyalar", KEY = "shp-zip", META_KEY = "shp-meta";
+type EnvanterMeta={updated_at:string|null;size:number;etag?:string|null};
 const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
 function cacheDegisimleriniOku():DegisimKaydi[]{
   if(typeof window==="undefined")return [];
@@ -70,11 +71,13 @@ function dbAc() {
     r.onerror = () => no(r.error);
   });
 }
-async function kaydetBlob(blob: Blob) {
+async function kaydetBlob(blob: Blob, meta?: EnvanterMeta|null) {
   const db = await dbAc();
   await new Promise<void>((ok, no) => {
     const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(blob, KEY);
+    const store=tx.objectStore(STORE);
+    store.put(blob, KEY);
+    if(meta)store.put(meta, META_KEY);
     tx.oncomplete = () => ok();
     tx.onerror = () => no(tx.error);
   });
@@ -90,6 +93,18 @@ async function okuBlob() {
   });
   db.close();
   return v as Blob | undefined;
+}
+async function okuMeta() {
+  const db = await dbAc();
+  const v = await new Promise<any>((ok, no) => {
+    const tx = db.transaction(STORE, "readonly");
+    const r = tx.objectStore(STORE).get(META_KEY);
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => no(r.error);
+  });
+  db.close();
+  if(!v||typeof v!=="object")return null;
+  return {updated_at:v.updated_at||null,size:Number(v.size||0),etag:v.etag||null} as EnvanterMeta;
 }
 function scriptYukle(id: string, kaynaklar: string[], test: () => boolean) {
   return new Promise<void>((ok, no) => {
@@ -297,6 +312,7 @@ export default function TrafoHarita() {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j?.error || "Merkezi envanter kaydedilemedi.");
     setMerkezi(true);
+    return j;
   }
 
   useEffect(() => {
@@ -356,26 +372,75 @@ export default function TrafoHarita() {
         window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },120);
         window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },450);
         setHazir(true);
-        let merkezVar = false;
+
+        // Önce cihazdaki IndexedDB kopyasını aç. Bu işlem Supabase trafiği üretmez.
+        const yerelBlob=await okuBlob().catch(()=>undefined);
+        const yerelMeta=await okuMeta().catch(()=>null);
+        if(yerelBlob&&!kapandi){
+          await zipOku(yerelBlob,"Merkezi trafo envanteri • cihaz önbelleği");
+          setMerkezi(true);
+        }
+
+        let merkeziVar=false;
         try {
-          const r = await fetch("/api/harita-envanter");
-          if (r.ok) {
-            const blob = await r.blob();
-            if (!kapandi) { await zipOku(blob, "Merkezi trafo envanteri"); setMerkezi(true); merkezVar = true; try { await kaydetBlob(blob); } catch {} }
-          } else if (r.status !== 404) {
-            const j = await r.json().catch(() => ({})); throw new Error(j?.error || "Merkezi envanter indirilemedi.");
-          }
-        } catch (e: any) { if (!kapandi) setHata(h => h || `Merkezi envanter: ${e?.message || "bağlantı hatası"}`); }
-        if (!merkezVar && !kapandi) {
-          const eski = await okuBlob().catch(() => undefined);
-          if (eski) {
-            await zipOku(eski, "Bu cihazdaki envanter");
-            const { session, admin } = await oturumBilgisi().catch(() => ({ session: null, admin: false }));
-            if (admin && session) {
-              try { setDurum("İlk merkezi envanter oluşturuluyor..."); await merkezeAktar(eski, session.access_token); if (!kapandi) { setDosyaAdi("Merkezi trafo envanteri"); setDurum("Merkezi envanter oluşturuldu • artık tüm cihazlarda otomatik açılır"); } }
-              catch (e: any) { if (!kapandi) setHata(h => h || `Merkezi aktarım: ${e?.message || "başarısız"}`); }
+          // Yalnızca küçük Storage metadata isteği: büyük JSON/ZIP burada indirilmez.
+          const metaCevap=await fetch("/api/harita-envanter?meta=1",{cache:"no-store"});
+          if(metaCevap.ok){
+            const uzak=(await metaCevap.json()) as EnvanterMeta;
+            merkeziVar=true;
+            setMerkezi(true);
+
+            // Eski sürümlerde IndexedDB'de meta yoktu. İlk geçişte yalnızca bir kez
+            // merkezi dosyayı indirip sürüm anahtarını kaydederiz.
+            const guncel=!!yerelBlob&&!!yerelMeta?.updated_at&&!!uzak.updated_at&&yerelMeta.updated_at===uzak.updated_at;
+            if(!guncel&&!kapandi){
+              setDurum(yerelBlob?"Yeni/ilk doğrulanan envanter indiriliyor...":"Merkezi envanter indiriliyor...");
+              const surum=encodeURIComponent(uzak.updated_at||uzak.etag||String(uzak.size||"current"));
+              const dosyaCevap=await fetch(`/api/harita-envanter?v=${surum}`);
+              if(!dosyaCevap.ok){
+                const j=await dosyaCevap.json().catch(()=>({}));
+                throw new Error(j?.error||"Merkezi envanter indirilemedi.");
+              }
+              const blob=await dosyaCevap.blob();
+              if(!kapandi){
+                await zipOku(blob,"Merkezi trafo envanteri");
+                await kaydetBlob(blob,uzak).catch(()=>{});
+              }
+            }else if(guncel&&!kapandi){
+              setDosyaAdi("Merkezi trafo envanteri • cihaz önbelleği");
             }
-          } else if (!kapandi) setDurum("Merkezi envanter henüz yok • admin kullanıcı bir kez SHP envanteri yüklemeli");
+          }else if(metaCevap.status!==404){
+            const j=await metaCevap.json().catch(()=>({}));
+            throw new Error(j?.error||"Merkezi envanter sürümü kontrol edilemedi.");
+          }
+        }catch(e:any){
+          // Yerel kopya varsa harita çalışmaya devam eder; büyük dosyaya fallback yapmayız.
+          // Böylece geçici hata durumlarında Cached Egress yeniden şişmez.
+          if(!kapandi&&!yerelBlob)setHata(h=>h||`Merkezi envanter: ${e?.message||"bağlantı hatası"}`);
+          else if(!kapandi&&yerelBlob)setDosyaAdi("Merkezi trafo envanteri • cihaz önbelleği");
+        }
+
+        if(!merkeziVar&&!kapandi){
+          if(yerelBlob){
+            const {session,admin}=await oturumBilgisi().catch(()=>({session:null,admin:false}));
+            if(admin&&session){
+              try{
+                setDurum("İlk merkezi envanter oluşturuluyor...");
+                const sonuc=await merkezeAktar(yerelBlob,session.access_token);
+                const meta:EnvanterMeta={
+                  updated_at:sonuc?.storage_updated_at||sonuc?.updated_at||null,
+                  size:Number(sonuc?.size||yerelBlob.size||0),
+                  etag:null
+                };
+                await kaydetBlob(yerelBlob,meta).catch(()=>{});
+                if(!kapandi){setDosyaAdi("Merkezi trafo envanteri");setDurum("Merkezi envanter oluşturuldu");}
+              }catch(e:any){
+                if(!kapandi)setHata(h=>h||`Merkezi aktarım: ${e?.message||"başarısız"}`);
+              }
+            }
+          }else{
+            setDurum("Merkezi envanter henüz yok • admin kullanıcı bir kez SHP envanteri yüklemeli");
+          }
         }
       } catch (e: any) { if (!kapandi) setHata(e?.message || "Harita yüklenemedi"); }
     };
@@ -510,7 +575,18 @@ export default function TrafoHarita() {
     const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
     if (!f.name.toLowerCase().endsWith(".zip")) { setHata("SHP dosyalarını içeren ZIP seçmelisiniz."); return; }
     setEnvanterIslem(true); setHata("");
-    try { await zipOku(f, "Merkezi trafo envanteri"); await merkezeAktar(f); await kaydetBlob(f); setMerkezi(true); setDurum("Merkezi envanter güncellendi • tüm cihazlar yeni veriyi kullanacak"); }
+    try {
+      await zipOku(f, "Merkezi trafo envanteri");
+      const sonuc=await merkezeAktar(f);
+      const meta:EnvanterMeta={
+        updated_at:sonuc?.storage_updated_at||sonuc?.updated_at||null,
+        size:Number(sonuc?.size||f.size||0),
+        etag:null
+      };
+      await kaydetBlob(f,meta);
+      setMerkezi(true);
+      setDurum("Merkezi envanter güncellendi • diğer cihazlar yeni sürümü yalnızca bir kez indirecek");
+    }
     catch (err: any) { setHata(err?.message || "Merkezi envanter güncellenemedi"); }
     finally { setEnvanterIslem(false); }
   };
