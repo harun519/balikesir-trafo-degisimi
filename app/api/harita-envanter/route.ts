@@ -8,8 +8,11 @@ export const maxDuration=60;
 const BUCKET="trafo-yedekler";
 const PATH="harita/trafo-envanter.json";
 const MAX_SIZE=30*1024*1024;
-const MAP_CACHE="public, max-age=300";
-const MAP_CDN_CACHE="public, s-maxage=7200, stale-while-revalidate=86400";
+
+// Büyük envanter yalnızca sürüm değiştiğinde çağrılır. URL'deki ?v= değeri
+// değiştiği için her sürüm CDN'de ayrı ve uzun ömürlü tutulabilir.
+const MAP_CACHE="public, max-age=31536000, immutable";
+const MAP_CDN_CACHE="public, s-maxage=31536000, immutable";
 
 function adminClient(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,11 +21,43 @@ function adminClient(){
   return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
 }
 
+function kayipMi(error:any){
+  const metin=String(error?.message||error?.error||"").toLowerCase();
+  return metin.includes("not found")||metin.includes("object not found")||metin.includes("404");
+}
+
 async function bucketHazirla(sb:ReturnType<typeof adminClient>){
   const {data,error}=await sb.storage.getBucket(BUCKET);
   if(data&&!error)return;
   const {error:createError}=await sb.storage.createBucket(BUCKET,{public:false,fileSizeLimit:52428800});
   if(createError&&!String(createError.message||"").toLowerCase().includes("already"))throw createError;
+}
+
+async function nesneMetaOku(){
+  const sb=adminClient();
+  const {data,error}=await sb.storage.from(BUCKET).info(PATH);
+  if(error||!data){
+    if(kayipMi(error))return null;
+    throw error||new Error("Harita envanteri bilgisi alınamadı.");
+  }
+  const d=data as any;
+  return {
+    updated_at:d.lastModified||d.updated_at||d.created_at||null,
+    size:Number(d.size||d.metadata?.size||0),
+    etag:d.eTag||d.etag||d.metadata?.eTag||d.metadata?.etag||null
+  };
+}
+
+async function paketOku(){
+  const sb=adminClient();
+  const {data,error}=await sb.storage.from(BUCKET).download(PATH);
+  if(error||!data){
+    if(kayipMi(error))return null;
+    throw error||new Error("Harita envanteri indirilemedi.");
+  }
+  const paket=JSON.parse(await data.text());
+  if(!paket?.base64)throw new Error("Merkezi harita envanteri bozuk.");
+  return paket;
 }
 
 async function adminDogrula(req:NextRequest){
@@ -36,34 +71,30 @@ async function adminDogrula(req:NextRequest){
   return {ok:true as const,sb,user};
 }
 
-async function paketOku(){
-  const sb=adminClient();
-  await bucketHazirla(sb);
-  const {data,error}=await sb.storage.from(BUCKET).download(PATH);
-  if(error||!data){
-    const msg=String(error?.message||"").toLowerCase();
-    if(msg.includes("not found")||msg.includes("object not found")||msg.includes("404"))return null;
-    throw error||new Error("Harita envanteri indirilemedi.");
-  }
-  const paket=JSON.parse(await data.text());
-  if(!paket?.base64)throw new Error("Merkezi harita envanteri bozuk.");
-  return paket;
-}
-
 export async function GET(req:NextRequest){
   try{
+    if(req.nextUrl.searchParams.get("meta")==="1"){
+      // KRİTİK: Bu çağrı büyük Storage nesnesini İNDİRMEZ.
+      // Sadece Storage metadata bilgisini okur; böylece Cached Egress şişmez.
+      const meta=await nesneMetaOku();
+      if(!meta)return NextResponse.json(
+        {error:"Merkezi harita envanteri henüz oluşturulmadı."},
+        {status:404,headers:{"Cache-Control":"no-store"}}
+      );
+      return NextResponse.json(
+        {ok:true,updated_at:meta.updated_at,size:meta.size,etag:meta.etag},
+        {headers:{
+          "Cache-Control":"public, max-age=30",
+          "Vercel-CDN-Cache-Control":"public, s-maxage=60, stale-while-revalidate=300"
+        }}
+      );
+    }
+
     const paket=await paketOku();
     if(!paket)return NextResponse.json(
       {error:"Merkezi harita envanteri henüz oluşturulmadı."},
       {status:404,headers:{"Cache-Control":"no-store"}}
     );
-
-    if(req.nextUrl.searchParams.get("meta")==="1"){
-      return NextResponse.json(
-        {ok:true,version:paket.version||1,size:paket.size||0,updated_at:paket.updated_at||null,checksum:paket.checksum||null},
-        {headers:{"Cache-Control":"public, max-age=60","Vercel-CDN-Cache-Control":"public, s-maxage=300, stale-while-revalidate=3600"}}
-      );
-    }
 
     const bytes=Buffer.from(paket.base64,"base64");
     const headers:Record<string,string>={
@@ -100,6 +131,9 @@ export async function POST(req:NextRequest){
 
     const updated_at=new Date().toISOString();
     const checksum=createHash("sha256").update(Buffer.from(body)).digest("hex");
+
+    // Sürüm sayısı artık meta kontrolü için kullanılmıyor. Eski pakette varsa koruyup artırıyoruz.
+    // Bu okuma yalnızca ADMIN envanteri gerçekten değiştirdiğinde çalışır.
     const eski=await paketOku().catch(()=>null);
     const version=Number(eski?.version||0)+1;
     const paket=JSON.stringify({
@@ -118,8 +152,18 @@ export async function POST(req:NextRequest){
     );
     if(error)throw error;
 
+    // Yeni Storage lastModified değeri istemcinin sürüm anahtarıdır.
+    const meta=await nesneMetaOku().catch(()=>null);
+
     return NextResponse.json(
-      {ok:true,version,size:body.byteLength,updated_at,checksum},
+      {
+        ok:true,
+        version,
+        size:body.byteLength,
+        updated_at,
+        checksum,
+        storage_updated_at:meta?.updated_at||updated_at
+      },
       {headers:{"Cache-Control":"no-store"}}
     );
   }catch(e:any){
