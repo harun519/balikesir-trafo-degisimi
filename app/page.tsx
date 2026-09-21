@@ -70,6 +70,8 @@ const BOS_FORM: FormData = {
 
 const inputSinif="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
 
+const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
+const TRAFO_CACHE_TIME_KEY="trafo_degisim_cache_time_v1";
 type SistemYedekDosyasi={name:string;created_at:string|null;updated_at:string|null;size:number;url:string};
 export default function Home() {
   const supabase = useMemo(getSupabaseBrowserClient, []);
@@ -83,7 +85,16 @@ export default function Home() {
   const [yeniSifreTekrar,setYeniSifreTekrar]=useState("");
   const [sifreMesaj,setSifreMesaj]=useState("");
   const [sifreIslem,setSifreIslem]=useState(false);
-  const [sayfa,setSayfa]=useState<Sayfa>("dashboard"); const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>([]);
+  const [sayfa,setSayfa]=useState<Sayfa>("dashboard");
+  const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>(()=>{
+    if(typeof window==="undefined")return [];
+    try{const v=JSON.parse(localStorage.getItem(TRAFO_CACHE_KEY)||"[]");return Array.isArray(v)?v:[];}catch{return [];}
+  });
+  const [manuelGuncelleniyor,setManuelGuncelleniyor]=useState(false);
+  const [sonManuelGuncelleme,setSonManuelGuncelleme]=useState(()=>{
+    if(typeof window==="undefined")return "";
+    try{return localStorage.getItem(TRAFO_CACHE_TIME_KEY)||"";}catch{return "";}
+  });
   const [arsivKayitlari,setArsivKayitlari]=useState<ArsivKaydi[]>([]);
   const [arsivYukleniyor,setArsivYukleniyor]=useState(false);
   const [arsivDosya,setArsivDosya]=useState<File|null>(null);
@@ -291,14 +302,13 @@ export default function Home() {
     return()=>{aktif=false;window.clearTimeout(beklemeSiniri);subscription.unsubscribe();};
   },[supabase]);
 
-  useEffect(()=>{ if(session&&yetkiHazir) kayitlariGetir(); else setKayitlar([]); },[session,yetkiHazir]);
-  useEffect(()=>{ if(session&&yetkiHazir){arsivKayitlariniGetir();driveSyncLoglariniGetir();} else {setArsivKayitlari([]);setDriveSyncLoglar([]);} },[session,yetkiHazir]);
+  // Manuel senkron: uygulama açılışında iş verileri Supabase’den otomatik okunmaz.
+  // Son alınan kayıtlar cihaz önbelleğinden gösterilir; merkezden okuma kullanıcı isteğiyle yapılır.
   useEffect(()=>{
     setYetkiHazir(false);
-    if(session){void kullaniciProfiliniGetir();}else{setKullaniciRolu("viewer");setAuditLoglar([]);}
+    if(session){void kullaniciProfiliniGetir();}
+    else{setKullaniciRolu("viewer");setAuditLoglar([]);setArsivKayitlari([]);setDriveSyncLoglar([]);}
   },[session]);
-  useEffect(()=>{if(yonetici)auditLoglariGetir();},[yonetici]);
-  useEffect(()=>{if(session&&yetkiHazir)trafoMarkalariniGetir();else setTrafoMarkalari([]);},[session,yetkiHazir]);
 
   async function kullaniciProfiliniGetir(){
     if(!supabase||!session)return;
@@ -508,10 +518,35 @@ export default function Home() {
   }
 
 async function kayitlariGetir(){
-    if(!supabase)return; setVeriYukleniyor(true); setGenelHata("");
+    if(!supabase)return false;
+    setVeriYukleniyor(true); setGenelHata("");
     const {data,error}=await supabase.from("trafo_degisim").select("*").order("tarih",{ascending:false,nullsFirst:false}).order("id",{ascending:false});
-    if(error){setGenelHata("Kayıtlar yüklenemedi: "+error.message);setVeriYukleniyor(false);return;}
-    setKayitlar((data||[]) as TrafoKaydi[]); setVeriYukleniyor(false);
+    if(error){setGenelHata("Kayıtlar yüklenemedi: "+error.message);setVeriYukleniyor(false);return false;}
+    const liste=(data||[]) as TrafoKaydi[];
+    setKayitlar(liste);
+    const simdi=new Date().toISOString();
+    setSonManuelGuncelleme(simdi);
+    try{
+      localStorage.setItem(TRAFO_CACHE_KEY,JSON.stringify(liste));
+      localStorage.setItem(TRAFO_CACHE_TIME_KEY,simdi);
+    }catch{}
+    window.dispatchEvent(new CustomEvent("trafo-manuel-veri-guncellendi",{detail:{kayitlar:liste,updatedAt:simdi}}));
+    setVeriYukleniyor(false);
+    return true;
+  }
+
+  async function manuelVerileriGuncelle(){
+    if(!session||!yetkiHazir||manuelGuncelleniyor)return;
+    setManuelGuncelleniyor(true);setGenelHata("");setBasariMesaji("");
+    try{
+      const ok=await kayitlariGetir();
+      if(!ok)return;
+      const ekIslemler:Promise<unknown>[]=[trafoMarkalariniGetir()];
+      if(yonetici)ekIslemler.push(auditLoglariGetir(),driveSyncLoglariniGetir());
+      await Promise.allSettled(ekIslemler);
+      setBasariMesaji("Merkezi veriler güncellendi.");
+      setTimeout(()=>setBasariMesaji(""),2500);
+    }finally{setManuelGuncelleniyor(false);}
   }
 
   async function girisYap(e:FormEvent<HTMLFormElement>){
@@ -1417,6 +1452,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">Trafo değişimlerinin güncel durumu, eğilimleri ve son hareketleri.</p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={manuelVerileriGuncelle} disabled={manuelGuncelleniyor||!session||!yetkiHazir} className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 shadow-sm hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60">{manuelGuncelleniyor?"⟳ Güncelleniyor…":"⟳ Verileri Güncelle"}</button>
                 <button type="button" onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-600 shadow-sm hover:bg-slate-50">📋 Kayıtlar</button>
                 {duzenleyebilir&&<button type="button" onClick={()=>{formTemizle();sayfayaGit("yeni");}} className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-blue-200 hover:bg-blue-700">+ Yeni Kayıt</button>}
               </div>
@@ -1788,7 +1824,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
                   <span className="font-black text-slate-700">Sistem Durumu</span>
-                  <span className="font-bold text-emerald-600">● Uygulama çalışıyor</span>
+                  <span className="font-bold text-emerald-600">● Manuel senkron • otomatik veri yenileme kapalı</span>
                 </div>
                 {yonetici&&<button type="button" onClick={()=>sayfayaGit("yedekleme")} className="self-start rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 hover:bg-slate-100 sm:self-auto">Yedekleme Merkezi →</button>}
               </div>
