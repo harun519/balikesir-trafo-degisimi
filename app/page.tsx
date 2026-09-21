@@ -2007,7 +2007,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                 <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Otomatik Yedekleme</div>
                 <div className="mt-2 flex items-center gap-2 text-lg font-black text-emerald-800"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500"/> AKTİF</div>
-                <div className="mt-1 text-xs text-emerald-600">Her gün yaklaşık 08:30</div>
+                <div className="mt-1 text-xs text-emerald-600">2 haftada bir otomatik</div>
               </div>
               <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
                 <div className="text-[10px] font-black uppercase tracking-wider text-blue-600">Son Sunucu Yedeği</div>
@@ -2030,14 +2030,14 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 </div>
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                   <div className="text-sm font-black text-emerald-800">✓ Otomatik Koruma</div>
-                  <div className="mt-2 text-xs leading-6 text-emerald-700">Vercel günlük olarak aynı yedek işlemini otomatik çalıştırır. Manuel düğme ise istediğiniz anda ek yedek oluşturur.</div>
+                  <div className="mt-2 text-xs leading-6 text-emerald-700">Vercel 2 haftada bir otomatik yedek alır. Yeni yedek başarıyla oluşunca önceki yedek silinir ve yalnızca son 1 yedek saklanır.</div>
                 </div>
               </div>
               {sunucuYedekHata&&<div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">{sunucuYedekHata}</div>}
             </Panel>
 
             <div className="mt-5">
-              <Panel baslik="🕘 Yedek Geçmişi" altBaslik="Sunucuda saklanan son sistem yedekleri">
+              <Panel baslik="🕘 Yedek Geçmişi" altBaslik="Sunucuda yalnızca son 1 sistem yedeği saklanır">
                 <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
                   {yedekListesiYukleniyor?<div className="p-5 text-sm text-slate-500">Yedekler yükleniyor...</div>:sistemYedekleri.length?sistemYedekleri.map((y,i)=><div key={y.name} className="flex flex-col gap-3 border-b border-slate-100 p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
