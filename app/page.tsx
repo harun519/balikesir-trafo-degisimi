@@ -86,15 +86,9 @@ export default function Home() {
   const [sifreMesaj,setSifreMesaj]=useState("");
   const [sifreIslem,setSifreIslem]=useState(false);
   const [sayfa,setSayfa]=useState<Sayfa>("dashboard");
-  const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>(()=>{
-    if(typeof window==="undefined")return [];
-    try{const v=JSON.parse(localStorage.getItem(TRAFO_CACHE_KEY)||"[]");return Array.isArray(v)?v:[];}catch{return [];}
-  });
+  const [kayitlar,setKayitlar]=useState<TrafoKaydi[]>([]);
   const [manuelGuncelleniyor,setManuelGuncelleniyor]=useState(false);
-  const [sonManuelGuncelleme,setSonManuelGuncelleme]=useState(()=>{
-    if(typeof window==="undefined")return "";
-    try{return localStorage.getItem(TRAFO_CACHE_TIME_KEY)||"";}catch{return "";}
-  });
+  const [sonManuelGuncelleme,setSonManuelGuncelleme]=useState("");
   const [arsivKayitlari,setArsivKayitlari]=useState<ArsivKaydi[]>([]);
   const [arsivYukleniyor,setArsivYukleniyor]=useState(false);
   const [arsivDosya,setArsivDosya]=useState<File|null>(null);
@@ -301,6 +295,14 @@ export default function Home() {
     });
     return()=>{aktif=false;window.clearTimeout(beklemeSiniri);subscription.unsubscribe();};
   },[supabase]);
+
+  useEffect(()=>{
+    try{
+      const v=JSON.parse(localStorage.getItem(TRAFO_CACHE_KEY)||"[]");
+      if(Array.isArray(v))setKayitlar(v as TrafoKaydi[]);
+      setSonManuelGuncelleme(localStorage.getItem(TRAFO_CACHE_TIME_KEY)||"");
+    }catch{}
+  },[]);
 
   // Manuel senkron: uygulama açılışında iş verileri Supabase’den otomatik okunmaz.
   // Son alınan kayıtlar cihaz önbelleğinden gösterilir; merkezden okuma kullanıcı isteğiyle yapılır.
