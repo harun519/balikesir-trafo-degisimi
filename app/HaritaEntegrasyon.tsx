@@ -6,6 +6,17 @@ import { getSupabaseBrowserClient } from "./supabaseClient";
 import TrafoHarita from "./TrafoHarita";
 
 const EVENT_AC="trafo-harita-ac";
+const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
+function cacheKaydiniGuncelle(kayit:any){
+ try{
+  const eski=JSON.parse(localStorage.getItem(TRAFO_CACHE_KEY)||"[]");
+  const liste=Array.isArray(eski)?eski:[];
+  const i=liste.findIndex((x:any)=>x?.id===kayit?.id);
+  if(i>=0)liste[i]=kayit;else liste.unshift(kayit);
+  liste.sort((a:any,b:any)=>String(b?.tarih||"").localeCompare(String(a?.tarih||""))||Number(b?.id||0)-Number(a?.id||0));
+  localStorage.setItem(TRAFO_CACHE_KEY,JSON.stringify(liste));
+ }catch{}
+}
 const tarih=(v:any)=>{if(!v)return"—";const s=String(v).slice(0,10).split("-");return s.length===3?`${s[2]}.${s[1]}.${s[0]}`:String(v);};
 const tarihInput=(v:any)=>v?String(v).slice(0,10):"";
 const nedenRengi=(v:any)=>{const x=String(v||"").toLocaleUpperCase("tr-TR");if(x==="ARIZA")return"#ef4444";if(x==="DÖNÜŞÜM")return"#3b82f6";if(x==="GÜÇ DEĞİŞİMİ")return"#84cc16";if(x==="TRAFO İPTAL")return"#38bdf8";if(x==="YATIRIM")return"#facc15";if(x==="YENİ TESİS")return"#22d3ee";if(x==="ARIZA RİSKİ")return"#fb7185";if(x==="KISMİ ARIZALI")return"#f97316";return"#64748b";};
@@ -37,13 +48,11 @@ export default function HaritaEntegrasyon(){
  useEffect(()=>{if(!acik)return;let a=0,b=0;a=requestAnimationFrame(()=>window.dispatchEvent(new Event("trafo-harita-gorundu")));b=window.setTimeout(()=>window.dispatchEvent(new Event("trafo-harita-gorundu")),260);return()=>{cancelAnimationFrame(a);window.clearTimeout(b);};},[acik]);
  useEffect(()=>{const f=(e:MouseEvent)=>{const b=(e.target as HTMLElement|null)?.closest("nav button") as HTMLButtonElement|null;if(!b||b.dataset.trafoHaritaMenu==="1")return;setAcik(false);setGecmis(null);};document.addEventListener("click",f,true);return()=>document.removeEventListener("click",f,true);},[]);
  useEffect(()=>{
-  if(!supabase)return;
   let timer:number|undefined;
   const yenile=()=>{window.clearTimeout(timer);timer=window.setTimeout(()=>window.dispatchEvent(new Event("trafo-harita-veri-yenile")),120);};
   window.addEventListener("trafo-kayit-guncellendi",yenile as EventListener);
-  const kanal=supabase.channel("trafo-harita-ekran-canli").on("postgres_changes",{event:"*",schema:"public",table:"trafo_degisim"},yenile).subscribe();
-  return()=>{window.clearTimeout(timer);window.removeEventListener("trafo-kayit-guncellendi",yenile as EventListener);supabase.removeChannel(kanal);};
- },[supabase]);
+  return()=>{window.clearTimeout(timer);window.removeEventListener("trafo-kayit-guncellendi",yenile as EventListener);};
+ },[]);
 
  useEffect(()=>{
   let deneme=0;
@@ -60,7 +69,7 @@ export default function HaritaEntegrasyon(){
 
  const duzenle=(k:any)=>{if(!duzenleyebilir)return;setDuzenlemeHata("");setDuzenlenenId(k.id);setForm({...k,tarih:tarihInput(k.tarih)});};
  const fv=(alan:string,v:any)=>setForm((x:any)=>({...x,[alan]:v}));
- const kaydet=async()=>{if(!supabase||duzenlenenId==null||!duzenleyebilir){setDuzenlemeHata("Bu işlem için düzenleme yetkiniz yok.");return;}setKaydediliyor(true);setDuzenlemeHata("");try{const payload:any={tarih:form.tarih||null,degisim_nedeni:form.degisim_nedeni||null,ilce:form.ilce||null,mahalle:form.mahalle||null,tr:form.tr||null,trafo_id:form.trafo_id||null,lokasyon_id:form.lokasyon_id||null,trafo_tipi:form.trafo_tipi||null,sokulen_gucu:form.sokulen_gucu||null,sokulen_gerilim:form.sokulen_gerilim||null,sokulen_markasi:form.sokulen_markasi||null,sokulen_seri_no:form.sokulen_seri_no||null,sokulen_imal_yili:form.sokulen_imal_yili||null,sokulen_trafo_tipi:form.sokulen_trafo_tipi||null,sokulen_tamir_yili:form.sokulen_tamir_yili||null,sokulen_tamir_firmasi:form.sokulen_tamir_firmasi||null,takilan_gucu:form.takilan_gucu||null,takilan_gerilim:form.takilan_gerilim||null,takilan_markasi:form.takilan_markasi||null,takilan_seri_no:form.takilan_seri_no||null,takilan_imal_yili:form.takilan_imal_yili||null,takilan_trafo_tipi:form.takilan_trafo_tipi||null,takilan_tamir_yili:form.takilan_tamir_yili||null,takilan_tamir_firmasi:form.takilan_tamir_firmasi||null,sokulen_yuklenici:form.sokulen_yuklenici||null,aciklama:form.aciklama||null};const {data,error}=await supabase.from("trafo_degisim").update(payload).eq("id",duzenlenenId).select("*").single();if(error)throw error;setGecmis(g=>g?.map(x=>x.id===duzenlenenId?data:x)||g);window.dispatchEvent(new CustomEvent("trafo-kayit-guncellendi",{detail:{kayit:data}}));setDuzenlenenId(null);}catch(e:any){setDuzenlemeHata(e?.message||"Kayıt güncellenemedi.");}finally{setKaydediliyor(false);}};
+ const kaydet=async()=>{if(!supabase||duzenlenenId==null||!duzenleyebilir){setDuzenlemeHata("Bu işlem için düzenleme yetkiniz yok.");return;}setKaydediliyor(true);setDuzenlemeHata("");try{const payload:any={tarih:form.tarih||null,degisim_nedeni:form.degisim_nedeni||null,ilce:form.ilce||null,mahalle:form.mahalle||null,tr:form.tr||null,trafo_id:form.trafo_id||null,lokasyon_id:form.lokasyon_id||null,trafo_tipi:form.trafo_tipi||null,sokulen_gucu:form.sokulen_gucu||null,sokulen_gerilim:form.sokulen_gerilim||null,sokulen_markasi:form.sokulen_markasi||null,sokulen_seri_no:form.sokulen_seri_no||null,sokulen_imal_yili:form.sokulen_imal_yili||null,sokulen_trafo_tipi:form.sokulen_trafo_tipi||null,sokulen_tamir_yili:form.sokulen_tamir_yili||null,sokulen_tamir_firmasi:form.sokulen_tamir_firmasi||null,takilan_gucu:form.takilan_gucu||null,takilan_gerilim:form.takilan_gerilim||null,takilan_markasi:form.takilan_markasi||null,takilan_seri_no:form.takilan_seri_no||null,takilan_imal_yili:form.takilan_imal_yili||null,takilan_trafo_tipi:form.takilan_trafo_tipi||null,takilan_tamir_yili:form.takilan_tamir_yili||null,takilan_tamir_firmasi:form.takilan_tamir_firmasi||null,sokulen_yuklenici:form.sokulen_yuklenici||null,aciklama:form.aciklama||null};const {data,error}=await supabase.from("trafo_degisim").update(payload).eq("id",duzenlenenId).select("*").single();if(error)throw error;cacheKaydiniGuncelle(data);setGecmis(g=>g?.map(x=>x.id===duzenlenenId?data:x)||g);window.dispatchEvent(new CustomEvent("trafo-kayit-guncellendi",{detail:{kayit:data}}));setDuzenlenenId(null);}catch(e:any){setDuzenlemeHata(e?.message||"Kayıt güncellenemedi.");}finally{setKaydediliyor(false);}};
 
  const ilk=gecmis?.[0];
  const gecmisModal=gecmis!==null&&typeof document!=="undefined"?createPortal(<div data-trafo-gecmis-modal="1" className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-slate-950/55 p-2 sm:p-4" onMouseDown={e=>{if(e.target===e.currentTarget){setDuzenlenenId(null);setGecmis(null);}}}>
