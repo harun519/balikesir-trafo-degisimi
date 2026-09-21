@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const BUCKET = "trafo-yedekler";
+const KEEP = 1;
 
 function adminClient(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,6 +35,22 @@ async function adminDogrula(req:NextRequest){
 async function tabloGetir(sb:ReturnType<typeof adminClient>,table:string){
   const {data,error}=await sb.from(table).select("*");
   return {data:data||[],error:error?error.message:null};
+}
+
+async function sistemYedekDosyalari(sb:ReturnType<typeof adminClient>){
+  const {data,error}=await sb.storage.from(BUCKET).list("sistem",{limit:100,sortBy:{column:"created_at",order:"desc"}});
+  if(error)throw error;
+  return (data||[]).filter(x=>x.name?.endsWith(".json"));
+}
+
+async function sistemYedekleriniTemizle(sb:ReturnType<typeof adminClient>){
+  const files=await sistemYedekDosyalari(sb);
+  const stale=files.slice(KEEP);
+  if(stale.length){
+    const {error}=await sb.storage.from(BUCKET).remove(stale.map(x=>`sistem/${x.name}`));
+    if(error)throw error;
+  }
+  return files.slice(0,KEEP);
 }
 
 async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
@@ -76,15 +93,14 @@ async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   const body=JSON.stringify(payload,null,2);
   const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:"application/json",upsert:false});
   if(error)throw error;
-  return {name,path,size:new TextEncoder().encode(body).length,created_at:now.toISOString(),kaynak};
+  await sistemYedekleriniTemizle(sb);
+  return {name,path,size:new TextEncoder().encode(body).length,created_at:now.toISOString(),kaynak,retention:KEEP};
 }
 
 async function yedekleriListele(){
   const sb=adminClient();
   await bucketHazirla(sb);
-  const {data,error}=await sb.storage.from(BUCKET).list("sistem",{limit:100,sortBy:{column:"created_at",order:"desc"}});
-  if(error)throw error;
-  const files=(data||[]).filter(x=>x.name?.endsWith(".json"));
+  const files=await sistemYedekleriniTemizle(sb);
   const yedekler=await Promise.all(files.map(async x=>{
     const path=`sistem/${x.name}`;
     const {data:signed}=await sb.storage.from(BUCKET).createSignedUrl(path,60*60);
