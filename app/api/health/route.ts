@@ -15,17 +15,10 @@ function client(){
 
 async function latestBackup(sb:ReturnType<typeof client>):Promise<BackupInfo>{
   const bucket="trafo-yedekler";
-  const {data:years}=await sb.storage.from(bucket).list("otomatik",{limit:20,sortBy:{column:"name",order:"desc"}});
-  for(const y of (years||[]).filter(x=>/^\d{4}$/.test(x.name)).sort((a,b)=>b.name.localeCompare(a.name))){
-    const {data:months}=await sb.storage.from(bucket).list(`otomatik/${y.name}`,{limit:20,sortBy:{column:"name",order:"desc"}});
-    for(const m of (months||[]).filter(x=>/^\d{2}$/.test(x.name)).sort((a,b)=>b.name.localeCompare(a.name))){
-      const prefix=`otomatik/${y.name}/${m.name}`;
-      const {data:files}=await sb.storage.from(bucket).list(prefix,{limit:100,sortBy:{column:"created_at",order:"desc"}});
-      const f=(files||[]).find(x=>x.name?.endsWith(".json"));
-      if(f)return {name:f.name,path:`${prefix}/${f.name}`,created_at:f.created_at||f.updated_at||null};
-    }
-  }
-  return null;
+  const {data:files,error}=await sb.storage.from(bucket).list("sistem",{limit:20,sortBy:{column:"created_at",order:"desc"}});
+  if(error)throw error;
+  const f=(files||[]).find(x=>x.name?.endsWith(".json"));
+  return f?{name:f.name,path:`sistem/${f.name}`,created_at:f.created_at||f.updated_at||null}:null;
 }
 
 export async function GET(){
