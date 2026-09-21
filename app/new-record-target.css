@@ -305,3 +305,34 @@ main:has(.trafo-new-record) button[title="Yukarı çık"]{
   #new-record-summary{display:none!important}
   #new-record-actions{bottom:5px!important}
 }
+
+
+/* New-record readability pass: slightly larger text only */
+#new-record-stepper button>span:last-child>span:first-child{font-size:14px!important}
+#new-record-stepper button>span:last-child>span:last-child{font-size:11px!important}
+#new-record-stepper button>span:first-child{font-size:15px!important}
+
+#new-record-main label>span,
+#new-record-main .block>span{font-size:13px!important}
+
+#new-record-main input,
+#new-record-main textarea,
+#new-record-main [role="combobox"]{font-size:14px!important}
+
+#new-record-main input::placeholder,
+#new-record-main textarea::placeholder{font-size:14px!important}
+
+#new-record-main>div>.space-y-4 h3{font-size:17px!important}
+#new-record-main>div>.space-y-4 h3+p{font-size:12px!important}
+
+#new-record-summary>div:first-child h2{font-size:17px!important}
+#new-record-summary>div:first-child p{font-size:11px!important}
+#new-record-summary .space-y-3>div span:nth-child(2){font-size:13px!important}
+#new-record-summary .space-y-3>div span:last-child{font-size:13px!important}
+#new-record-summary>div:first-child+div{font-size:12px!important}
+#new-record-summary>div:last-child{font-size:11px!important}
+
+#new-record-actions button{font-size:14px!important}
+#new-record-actions>div{font-size:12px!important}
+
+main:has(.trafo-new-record) section>header input{font-size:13px!important}
