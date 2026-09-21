@@ -132,10 +132,9 @@ export async function POST(req:NextRequest){
     const updated_at=new Date().toISOString();
     const checksum=createHash("sha256").update(Buffer.from(body)).digest("hex");
 
-    // Sürüm sayısı artık meta kontrolü için kullanılmıyor. Eski pakette varsa koruyup artırıyoruz.
-    // Bu okuma yalnızca ADMIN envanteri gerçekten değiştirdiğinde çalışır.
-    const eski=await paketOku().catch(()=>null);
-    const version=Number(eski?.version||0)+1;
+    // Meta kontrolü Storage lastModified ile yapıldığı için eski büyük paketi
+    // yalnız sürüm numarası hesaplamak amacıyla tekrar indirmiyoruz.
+    const version=Date.now();
     const paket=JSON.stringify({
       version,
       format:"zip-base64",
