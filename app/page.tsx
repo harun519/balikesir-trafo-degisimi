@@ -63,6 +63,7 @@ const BOS_FORM: FormData = {
 
 const inputSinif="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
 
+// NEW_RECORD_STEPPER_LAYOUT_FIX_20260924
 const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
 const TRAFO_CACHE_TIME_KEY="trafo_degisim_cache_time_v1";
 type SistemYedekDosyasi={name:string;created_at:string|null;updated_at:string|null;size:number;url:string};
