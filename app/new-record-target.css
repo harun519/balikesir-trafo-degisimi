@@ -429,3 +429,63 @@ main:has(.trafo-new-record) section>header input{font-size:13px!important}
     background:rgba(255,255,255,.02)!important;
   }
 }
+
+
+/* Final sidebar parity fix: New Record must exactly match normal/dashboard shell */
+@media(min-width:1024px){
+  main:has(.trafo-new-record) aside.fixed.lg\:flex{
+    width:252px!important;
+    background:linear-gradient(180deg,#0b1930 0%,#0d203d 52%,#09182d 100%)!important;
+    border-right:1px solid rgba(148,163,184,.10)!important;
+    box-shadow:18px 0 42px rgba(15,23,42,.12)!important;
+  }
+  main:has(.trafo-new-record) section.lg\:ml-\[248px\]{
+    margin-left:252px!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:first-child{
+    min-height:82px!important;
+    height:82px!important;
+    padding:16px 17px!important;
+    background:rgba(255,255,255,.025)!important;
+    border-bottom:1px solid rgba(148,163,184,.12)!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:first-child>div>div:first-child{
+    width:42px!important;
+    height:42px!important;
+    flex:0 0 42px!important;
+    border-radius:13px!important;
+    background:linear-gradient(135deg,#f97316,#fb923c)!important;
+    box-shadow:0 10px 25px rgba(249,115,22,.28)!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:first-child div[class*="text-\[15px\]"]{
+    font-size:15px!important;
+    letter-spacing:normal!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:first-child div[class*="text-\[10px\]"]{
+    font-size:10px!important;
+    letter-spacing:.15em!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex nav{
+    padding:14px 11px!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex nav button,
+  main:has(.trafo-new-record) aside.fixed.lg\:flex nav a{
+    min-height:42px!important;
+    height:auto!important;
+    margin:0 0 4px 0!important;
+    padding:0 12px!important;
+    border-radius:10px!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+    font-weight:650!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:last-child{
+    padding:12px!important;
+    border-top:1px solid rgba(148,163,184,.12)!important;
+    background:rgba(0,0,0,.08)!important;
+  }
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:last-child>div,
+  main:has(.trafo-new-record) aside.fixed.lg\:flex>div:last-child button{
+    border-radius:11px!important;
+  }
+}
