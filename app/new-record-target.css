@@ -372,3 +372,60 @@ main:has(.trafo-new-record) section>header input{font-size:13px!important}
   #new-record-stepper>div{min-width:650px!important}
   #new-record-stepper button{min-height:86px!important;padding:10px 14px!important}
 }
+
+
+/* Permanent desktop sidebar lock: identical on every page */
+@media(min-width:1024px){
+  main aside.fixed.lg\:flex{
+    width:242px!important;
+    background:linear-gradient(180deg,#092541 0%,#08213b 54%,#071c33 100%)!important;
+    border-right:1px solid rgba(255,255,255,.08)!important;
+    box-shadow:14px 0 38px rgba(20,45,78,.12)!important;
+  }
+  main section.lg\:ml-\[248px\]{margin-left:242px!important}
+  main aside.fixed.lg\:flex>div:first-child{
+    min-height:92px!important;
+    height:auto!important;
+    padding:20px 18px!important;
+    background:rgba(255,255,255,.018)!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;
+  }
+  main aside.fixed.lg\:flex>div:first-child>div>div:first-child{
+    width:52px!important;
+    height:52px!important;
+    flex:0 0 52px!important;
+    border-radius:13px!important;
+    background:linear-gradient(135deg,#ff8a20,#ff5d0a)!important;
+    box-shadow:0 12px 24px rgba(255,107,24,.25)!important;
+  }
+  main aside.fixed.lg\:flex>div:first-child div[class*="text-\[15px\]"]{
+    color:#fff!important;
+    font-size:15px!important;
+    letter-spacing:.08em!important;
+  }
+  main aside.fixed.lg\:flex>div:first-child div[class*="text-\[10px\]"]{
+    color:#a8bad0!important;
+    font-size:10px!important;
+    letter-spacing:.18em!important;
+  }
+  main aside.fixed.lg\:flex nav{
+    padding:12px 10px!important;
+  }
+  main aside.fixed.lg\:flex nav button,
+  main aside.fixed.lg\:flex nav a{
+    min-height:45px!important;
+    height:45px!important;
+    margin:2px 0!important;
+    padding:0 14px!important;
+    border-radius:10px!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+    font-weight:700!important;
+    letter-spacing:-.01em!important;
+  }
+  main aside.fixed.lg\:flex>div:last-child{
+    padding:12px!important;
+    border-top:1px solid rgba(255,255,255,.08)!important;
+    background:rgba(255,255,255,.02)!important;
+  }
+}
