@@ -1589,9 +1589,9 @@ const filtrelenmisKayitlar=useMemo(()=>{
             <div id="new-record-stepper" className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_10px_32px_rgba(15,23,42,.07)]">
               <div className="grid min-w-[620px] grid-cols-3">
                 {[
-                  ["1","Konum & Kayıt","Yer ve sistem bilgileri"],
+                  ["1","Konum & Kayıt","Tarih, yer ve sistem bilgileri"],
                   ["2","Trafo Değişimi","Sökülen ve takılan trafo"],
-                  ["3","Değişim & Onay","Tarih, neden ve kayıt onayı"],
+                  ["3","Değişim & Onay","Neden, açıklama ve kayıt onayı"],
                 ].map((a,i)=>{
                   const n=i+1,aktif=formAdim===n,tamam=formAdim>n;
                   return <button type="button" key={n} onClick={()=>setFormAdim(n)} className={`relative flex min-h-[84px] items-center gap-3 border-b-4 px-5 text-left transition ${aktif?"border-orange-500 bg-orange-50/70":"border-transparent hover:bg-slate-50"}`}>
@@ -1611,9 +1611,16 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 {formAdim===1&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-xl">📍</div>
-                    <div><h2 className="text-lg font-black text-slate-900">Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Trafo değişiminin gerçekleştiği konum ve sistem bilgilerini girin.</p></div>
+                    <div><h2 className="text-lg font-black text-slate-900">Tarih & Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Önce değişim tarihini, ardından konum ve sistem bilgilerini girin.</p></div>
                   </div>
-                  <div className="mt-6"><FormGrid><ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/><ComboAlani baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} listeId="ay" gerekli/><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><div><ComboAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)} secenekler={mahalleSecenekleri} listeId="mahalle"/><div className="mt-1 text-[10px] text-slate-400">{!form.ilce?"Önce ilçe seçin.":mahalleYukleniyor?"Mahalleler yükleniyor...":mahalleSecenekleri.length?`${mahalleSecenekleri.length} mahalle hazır.`:"Hazır mahalle bulunamazsa elle yazabilirsiniz."}</div></div><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
+                  <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <Alan baslik="Değişim Tarihi (Opsiyonel)"><input type="date" value={form.tarih} onChange={e=>formDegistir("tarih",e.target.value)} className={inputSinif}/><span className="mt-1 block text-[10px] text-slate-500">Tarih seçildiğinde Yıl ve Ay otomatik doldurulur.</span></Alan>
+                      <ComboAlani baslik="Yıl *" deger={form.yil} degistir={v=>formDegistir("yil",v)} secenekler={YIL_SECENEKLERI} listeId="yil" gerekli/>
+                      <ComboAlani baslik="Ay *" deger={form.ay} degistir={v=>formDegistir("ay",v)} secenekler={AYLAR} listeId="ay" gerekli/>
+                    </div>
+                  </div>
+                  <div className="mt-5"><FormGrid><ComboAlani baslik="İlçe *" deger={form.ilce} degistir={v=>formDegistir("ilce",v)} secenekler={ILCE_SECENEKLERI} listeId="ilce" gerekli/><div><ComboAlani baslik="Mahalle" deger={form.mahalle} degistir={v=>formDegistir("mahalle",v)} secenekler={mahalleSecenekleri} listeId="mahalle"/><div className="mt-1 text-[10px] text-slate-400">{!form.ilce?"Önce ilçe seçin.":mahalleYukleniyor?"Mahalleler yükleniyor...":mahalleSecenekleri.length?`${mahalleSecenekleri.length} mahalle hazır.`:"Hazır mahalle bulunamazsa elle yazabilirsiniz."}</div></div><MetinAlani baslik="TR / Trafo Bölge Adı" deger={form.tr} degistir={v=>formDegistir("tr",v)}/><MetinAlani baslik="Lokasyon ID" deger={form.lokasyon_id} degistir={v=>formDegistir("lokasyon_id",v)}/><MetinAlani baslik="Trafo ID" deger={form.trafo_id} degistir={v=>formDegistir("trafo_id",v)}/><ComboAlani baslik="Trafo Tipi" deger={form.trafo_tipi} degistir={v=>formDegistir("trafo_tipi",v)} secenekler={KONUM_TRAFO_TIPLERI} listeId="konumtip"/></FormGrid></div>
                   
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
@@ -1664,10 +1671,9 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 {formAdim===3&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Değişim & Onay</h2><p className="mt-1 text-xs text-slate-500">İşlem bilgilerini tamamlayın ve kaydı son kez kontrol edin.</p></div></div>
 
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <Alan baslik="Tarih (Opsiyonel)"><input type="date" value={form.tarih} onChange={e=>formDegistir("tarih",e.target.value)} className={inputSinif}/><span className="mt-1 block text-[10px] text-slate-400">Tarih seçilirse Yıl ve Ay otomatik doldurulur.</span></Alan>
+                  <div className="mt-6 grid gap-4">
                     <ComboAlani baslik="Değişim Nedeni *" deger={form.degisim_nedeni} degistir={v=>formDegistir("degisim_nedeni",v)} secenekler={NEDENLER.map(n=>n.ad)} listeId="degisim-nedeni" gerekli/>
-                    <div className="sm:col-span-2"><Alan baslik="Açıklama"><textarea rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan></div>
+                    <Alan baslik="Açıklama"><textarea rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan>
                   </div>
 
                   <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
