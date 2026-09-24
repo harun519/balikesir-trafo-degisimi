@@ -139,8 +139,6 @@ export default function Home() {
   const [csvYukleniyor,setCsvYukleniyor]=useState(false);
   const [genelArama,setGenelArama]=useState("");
   const [genelAramaAcik,setGenelAramaAcik]=useState(false);
-  const [bildirimAcik,setBildirimAcik]=useState(false);
-  const [okunanBildirimler,setOkunanBildirimler]=useState<string[]>([]);
   const [yedekHazirlaniyor,setYedekHazirlaniyor]=useState(false);
   const [sunucuYedekleniyor,setSunucuYedekleniyor]=useState(false);
   const [sistemYedekleri,setSistemYedekleri]=useState<SistemYedekDosyasi[]>([]);
@@ -235,16 +233,6 @@ export default function Home() {
     window.addEventListener("keydown",fn);
     return ()=>window.removeEventListener("keydown",fn);
   },[duzenleyebilir]);
-
-  useEffect(()=>{
-    try{
-      const raw=localStorage.getItem("trafo_okunan_bildirimler");
-      if(raw){
-        const arr=JSON.parse(raw);
-        if(Array.isArray(arr))setOkunanBildirimler(arr.filter((x):x is string=>typeof x==="string"));
-      }
-    }catch{}
-  },[]);
 
   useEffect(()=>{
     if(sayfa!=="dashboard")return;
@@ -1071,37 +1059,6 @@ async function kayitlariGetir(){
     const aa=arsivKayitlari.filter(a=>eslemeAnahtari([a.yil,a.ay,a.ilce,a.mahalle,a.tr,a.lokasyon_id,a.trafo_id,a.dosya_adi,a.aciklama].join(" ")).includes(q)).slice(0,6);
     return {kayit:kk,arsiv:aa};
   },[genelArama,kayitlar,arsivKayitlari]);
-  const bildirimler=useMemo(()=>{
-    const items:{id:string;ikon:string;baslik:string;alt:string;tur:"ok"|"warn"|"info"}[]=[];
-    const son=driveSyncLoglar[0];
-    if(son){items.push({id:`sync-${son.id}`,ikon:son.durum==="error"?"❌":"☁️",baslik:son.durum==="error"?"Drive senkronizasyon hatası":`${son.aktarilan} yeni form senkronize edildi`,alt:new Date(son.created_at).toLocaleString("tr-TR"),tur:son.durum==="error"?"warn":"ok"});}
-    if(arsivKayitlari.length)items.push({id:`arsiv-${arsivKayitlari.length}-${arsivToplamBoyut}`,ikon:"📁",baslik:`Arşivde ${arsivKayitlari.length} dosya`,alt:`Toplam boyut ${arsivBoyutGoster(arsivToplamBoyut)}`,tur:"info"});
-    return items.slice(0,6);
-  },[driveSyncLoglar,arsivKayitlari,arsivToplamBoyut]);
-
-  const okunmamisBildirimler=useMemo(
-    ()=>bildirimler.filter(b=>!okunanBildirimler.includes(b.id)),
-    [bildirimler,okunanBildirimler]
-  );
-
-  function bildirimOkunduYap(id:string){
-    setOkunanBildirimler(prev=>{
-      if(prev.includes(id))return prev;
-      const next=[...prev,id].slice(-200);
-      try{localStorage.setItem("trafo_okunan_bildirimler",JSON.stringify(next));}catch{}
-      return next;
-    });
-  }
-
-  function tumBildirimleriOkunduYap(){
-    setOkunanBildirimler(prev=>{
-      const next=Array.from(new Set([...prev,...bildirimler.map(b=>b.id)])).slice(-200);
-      try{localStorage.setItem("trafo_okunan_bildirimler",JSON.stringify(next));}catch{}
-      return next;
-    });
-  }
-
-
   async function sistemYedekleriniGetir(){
     if(!session||!yonetici)return;
     setYedekListesiYukleniyor(true);setSunucuYedekHata("");
@@ -1440,7 +1397,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
       <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[248px] flex-col border-r border-slate-200 bg-white text-slate-800 lg:flex"><div className="border-b border-slate-200 px-5 py-6"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 text-xl text-white shadow-sm">⚡</div><div><div className="text-[15px] font-bold tracking-tight text-slate-900">BALIKESİR</div><div className="text-[10px] font-semibold tracking-[.15em] text-slate-500">TRAFO DEĞİŞİMİ</div></div></div></div><Nav sayfa={sayfa} duzenlenenId={duzenlenenId} formTemizle={formTemizle} git={sayfayaGit} bolumeGit={bolumeGit} aktifAnaliz={aktifAnaliz} misafirModu={misafirModu} rol={kullaniciRolu}/><div className="mt-auto border-t border-slate-200 p-4"><div className="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"><div className="truncate text-xs font-semibold text-slate-700">{misafirModu ? "👁 Görüntüleme Modu" : session?.user.email}</div>{!misafirModu&&<span className="mt-2 inline-flex rounded-full bg-blue-100 px-2 py-1 text-[9px] font-black uppercase text-blue-700">{kullaniciRolu}</span>}</div>{!misafirModu&&<CentralPasswordChange/>}<button onClick={cikisYap} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">↪ Çıkış Yap</button></div></aside>
 
       <section className="w-full min-w-0 max-w-full flex-1 overflow-x-hidden lg:ml-[248px]">
-        <header className="sticky top-0 z-30 flex min-h-[64px] items-center gap-3 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-5 lg:px-6"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 shadow-sm lg:hidden">☰</button>{sayfa==="yeni"&&<div id="new-record-top-brand" className="hidden min-w-[310px] items-center gap-3 lg:flex"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-lg text-blue-700">◫</div><div><div className="text-[18px] font-black tracking-tight text-slate-900">Balıkesir Trafo Değişimi</div><div className="mt-0.5 text-[10px] font-medium text-slate-400">Sürdürülebilir enerji altyapısı için güvenilir kayıt sistemi</div></div></div>}<div className="relative min-w-0 flex-1 sm:min-w-[280px] sm:max-w-xl"><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={genelArama} onFocus={()=>setGenelAramaAcik(true)} onChange={e=>{setGenelArama(e.target.value);setGenelAramaAcik(true);}} placeholder="Kayıt, trafo, mahalle veya seri no ara..." className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-[13px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"/></div>{genelAramaAcik&&genelArama.trim().length>=2&&<div className="absolute left-0 right-0 top-[54px] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,.18)]"><div className="max-h-[420px] overflow-y-auto p-2"><div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Trafo Kayıtları</div>{genelAramaSonuclari.kayit.length?genelAramaSonuclari.kayit.map(k=><button key={`k-${k.id}`} type="button" onClick={()=>{setDetayKayit(k);setGenelAramaAcik(false);}} className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-blue-50"><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{k.ilce||"-"} / {k.mahalle||"-"} • {k.trafo_id||k.tr||"Trafo"}</div><div className="mt-1 text-[10px] text-slate-400">{tarihGoster(k.tarih)} • {k.degisim_nedeni||"-"}</div></div><span className="text-blue-600">→</span></button>):<div className="px-3 py-2 text-xs text-slate-400">Kayıt bulunamadı.</div>}</div></div>}</div><div className="ml-auto flex items-center gap-2"><a href="https://balikesir-sistem-isletme.vercel.app" className="inline-flex items-center gap-2 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2.5 text-[11px] font-black text-white shadow-[0_8px_20px_rgba(249,115,22,.30)] ring-2 ring-orange-100 transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(249,115,22,.38)] sm:px-4" title="Balıkesir Sistem İşletme portalına dön"><span className="text-base">🏠</span><span className="sm:hidden">Portal</span><span className="hidden sm:inline">BALIKESİR SİSTEM İŞLETME</span></a><div className="relative"><button type="button" onClick={()=>setBildirimAcik(x=>!x)} className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm shadow-sm hover:bg-slate-50">🔔{okunmamisBildirimler.length>0&&<span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white">{okunmamisBildirimler.length}</span>}</button>{bildirimAcik&&<div className="absolute right-0 top-12 z-50 w-[330px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,.18)]"><div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"><div><div className="text-sm font-black">Bildirimler</div><div className="text-[10px] text-slate-400">Sistem bildirimleri</div></div><div className="flex items-center gap-2">{okunmamisBildirimler.length>0&&<button type="button" onClick={tumBildirimleriOkunduYap} className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[9px] font-black text-blue-700">Tümünü Oku</button>}<button onClick={()=>setBildirimAcik(false)} className="text-slate-400">×</button></div></div><div className="max-h-[360px] overflow-y-auto p-2">{bildirimler.length?bildirimler.map(b=>{const okundu=okunanBildirimler.includes(b.id);return <button key={b.id} type="button" onClick={()=>{bildirimOkunduYap(b.id);setBildirimAcik(false);}} className={`flex w-full gap-3 rounded-xl p-3 text-left transition hover:bg-slate-50 ${okundu?"opacity-55":"bg-blue-50/35"}`}><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${b.tur==="warn"?"bg-red-50":b.tur==="ok"?"bg-emerald-50":"bg-blue-50"}`}>{b.ikon}</div><div className="min-w-0"><div className="flex items-center gap-2"><div className="truncate text-xs font-black text-slate-800">{b.baslik}</div>{!okundu&&<span className="h-2 w-2 shrink-0 rounded-full bg-blue-500"/>}</div><div className="mt-1 text-[10px] leading-4 text-slate-400">{b.alt}</div></div></button>}):<div className="p-6 text-center text-xs text-slate-400">Yeni bildirim yok.</div>}</div></div>}</div><div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">{misafirModu?"M":(session?.user.email?.charAt(0).toUpperCase()||"K")}</div><div className="min-w-0"><div className="max-w-[150px] truncate text-[11px] font-black text-slate-800">{misafirModu?"Misafir":(session?.user.email||"Kullanıcı")}</div><div className="text-[9px] text-slate-400">{misafirModu?"Görüntüleme":kullaniciRolu}</div></div></div></div></header>
+        <header className="sticky top-0 z-30 flex min-h-[64px] items-center gap-3 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-5 lg:px-6"><button onClick={()=>setMobilMenuAcik(true)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 shadow-sm lg:hidden">☰</button>{sayfa==="yeni"&&<div id="new-record-top-brand" className="hidden min-w-[310px] items-center gap-3 lg:flex"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-lg text-blue-700">◫</div><div><div className="text-[18px] font-black tracking-tight text-slate-900">Balıkesir Trafo Değişimi</div><div className="mt-0.5 text-[10px] font-medium text-slate-400">Sürdürülebilir enerji altyapısı için güvenilir kayıt sistemi</div></div></div>}<div className="relative min-w-0 flex-1 sm:min-w-[280px] sm:max-w-xl"><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={genelArama} onFocus={()=>setGenelAramaAcik(true)} onChange={e=>{setGenelArama(e.target.value);setGenelAramaAcik(true);}} placeholder="Kayıt, trafo, mahalle veya seri no ara..." className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-[13px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"/></div>{genelAramaAcik&&genelArama.trim().length>=2&&<div className="absolute left-0 right-0 top-[54px] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,.18)]"><div className="max-h-[420px] overflow-y-auto p-2"><div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Trafo Kayıtları</div>{genelAramaSonuclari.kayit.length?genelAramaSonuclari.kayit.map(k=><button key={`k-${k.id}`} type="button" onClick={()=>{setDetayKayit(k);setGenelAramaAcik(false);}} className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-blue-50"><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{k.ilce||"-"} / {k.mahalle||"-"} • {k.trafo_id||k.tr||"Trafo"}</div><div className="mt-1 text-[10px] text-slate-400">{tarihGoster(k.tarih)} • {k.degisim_nedeni||"-"}</div></div><span className="text-blue-600">→</span></button>):<div className="px-3 py-2 text-xs text-slate-400">Kayıt bulunamadı.</div>}</div></div>}</div><div className="ml-auto flex items-center gap-2"><a href="https://balikesir-sistem-isletme.vercel.app" className="inline-flex items-center gap-2 rounded-xl border border-orange-300 bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2.5 text-[11px] font-black text-white shadow-[0_8px_20px_rgba(249,115,22,.30)] ring-2 ring-orange-100 transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(249,115,22,.38)] sm:px-4" title="Balıkesir Sistem İşletme portalına dön"><span className="text-base">🏠</span><span className="sm:hidden">Portal</span><span className="hidden sm:inline">BALIKESİR SİSTEM İŞLETME</span></a><div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:flex"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">{misafirModu?"M":(session?.user.email?.charAt(0).toUpperCase()||"K")}</div><div className="min-w-0"><div className="max-w-[150px] truncate text-[11px] font-black text-slate-800">{misafirModu?"Misafir":(session?.user.email||"Kullanıcı")}</div><div className="text-[9px] text-slate-400">{misafirModu?"Görüntüleme":kullaniciRolu}</div></div></div></div></header>
 
         <div className="mx-auto w-full min-w-0 max-w-[1700px] p-3 sm:p-5 lg:p-6">
           
