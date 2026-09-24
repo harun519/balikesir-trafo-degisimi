@@ -336,3 +336,39 @@ main:has(.trafo-new-record) button[title="Yukarı çık"]{
 #new-record-actions>div{font-size:12px!important}
 
 main:has(.trafo-new-record) section>header input{font-size:13px!important}
+
+
+/* Stepper overlap fix: keep titles/subtitles separated at desktop scaling and narrow widths */
+#new-record-stepper{
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+#new-record-stepper>div{
+  min-width:700px!important;
+}
+#new-record-stepper button{
+  min-height:92px!important;
+  align-items:center!important;
+}
+#new-record-stepper button>span:last-child{
+  min-width:0!important;
+  display:block!important;
+}
+#new-record-stepper button>span:last-child>span:first-child{
+  display:block!important;
+  white-space:nowrap!important;
+  line-height:1.22!important;
+}
+#new-record-stepper button>span:last-child>span:last-child{
+  display:block!important;
+  margin-top:6px!important;
+  white-space:nowrap!important;
+  line-height:1.35!important;
+}
+@media(max-width:900px){
+  #new-record-stepper>div{min-width:680px!important}
+}
+@media(max-width:640px){
+  #new-record-stepper>div{min-width:650px!important}
+  #new-record-stepper button{min-height:86px!important;padding:10px 14px!important}
+}
