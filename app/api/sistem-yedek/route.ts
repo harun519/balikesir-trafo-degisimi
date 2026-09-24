@@ -75,11 +75,9 @@ async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   const sb=adminClient();
   await bucketHazirla(sb);
 
-  const [trafo,arsiv,markalar,drive,audit]=await Promise.all([
+  const [trafo,markalar,audit]=await Promise.all([
     tabloGetir(sb,"trafo_degisim"),
-    tabloGetir(sb,"trafo_form_arsivi"),
     tabloGetir(sb,"trafo_markalari"),
-    tabloGetir(sb,"drive_sync_logs"),
     tabloGetir(sb,"trafo_audit_log"),
   ]);
 
@@ -88,22 +86,18 @@ async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
   const name=`SISTEM_YEDEGI_${damga}_${kaynak}.json`;
   const path=`sistem/${name}`;
   const payload={
-    backup_version:2,
+    backup_version:3,
     created_at:now.toISOString(),
     kaynak,
     kullanici_email:email||null,
     tables:{
       trafo_degisim:trafo.data,
-      trafo_form_arsivi:arsiv.data,
       trafo_markalari:markalar.data,
-      drive_sync_logs:drive.data,
       trafo_audit_log:audit.data,
     },
     table_errors:{
       trafo_degisim:trafo.error,
-      trafo_form_arsivi:arsiv.error,
       trafo_markalari:markalar.error,
-      drive_sync_logs:drive.error,
       trafo_audit_log:audit.error,
     }
   };
