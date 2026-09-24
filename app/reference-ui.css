@@ -45,29 +45,25 @@ main:has(.trafo-new-record) section>header input{
 }
 
 @media(min-width:1024px){
-  main:has(#dashboard-hero) aside.fixed.lg\:flex,
-  main:has(.trafo-new-record) aside.fixed.lg\:flex{
+  main:has(#dashboard-hero) aside.fixed.lg\:flex{
     width:240px!important;
     background:linear-gradient(180deg,#0a203d 0%,#0a1d36 55%,#081a31 100%)!important;
     border-right:1px solid rgba(255,255,255,.07)!important;
     box-shadow:18px 0 46px rgba(18,40,70,.12)!important;
   }
-  main:has(#dashboard-hero) section.lg\:ml-\[248px\],
-  main:has(.trafo-new-record) section.lg\:ml-\[248px\]{
+  main:has(#dashboard-hero) section.lg\:ml-\[248px\]{
     margin-left:240px!important;
   }
 }
 
-main:has(#dashboard-hero) aside.fixed.lg\:flex nav button,
-main:has(.trafo-new-record) aside.fixed.lg\:flex nav button{
+main:has(#dashboard-hero) aside.fixed.lg\:flex nav button{
   min-height:41px!important;
   border-radius:9px!important;
   font-size:12px!important;
   font-weight:700!important;
 }
 
-main:has(#dashboard-hero) aside.fixed.lg\:flex nav button[class*="from-blue-600"],
-main:has(.trafo-new-record) aside.fixed.lg\:flex nav button[class*="from-blue-600"]{
+main:has(#dashboard-hero) aside.fixed.lg\:flex nav button[class*="from-blue-600"]{
   background:linear-gradient(135deg,#1170f6,#0862e7)!important;
   border-color:rgba(147,197,253,.22)!important;
   box-shadow:0 8px 18px rgba(18,103,244,.25)!important;
