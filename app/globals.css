@@ -414,3 +414,12 @@ main .space-y-6>:not([hidden])~:not([hidden]){margin-top:1.25rem!important}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+
+
+/* Masaüstü daraltılabilir sol menü — Tailwind sınıf sırası ne olursa olsun genişliği sabitler. */
+@media (min-width:1024px){
+  .trafo-desktop-sidebar{width:248px!important;min-width:248px!important;max-width:248px!important}
+  .trafo-desktop-sidebar[data-collapsed="true"]{width:76px!important;min-width:76px!important;max-width:76px!important}
+  .trafo-main-content{margin-left:248px!important}
+  .trafo-main-content[data-sidebar-collapsed="true"]{margin-left:76px!important}
+}
