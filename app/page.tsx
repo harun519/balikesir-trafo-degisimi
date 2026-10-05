@@ -68,7 +68,7 @@ const inputSinif="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5
 const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
 const TRAFO_CACHE_TIME_KEY="trafo_degisim_cache_time_v1";
 const TRAFO_ROLE_CACHE_KEY="trafo_user_role_cache_v1";
-const TRAFO_ROLE_CACHE_TTL=6*60*60*1000;
+const TRAFO_ROLE_CACHE_TTL=7*24*60*60*1000;
 type SistemYedekDosyasi={name:string;created_at:string|null;updated_at:string|null;size:number;url:string};
 export default function Home() {
   const supabase = useMemo(getSupabaseBrowserClient, []);
@@ -278,7 +278,7 @@ export default function Home() {
   async function kullaniciProfiliniGetir(){
     if(!supabase||!session)return;
     try{
-      const raw=sessionStorage.getItem(TRAFO_ROLE_CACHE_KEY);
+      const raw=localStorage.getItem(TRAFO_ROLE_CACHE_KEY);
       const cached=raw?JSON.parse(raw):null;
       if(cached?.userId===session.user.id&&Date.now()-Number(cached.cachedAt||0)<TRAFO_ROLE_CACHE_TTL&&["admin","editor","viewer"].includes(String(cached.role))){
         setKullaniciRolu(cached.role as KullaniciRolu);
@@ -297,7 +297,7 @@ export default function Home() {
     }
     setKullaniciRolu(rol as KullaniciRolu);
     setYetkiHazir(true);
-    try{sessionStorage.setItem(TRAFO_ROLE_CACHE_KEY,JSON.stringify({userId:session.user.id,role:rol,cachedAt:Date.now()}));}catch{}
+    try{localStorage.setItem(TRAFO_ROLE_CACHE_KEY,JSON.stringify({userId:session.user.id,role:rol,cachedAt:Date.now()}));}catch{}
   }
   async function trafoMarkalariniGetir(){
     if(!supabase)return;
