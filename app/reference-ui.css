@@ -841,15 +841,15 @@ main>button[title="Yukarı çık"]:hover{
 }
 
 /* Record exports/imports: one scoped toolbar with readable labels. */
-main .recordTransferBar{display:flex;flex-direction:column;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid #e7edf4}
-main .recordTransferMeta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+main .recordTransferBar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #e7edf4}
+main .recordTransferMeta{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
 main .recordTransferCount{color:#52647b!important;font-size:14px!important;line-height:20px}
 main .recordTransferCountValue{color:#172b46!important;font-weight:650}
 main .recordTransferClear{min-height:38px;padding:8px 12px;border:1px solid #e4eaf2!important;border-radius:9px!important;background:#fff!important;color:#a54a0a!important;font-size:13px!important;font-weight:600!important;box-shadow:none!important}
-main .recordTransferTools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:100%;min-width:0}
-main .recordTransferTools .recordTransferAction{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;min-height:52px!important;height:52px!important;box-sizing:border-box!important;padding:10px 12px!important;border:1px solid #d5dfec!important;border-radius:10px!important;background:#fff!important;color:#243b58!important;font-size:14px!important;line-height:20px!important;font-weight:600!important;box-shadow:0 1px 3px #172b4608!important;text-align:center;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s!important}
+main .recordTransferTools{display:flex;flex-wrap:wrap;gap:8px;width:auto;max-width:100%;min-width:0}
+main .recordTransferTools .recordTransferAction{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:38px!important;height:38px!important;box-sizing:border-box!important;padding:6px 10px!important;border:1px solid #d5dfec!important;border-radius:10px!important;background:#fff!important;color:#243b58!important;font-size:14px!important;line-height:20px!important;font-weight:600!important;box-shadow:0 1px 3px #172b4608!important;text-align:center;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s!important}
 main .recordTransferTools .recordTransferAction>span:last-of-type{min-width:0;overflow-wrap:anywhere}
-main .recordTransferTools .recordTransferIcon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:30px;height:30px;border-radius:7px;background:#edf3fb;color:#275288;font-size:18px;font-weight:650;line-height:1}
+main .recordTransferTools .recordTransferIcon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:24px;height:24px;border-radius:6px;background:#edf3fb;color:#275288;font-size:18px;font-weight:650;line-height:1}
 main .recordTransferTools .recordTransferPdf{background:#173b64!important;border-color:#173b64!important;color:#fff!important}
 main .recordTransferTools .recordTransferPdf .recordTransferIcon{background:#ffffff20;color:#fff;font-size:10px;letter-spacing:.3px}
 main .recordTransferTools :is(.recordTransferExcel,.recordTransferExcelImport) .recordTransferIcon{background:#e7f5ef;color:#167450}
@@ -858,5 +858,5 @@ main .recordTransferTools .recordTransferAction:hover{background:#f5f8fc!importa
 main .recordTransferTools .recordTransferPdf:hover{background:#204e80!important;border-color:#204e80!important}
 main .recordTransferTools .recordTransferAction:focus-visible,main .recordTransferClear:focus-visible{outline:3px solid #80b5ef;outline-offset:3px}
 main .recordTransferTools .recordTransferAction[aria-disabled="true"]{opacity:.6;cursor:wait}
-@media(max-width:1200px){main .recordTransferTools{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:640px){main .recordTransferTools{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}main .recordTransferTools .recordTransferAction{font-size:13px!important;padding:9px!important;gap:8px;height:auto!important;min-height:60px!important}}
+@media(pointer:coarse){main .recordTransferTools .recordTransferAction{min-height:44px!important;height:44px!important}}
+@media(max-width:640px){main .recordTransferTools .recordTransferAction{font-size:13px!important;min-height:44px!important;height:44px!important}}
