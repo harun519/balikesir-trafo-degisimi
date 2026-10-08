@@ -689,6 +689,7 @@ async function kayitlariGetir(){
     return {buYil,tarihiBos,enGuc:ilk(gucSay),enNeden:ilk(nedenSay),enIlce:ilk(ilceSay)};
   },[dashboardKayitlari,kayitlar]);
 
+  const [veriKaliteFiltre,setVeriKaliteFiltre]=useState("tumu");
   const veriKaliteMerkezi=useMemo(()=>{
     const seriSay=new Map<string,number>();
     kayitlar.forEach(k=>{const x=norm(k.takilan_seri_no);if(x)seriSay.set(x,(seriSay.get(x)||0)+1);});
@@ -697,11 +698,18 @@ async function kayitlariGetir(){
       {id:"trafo",baslik:"Trafo ID eksik",aciklama:"Trafo ID alanı boş kayıtlar",kayitlar:kayitlar.filter(k=>!k.trafo_id?.trim()),ton:"blue"},
       {id:"lokasyon",baslik:"Lokasyon ID eksik",aciklama:"Lokasyon ID alanı boş kayıtlar",kayitlar:kayitlar.filter(k=>!k.lokasyon_id?.trim()),ton:"violet"},
       {id:"marka",baslik:"Marka bilgisi eksik",aciklama:"Sökülen veya takılan marka bilgisi boş",kayitlar:kayitlar.filter(k=>!k.sokulen_markasi?.trim()||!k.takilan_markasi?.trim()),ton:"orange"},
+      {id:"guc",baslik:"Trafo gücü eksik",aciklama:"Sökülen veya takılan güç bilgisi girilmemiş",kayitlar:kayitlar.filter(k=>!String(k.sokulen_gucu??"").trim()||!String(k.takilan_gucu??"").trim()),ton:"amber"},
       {id:"seri",baslik:"Tekrarlanan takılan seri no",aciklama:"Birden fazla kayıtta kullanılan takılan seri numaraları",kayitlar:kayitlar.filter(k=>{const x=norm(k.takilan_seri_no);return !!x&&(seriSay.get(x)||0)>1;}),ton:"red"},
     ];
     const toplam=sorunlar.reduce((a,x)=>a+x.kayitlar.length,0);
     return {sorunlar,toplam};
   },[kayitlar]);
+
+  const veriKaliteListe=useMemo(()=>{
+    const secili=veriKaliteMerkezi.sorunlar.filter(x=>veriKaliteFiltre==="tumu"||x.id===veriKaliteFiltre);
+    const ids=new Set(secili.flatMap(x=>x.kayitlar.map(k=>k.id)));
+    return kayitlar.filter(k=>ids.has(k.id)).map(k=>({kayit:k,sorunlar:veriKaliteMerkezi.sorunlar.filter(x=>x.kayitlar.some(r=>r.id===k.id)).map(x=>x.baslik)}));
+  },[kayitlar,veriKaliteMerkezi,veriKaliteFiltre]);
 
   // Hızlı filtrelerden bir değişim nedeni seçildiğinde üst KPI kartını da dinamik güncelle.
   // Tümü / Bu Yıl / Son 30 Gün / güç filtrelerinde varsayılan KPI ARIZA olarak kalır.
@@ -1762,9 +1770,10 @@ const filtrelenmisKayitlar=useMemo(()=>{
           
           {sayfa==="veri-kalite"&&<>
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><div className="text-[10px] font-black uppercase tracking-[.16em] text-amber-500">Kontrol Merkezi</div><h1 className="mt-1 text-2xl font-black text-slate-900">🛡️ Veri Kalitesi</h1><p className="mt-1 text-sm text-slate-500">Eksik veya tekrarlı bilgileri kayıt silmeden tespit edin.</p></div><button type="button" onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-600">Trafo Kayıtlarına Git →</button></div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{veriKaliteMerkezi.sorunlar.map(x=><div key={x.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="text-[10px] font-black uppercase tracking-wider text-slate-500">{x.baslik}</div><div className="mt-2 text-3xl font-black text-slate-900">{x.kayitlar.length}</div><div className="mt-1 text-[10px] leading-5 text-slate-500">{x.aciklama}</div></div>)}</div>
-            <div className="mt-5"><Panel baslik="Kontrol Edilecek Kayıtlar" altBaslik={`${veriKaliteMerkezi.toplam} toplam uyarı • aynı kayıt birden fazla başlıkta bulunabilir`}>
-              <div className="mt-4 space-y-5">{veriKaliteMerkezi.sorunlar.map(x=><div key={x.id}><div className="mb-2 flex items-center justify-between"><div className="text-sm font-black text-slate-800">{x.baslik}</div><span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-700">{x.kayitlar.length}</span></div>{x.kayitlar.length?<div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{x.kayitlar.slice(0,12).map(k=><button type="button" key={`${x.id}-${k.id}`} onClick={()=>setDetayKayit(k)} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:border-amber-300 hover:bg-amber-50"><div className="truncate text-xs font-black text-slate-800">{k.tr||k.trafo_id||`Kayıt #${k.id}`}</div><div className="mt-1 truncate text-[10px] text-slate-500">{k.ilce||"-"}{k.mahalle?` / ${k.mahalle}`:""} • {tarihGoster(k.tarih)}</div></button>)}</div>:<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">✓ Bu başlıkta sorun yok.</div>}</div>)}</div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{veriKaliteMerkezi.sorunlar.map(x=><button type="button" key={x.id} aria-pressed={veriKaliteFiltre===x.id} onClick={()=>setVeriKaliteFiltre(veriKaliteFiltre===x.id?"tumu":x.id)} className={`rounded-xl border p-4 text-left transition focus-visible:outline-2 focus-visible:outline-blue-500 ${veriKaliteFiltre===x.id?"border-blue-500 bg-blue-50 ring-1 ring-blue-500":"border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-600">{x.baslik}</span><span className="text-xl font-bold tabular-nums text-slate-900">{x.kayitlar.length}</span></div><div className="mt-2 text-xs text-slate-500">{x.aciklama}</div><div className="mt-3 text-xs font-semibold text-blue-600">{veriKaliteFiltre===x.id?"Seçili · tümünü göster →":"Kayıtları listele →"}</div></button>)}</div>
+            <div className="mt-5"><Panel baslik={veriKaliteFiltre==="tumu"?"Kontrol Edilecek Kayıtlar":veriKaliteMerkezi.sorunlar.find(x=>x.id===veriKaliteFiltre)?.baslik||"Kontrol Edilecek Kayıtlar"} altBaslik={`${veriKaliteListe.length} kayıt listeleniyor · ${veriKaliteMerkezi.toplam} toplam uyarı`}>
+              <div className="my-4 flex items-center justify-between gap-3"><span className="text-xs text-slate-500">Detayını açmak için kaydı seçin.</span><button type="button" onClick={()=>setVeriKaliteFiltre("tumu")} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">Tümünü Göster</button></div>
+              <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[850px] text-left text-xs"><thead className="bg-slate-50 text-slate-500"><tr>{["Trafo / Kayıt","İlçe","Mahalle","Değişim Tarihi","Sökülen Güç","Takılan Güç","Kontrol Gereken Alanlar",""].map((baslik,i)=><th key={i} className="px-4 py-3 font-semibold">{baslik}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{veriKaliteListe.map(({kayit:k,sorunlar})=><tr key={k.id} className="bg-white even:bg-slate-50/50 hover:bg-blue-50/50"><td className="px-4 py-3"><button type="button" onClick={()=>setDetayKayit(k)} className="text-left font-semibold text-slate-800 hover:text-blue-600">{k.tr||k.trafo_id||`Kayıt #${k.id}`}</button><div className="mt-1 text-[10px] text-slate-400">#{k.id}</div></td><td className="px-4 py-3 text-slate-600">{k.ilce||"—"}</td><td className="px-4 py-3 text-slate-600">{k.mahalle||"—"}</td><td className="whitespace-nowrap px-4 py-3 text-slate-600">{tarihGoster(k.tarih)}</td><td className="whitespace-nowrap px-4 py-3 text-slate-600">{k.sokulen_gucu||"Girilmemiş"}</td><td className="whitespace-nowrap px-4 py-3 text-slate-600">{k.takilan_gucu||"Girilmemiş"}</td><td className="px-4 py-3"><div className="flex flex-wrap gap-1.5">{sorunlar.map(sorun=><span key={sorun} className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700">{sorun}</span>)}</div></td><td className="px-4 py-3"><button type="button" onClick={()=>setDetayKayit(k)} className="whitespace-nowrap font-semibold text-blue-600 hover:underline">Detay →</button></td></tr>)}</tbody></table>{veriKaliteListe.length===0&&<div className="p-8 text-center text-sm text-emerald-700">Bu başlıkta kontrol gerektiren kayıt yok.</div>}</div>
             </Panel></div>
           </>}
 
