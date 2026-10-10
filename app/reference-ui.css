@@ -210,10 +210,10 @@ main:has(#dashboard-hero) aside.fixed.lg\:flex nav button[class*="from-blue-600"
 }
 
 #dashboard-filters .mt-3.flex.flex-wrap.gap-2 button{
-  min-height:31px!important;
-  padding:5px 11px!important;
+  min-height:40px!important;
+  padding:7px 11px!important;
   border-radius:999px!important;
-  font-size:9px!important;
+  font-size:12px!important;
 }
 
 /* ---------- Dashboard chart composition ---------- */
@@ -860,3 +860,36 @@ main .recordTransferTools .recordTransferAction:focus-visible,main .recordTransf
 main .recordTransferTools .recordTransferAction[aria-disabled="true"]{opacity:.6;cursor:wait}
 @media(pointer:coarse){main .recordTransferTools .recordTransferAction{min-height:44px!important;height:44px!important}}
 @media(max-width:640px){main .recordTransferTools .recordTransferAction{font-size:13px!important;min-height:44px!important;height:44px!important}}
+
+/* Record list: one scoped owner for filter geometry, scrolling and pagination. */
+.recordFilters .recordFilterGrid {gap:10px}
+.recordFilters .recordFilterGrid :is(input,select) {min-width:0;width:100%;min-height:42px;padding:9px 12px;font-size:13px}
+.recordTableScroll {max-height:min(62vh,640px);overflow:auto;isolation:isolate}
+.recordTableScroll table {border-collapse:separate;border-spacing:0}
+.recordTableScroll th {position:sticky;top:0;z-index:2;background:#f8fafc;font-size:12px!important;line-height:1.4;font-weight:600!important}
+.recordTableScroll td {font-size:13px;line-height:1.4}
+.recordTableScroll :is(th,td):first-child {position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 #e2e8f0}
+.recordTableScroll th:first-child {z-index:3;background:#f8fafc}
+.recordTableSelectable :is(th,td):first-child {width:44px;min-width:44px;padding-left:12px;padding-right:12px}
+.recordTableSelectable :is(th,td):nth-child(2) {position:sticky;left:44px;z-index:1;white-space:nowrap;background:#fff;box-shadow:1px 0 #e2e8f0}
+.recordTableSelectable th:nth-child(2) {z-index:3;background:#f8fafc}
+.recordTableScroll tbody tr:hover :is(td:first-child,td:nth-child(2)) {background:#eff6ff}
+.recordTableSelectable input[type="checkbox"] {display:block}
+.recordPagination {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px;color:#52647b}
+.recordPagination>div {display:flex;align-items:center;gap:12px}
+.recordPagination button {min-height:38px;border:1px solid #d5dfec;border-radius:8px;padding:7px 12px;background:#fff;color:#243b58;font-weight:600}
+.recordPagination button:disabled {opacity:.45;cursor:default}
+@media(min-width:768px) and (max-width:1279px) {
+ .recordFilters {padding:14px}
+ .recordFilters .recordFilterGrid {grid-template-columns:repeat(4,minmax(0,1fr))}
+ .recordFilters .recordFilterGrid>input:first-child {grid-column:span 2}
+}
+@media(pointer:coarse), (min-width:768px) and (max-width:1279px) {
+ .recordFilters button,.recordPagination button,.recordTableScroll td button {min-height:42px}
+ .searchableSelectToggle {min-height:42px!important;min-width:42px!important}
+}
+@media(min-width:768px) and (max-width:1279px) {
+ .recordFilters {padding:14px!important}
+ .recordFilters .recordTransferTools {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+ .recordFilters .recordTransferTools .recordTransferAction {width:100%}
+}
