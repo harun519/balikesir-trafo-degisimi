@@ -325,3 +325,15 @@ main:has(.trafo-new-record) section>header input{font-size:13px!important}
   #new-record-stepper>div{min-width:650px!important}
   #new-record-stepper button{min-height:86px!important;padding:10px 14px!important}
 }
+
+/* Tablet forms: readable labels, paired fields and safe long values. */
+#new-record-main label{min-width:0}
+#new-record-main label>span{font-size:13px!important;font-weight:600!important;line-height:1.4}
+#new-record-main :is(input,select,textarea){max-width:100%;min-width:0;font-size:14px!important;font-weight:500!important;line-height:1.4}
+#new-record-main .searchableSelectToggle{white-space:normal;overflow-wrap:anywhere;text-align:left}
+@media(min-width:701px) and (max-width:900px){
+ #new-record-main>div>.space-y-4>div:nth-child(2)>section>div:nth-child(2){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #new-record-main>div>.space-y-4>div:nth-child(2)>section:first-child>div:nth-child(2)>label:last-child{grid-column:1/-1!important}
+}
+
+#new-record-main input::placeholder{font-weight:400!important;color:#64748b!important}
