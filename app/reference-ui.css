@@ -906,15 +906,15 @@ main .dataQualityPage{display:grid;gap:16px;min-width:0}
 main .dataQualityPage .dataQualityHeader{margin:0!important;align-items:center;padding:18px 20px;border:1px solid #dce4ee;border-radius:12px;background:#fff}
 main .dataQualityPage .dataQualityHeader h1{font-size:22px!important;font-weight:650!important;letter-spacing:normal}
 main .dataQualityPage .dataQualityHeader p{font-size:13px!important;line-height:1.5}
-main .dataQualityPage .dataQualityFilters{gap:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
-main .dataQualityPage .dataQualityFilter{min-width:0;padding:13px 15px!important;border:1px solid #dce4ee!important;border-radius:10px!important;background:#fff!important;box-shadow:none!important;color:#334155!important;transform:none!important}
+main .dataQualityPage .dataQualityFilters{gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+main .dataQualityPage .dataQualityFilter{min-width:0;padding:9px 12px!important;border:1px solid #dce4ee!important;border-radius:10px!important;background:#fff!important;box-shadow:none!important;color:#334155!important;transform:none!important}
 main .dataQualityPage .dataQualityFilter:hover{border-color:#a7bdd8!important;background:#f8fafc!important}
 main .dataQualityPage .dataQualityFilter[aria-pressed="true"]{border-color:#2563eb!important;background:#eff6ff!important;box-shadow:inset 3px 0 #2563eb!important}
 main .dataQualityPage .dataQualityFilter>div:first-child{align-items:flex-start;gap:12px}
 main .dataQualityPage .dataQualityFilter>div:first-child>span:first-child{font-size:13px!important;line-height:1.4;font-weight:600!important;color:#334155!important}
-main .dataQualityPage .dataQualityFilter>div:first-child>span:last-child{font-size:22px!important;font-weight:600!important;line-height:1.1;color:#17365d!important}
-main .dataQualityPage .dataQualityFilter>div:nth-child(2){margin-top:6px;font-size:12px!important;line-height:1.5;color:#64748b!important}
-main .dataQualityPage .dataQualityFilterHint{margin-top:8px;font-size:12px!important;font-weight:500!important}
+main .dataQualityPage .dataQualityFilter>div:first-child>span:last-child{font-size:20px!important;font-weight:600!important;line-height:1.1;color:#17365d!important}
+main .dataQualityPage .dataQualityFilter>div:nth-child(2){margin-top:3px;font-size:12px!important;line-height:1.35;color:#64748b!important}
+main .dataQualityPage .dataQualityFilterHint{display:none}
 main .dataQualityPage>.mt-5{margin-top:0!important;min-width:0}
 main .dataQualityPage .dataQualityToolbar{flex-wrap:wrap;margin:12px 0!important;font-size:13px}
 main .dataQualityPage .dataQualityTable{overflow:auto;max-height:min(62vh,640px);isolation:isolate;border-radius:8px!important;overscroll-behavior:contain}
