@@ -900,3 +900,37 @@ main .recordTransferTools .recordTransferAction[aria-disabled="true"]{opacity:.6
  .recordFilters .recordTransferTools {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
  .recordFilters .recordTransferTools .recordTransferAction {width:100%}
 }
+
+/* Data quality workspace. Scoped to this page; no changes to quality rules or records. */
+main .dataQualityPage{display:grid;gap:16px;min-width:0}
+main .dataQualityPage .dataQualityHeader{margin:0!important;align-items:center;padding:18px 20px;border:1px solid #dce4ee;border-radius:12px;background:#fff}
+main .dataQualityPage .dataQualityHeader h1{font-size:22px!important;font-weight:650!important;letter-spacing:normal}
+main .dataQualityPage .dataQualityHeader p{font-size:13px!important;line-height:1.5}
+main .dataQualityPage .dataQualityFilters{gap:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+main .dataQualityPage .dataQualityFilter{min-width:0;padding:13px 15px!important;border:1px solid #dce4ee!important;border-radius:10px!important;background:#fff!important;box-shadow:none!important;color:#334155!important;transform:none!important}
+main .dataQualityPage .dataQualityFilter:hover{border-color:#a7bdd8!important;background:#f8fafc!important}
+main .dataQualityPage .dataQualityFilter[aria-pressed="true"]{border-color:#2563eb!important;background:#eff6ff!important;box-shadow:inset 3px 0 #2563eb!important}
+main .dataQualityPage .dataQualityFilter>div:first-child{align-items:flex-start;gap:12px}
+main .dataQualityPage .dataQualityFilter>div:first-child>span:first-child{font-size:13px!important;line-height:1.4;font-weight:600!important;color:#334155!important}
+main .dataQualityPage .dataQualityFilter>div:first-child>span:last-child{font-size:22px!important;font-weight:600!important;line-height:1.1;color:#17365d!important}
+main .dataQualityPage .dataQualityFilter>div:nth-child(2){margin-top:6px;font-size:12px!important;line-height:1.5;color:#64748b!important}
+main .dataQualityPage .dataQualityFilterHint{margin-top:8px;font-size:12px!important;font-weight:500!important}
+main .dataQualityPage>.mt-5{margin-top:0!important;min-width:0}
+main .dataQualityPage .dataQualityToolbar{flex-wrap:wrap;margin:12px 0!important;font-size:13px}
+main .dataQualityPage .dataQualityTable{overflow:auto;max-height:min(62vh,640px);isolation:isolate;border-radius:8px!important;overscroll-behavior:contain}
+main .dataQualityPage .dataQualityTable table{min-width:1100px;border-radius:0;overflow:visible;table-layout:auto}
+main .dataQualityPage .dataQualityTable :is(th,td){font-size:13px!important;line-height:1.45!important;padding:10px 12px!important;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0!important;vertical-align:middle;letter-spacing:normal!important;text-transform:none!important}
+main .dataQualityPage .dataQualityTable th{position:sticky;top:0;z-index:2;font-weight:600!important;white-space:nowrap;background:#f1f5f9!important;color:#475569!important}
+main .dataQualityPage .dataQualityTable :is(th,td):first-child{position:sticky;left:0;z-index:1;min-width:180px;max-width:230px;background:#fff;box-shadow:1px 0 #e2e8f0}
+main .dataQualityPage .dataQualityTable th:first-child{z-index:3;background:#f1f5f9!important}
+main .dataQualityPage .dataQualityTable td:nth-child(3){min-width:150px;max-width:220px;overflow-wrap:anywhere}
+main .dataQualityPage .dataQualityTable td:nth-child(7){min-width:240px;max-width:360px}
+main .dataQualityPage .dataQualityTable :is(th,td):nth-child(5),main .dataQualityPage .dataQualityTable :is(th,td):nth-child(6){text-align:right;font-variant-numeric:tabular-nums}
+main .dataQualityPage .dataQualityIssue{font-size:12px!important;font-weight:500!important;line-height:1.5;padding:3px 6px;background:#fff8e8!important;color:#815516!important;border:1px solid #f1e1bd}
+main .dataQualityPage .dataQualityTable td>div.text-slate-400{font-size:11px!important;color:#64748b!important}
+main .dataQualityPage .dataQualityTable button{font-size:13px!important;font-weight:500!important;min-height:34px;white-space:normal;overflow-wrap:anywhere;text-align:left}
+main .dataQualityPage .dataQualityTable :is(th,td):last-child{border-right:0;white-space:nowrap}
+main .dataQualityPage .dataQualityTable td:last-child button{white-space:nowrap}
+@media(pointer:coarse){main .dataQualityPage .dataQualityTable button,main .dataQualityPage .dataQualityToolbar button{min-height:42px}}
+@media(max-width:900px){main .dataQualityPage .dataQualityFilters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){main .dataQualityPage .dataQualityFilters{grid-template-columns:1fr}main .dataQualityPage .dataQualityHeader{align-items:flex-start;padding:15px}main .dataQualityPage .dataQualityHeader h1{font-size:20px!important}}
