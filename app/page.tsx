@@ -117,6 +117,7 @@ export default function Home() {
     ""|"bu-yil"|"son30"|"ariza"|"donusum"|"guc-degisimi"|"trafo-iptal"|"yatirim"|"yeni-tesis"|"ariza-riski"|"kismi-arizali"|"guc-artisi"|"guc-azalisi"|"ayni-guc"|"tarihi-bos"
   >("");
   const [yoneticiOzetiAcik,setYoneticiOzetiAcik]=useState(false);
+  const [acikIlce,setAcikIlce]=useState<string|null>(null);
   const analizSayfasi=ANALIZ_SAYFALARI[sayfa as AnalizSayfa];
   const genelGorunum=sayfa==="dashboard"||!!analizSayfasi;
   const [csvYukleniyor,setCsvYukleniyor]=useState(false);
@@ -1391,7 +1392,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             {sayfa==="ilce-analizi"&&<ViewportAnalysis id="ilce-analizi">
               <Panel baslik="İlçe Dağılımı" altBaslik={dashboardYil?`${dashboardYil} yılı seçili kayıtları`:"Tüm yıllar için seçili kayıtlar"} daraltilabilir acik={acikAnalizler["ilce-analizi"]} onToggle={()=>analizAcKapa("ilce-analizi")}>
-                <DistrictAnalysis items={ilceAnalizi} filterKey={[dashboardYil,dashboardIlce,dashboardBaslangic,dashboardBitis,dashboardHizliFiltre].join("|")} onDistrictClick={ilce=>kayitListesineGit({yil:dashboardYil,ilce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/>
+                <DistrictAnalysis items={ilceAnalizi} filterKey={[dashboardYil,dashboardIlce,dashboardBaslangic,dashboardBitis,dashboardHizliFiltre].join("|")} onDistrictClick={setAcikIlce}/>
               </Panel>
             </ViewportAnalysis>}
 
@@ -1741,6 +1742,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
     </div>
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500 text-xl font-black text-white shadow-2xl hover:bg-orange-400" title="Yukarı çık">↑</button>
     
+    {sayfa==="ilce-analizi"&&acikIlce!==null&&typeof document!=="undefined"&&createPortal(<DistrictRecordsDialog district={acikIlce} records={dashboardKayitlari.filter(record=>((record.ilce||"BELİRTİLMEMİŞ").trim()||"BELİRTİLMEMİŞ")===acikIlce)} onClose={()=>setAcikIlce(null)}/>,document.body)}
     {detayKayit&&typeof document!=="undefined"&&createPortal(<DetayModal
       kayit={detayKayit}
       kapat={()=>setDetayKayit(null)}
@@ -1957,6 +1959,39 @@ function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:stri
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
+function DistrictRecordsDialog({district,records,onClose}:{district:string;records:TrafoKaydi[];onClose:()=>void}){
+  const dialog=useRef<HTMLDialogElement>(null);
+  const [search,setSearch]=useState("");
+  const [selected,setSelected]=useState<TrafoKaydi|null>(null);
+  const [pagination,setPagination]=useState({key:"",page:1});
+  const filtered=useMemo(()=>{const query=search.trim().toLocaleLowerCase("tr-TR");return records.filter(record=>!query||[record.mahalle,record.tr,record.lokasyon_id,record.trafo_id,record.degisim_nedeni,record.tarih,record.sira_no].some(value=>String(value||"").toLocaleLowerCase("tr-TR").includes(query))).sort((a,b)=>(b.tarih||"").localeCompare(a.tarih||"")||b.id-a.id)},[records,search]);
+  const key=search+"|"+filtered.map(record=>record.id).join(",");
+  if(pagination.key!==key)setPagination({key,page:1});
+  const pageCount=Math.max(1,Math.ceil(filtered.length/10)),page=Math.min(pageCount,pagination.key===key?pagination.page:1),start=(page-1)*10;
+  useEffect(()=>{
+    const element=dialog.current;if(!element)return;
+    const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    const overflow=document.body.style.overflow;document.body.style.overflow="hidden";element.showModal();
+    return()=>{element.close();document.body.style.overflow=overflow;if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true})};
+  },[]);
+  return <dialog ref={dialog} className="district-record-dialog" aria-labelledby="district-dialog-title" onCancel={event=>{event.preventDefault();onClose()}} onClose={onClose} onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)onClose()}}>
+    <div className="district-dialog-shell">
+      <div className="district-dialog-header"><div><h2 id="district-dialog-title">{district} · Trafo Kayıtları</h2><p>{records.length} kayıt · İlçe Analizi’nde seçili filtrelere göre</p></div><button type="button" className="district-dialog-close" aria-label="Pencereyi kapat" onClick={onClose}>×</button></div>
+      {selected?<>
+        <div className="district-dialog-toolbar"><button type="button" onClick={()=>setSelected(null)}>← Kayıt listesine dön</button><span>Kayıt #{selected.sira_no||selected.id} · {tarihGoster(selected.tarih)}</span></div>
+        <div className="district-dialog-detail">
+          <DetayBolumu baslik="Konum ve İşlem"><DetayGrid><D b="İlçe" v={selected.ilce}/><D b="Mahalle" v={selected.mahalle}/><D b="TR" v={selected.tr}/><D b="Trafo ID" v={selected.trafo_id}/><D b="Lokasyon ID" v={selected.lokasyon_id}/><D b="Yıl / Ay" v={`${selected.yil||"—"} / ${selected.ay||"—"}`}/><D b="Değişim Nedeni" v={selected.degisim_nedeni}/><D b="Trafo Tipi" v={selected.trafo_tipi}/></DetayGrid></DetayBolumu>
+          <div className="district-dialog-transformers"><TrafoKarsilastirmaKart tur="eski" baslik="Sökülen Trafo" guc={selected.sokulen_gucu} gerilim={selected.sokulen_gerilim} marka={selected.sokulen_markasi} seri={selected.sokulen_seri_no} imal={selected.sokulen_imal_yili} tip={selected.sokulen_trafo_tipi} tamirYili={selected.sokulen_tamir_yili} tamirFirma={selected.sokulen_tamir_firmasi}/><TrafoKarsilastirmaKart tur="yeni" baslik="Takılan Trafo" guc={selected.takilan_gucu} gerilim={selected.takilan_gerilim} marka={selected.takilan_markasi} seri={selected.takilan_seri_no} imal={selected.takilan_imal_yili} tip={selected.takilan_trafo_tipi} tamirYili={selected.takilan_tamir_yili} tamirFirma={selected.takilan_tamir_firmasi}/></div>
+          <DetayBolumu baslik="Açıklama"><p className="district-dialog-description">{selected.aciklama||"Açıklama bulunmuyor."}</p></DetayBolumu>
+        </div>
+      </>:<>
+        <div className="district-dialog-toolbar"><label htmlFor="district-record-search">Kayıtlarda ara</label><input id="district-record-search" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Mahalle, TR, trafo ID veya neden ara…"/><span>{filtered.length} kayıt</span></div>
+        <div className="district-dialog-table-scroll" tabIndex={0} aria-label="İlçe trafo kayıtları tablosu"><table><colgroup><col style={{width:"11%"}}/><col style={{width:"25%"}}/><col style={{width:"19%"}}/><col style={{width:"19%"}}/><col style={{width:"17%"}}/><col style={{width:"9%"}}/></colgroup><thead><tr><th scope="col">Tarih</th><th scope="col">Mahalle / TR</th><th scope="col">Trafo / Lokasyon ID</th><th scope="col">Değişim Nedeni</th><th scope="col">Güç (kVA)</th><th scope="col">Detay</th></tr></thead><tbody>{filtered.length?filtered.slice(start,start+10).map(record=><tr key={record.id}><td>{tarihGoster(record.tarih)}</td><td><strong>{record.mahalle||"—"}</strong><small>TR: {record.tr||"—"} · #{record.sira_no||record.id}</small></td><td>{record.trafo_id||record.lokasyon_id||"—"}</td><td><span className="district-dialog-reason" style={{color:NEDENLER.find(reason=>reason.ad===record.degisim_nedeni)?.renk||"#64748b"}}>{record.degisim_nedeni||"—"}</span></td><td>{record.sokulen_gucu||"—"} → {record.takilan_gucu||"—"}</td><td><button type="button" aria-label={`Kayıt ${record.sira_no||record.id} detayını aç`} onClick={()=>setSelected(record)}>İncele</button></td></tr>):<tr><td colSpan={6} className="district-dialog-empty">Aramaya uygun kayıt bulunamadı.</td></tr>}</tbody></table></div>
+        <div className="district-dialog-pagination"><span>{filtered.length?`${start+1}–${Math.min(start+10,filtered.length)}`:"0"} / {filtered.length} kayıt</span><div><button type="button" disabled={page===1} onClick={()=>setPagination({key,page:page-1})}>Önceki</button><span>Sayfa {page} / {pageCount}</span><button type="button" disabled={page===pageCount} onClick={()=>setPagination({key,page:page+1})}>Sonraki</button></div></div>
+      </>}
+    </div>
+  </dialog>;
+}
 function DistrictAnalysis({items,filterKey,onDistrictClick}:{items:{ilce:string;sayi:number;oran:number}[];filterKey:string;onDistrictClick:(district:string)=>void}){
   const [pagination,setPagination]=useState({key:"",page:1});
   const key=filterKey+"|"+items.map(item=>`${item.ilce}:${item.sayi}`).join("|");
@@ -1993,7 +2028,7 @@ function DistrictAnalysis({items,filterKey,onDistrictClick}:{items:{ilce:string;
         <div className="district-card-heading"><h3 id="district-top-title">En Yoğun 3 İlçe</h3><span>Seçili kayıtlar</span></div>
         <div className="district-share" role="img" aria-label={`İlk üç ilçenin toplam payı yüzde ${topShare.toFixed(1)}`} style={{background:`conic-gradient(#3b82f6 ${topShare}%,#e8eef7 0)`}}><div><strong>%{topShare.toFixed(1)}</strong><span>İlk 3 ilçe</span></div></div>
         <div className="district-top-list">{topThree.length?topThree.map((item,index)=><button type="button" key={item.ilce} onClick={()=>onDistrictClick(item.ilce)} aria-label={`${item.ilce} kayıtlarını aç`}><span className="district-rank" data-rank={index+1}>{index+1}</span><span><strong>{item.ilce}</strong><small>Toplamın %{item.oran.toFixed(1)} kadarı</small></span><span className="district-top-count"><strong>{item.sayi}</strong><small>kayıt</small></span></button>):<p className="district-empty">Seçili filtrelerde ilçe kaydı bulunamadı.</p>}</div>
-        <p className="district-note">Bir ilçeye tıklayarak o ilçenin kayıtlarını açabilirsiniz.</p>
+        <p className="district-note">Bir ilçeye tıklayarak kayıtlarını pencerede inceleyebilirsiniz.</p>
       </section>
     </div>
   </div>;
