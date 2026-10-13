@@ -750,7 +750,6 @@ async function kayitlariGetir(){
     return Object.entries(sayilar).map(([ilce,sayi])=>({ilce,sayi,oran:kaynak.length?(sayi/kaynak.length)*100:0})).sort((a,b)=>b.sayi-a.sayi);
   },[dashboardKayitlari]);
 
-  const maxIlce=Math.max(1,...ilceAnalizi.map(x=>x.sayi));
 
   const gucAnalizi=useMemo(()=>{
     const kaynak=dashboardKayitlari;
@@ -1390,88 +1389,11 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             </>}
 
-            {sayfa==="ilce-analizi"&&<>
-            <div className="mt-5 scroll-mt-24" id="ilce-analizi">
-              <Panel
-                baslik="İlçe Analizi"
-                altBaslik={dashboardYil ? `${dashboardYil} yılı ilçe bazlı trafo değişim dağılımı` : "Tüm yıllar için ilçe bazlı trafo değişim dağılımı"}
-                daraltilabilir acik={acikAnalizler["ilce-analizi"]} onToggle={()=>analizAcKapa("ilce-analizi")}
-              >
-                <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
-                  <div className="space-y-3">
-                    {ilceAnalizi.length===0 ? (
-                      <BosAlan>İlçe analizi için kayıt bulunmuyor.</BosAlan>
-                    ) : (
-                      ilceAnalizi.map((item,index)=>(
-                        <button type="button" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:item.ilce,baslangic:dashboardBaslangic,bitis:dashboardBitis})} key={item.ilce} className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-[0_8px_24px_rgba(15,23,42,.06)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/50 hover:shadow-md">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
-                                index===0 ? "bg-amber-100 text-amber-700" :
-                                index===1 ? "bg-slate-200 text-slate-700" :
-                                index===2 ? "bg-orange-100 text-orange-700" :
-                                "bg-blue-50 text-blue-700"
-                              }`}>
-                                {index+1}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="truncate text-sm font-black text-slate-800">{item.ilce}</div>
-                                <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                  Toplam içindeki payı %{item.oran.toFixed(1)}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-xl font-black">{item.sayi}</div>
-                              <div className="text-[10px] text-slate-500">kayıt</div>
-                            </div>
-                          </div>
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                            <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all" style={{width:`${Math.max(3,(item.sayi/maxIlce)*100)}%`}} />
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,.06)]">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">EN YOĞUN 3 İLÇE</div>
-                      <div className="mt-4 space-y-3">
-                        {ilceAnalizi.slice(0,3).map((item,index)=>(
-                          <button type="button" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:item.ilce,baslangic:dashboardBaslangic,bitis:dashboardBitis})} key={item.ilce} className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-orange-500/40">
-                            <div className="flex items-center gap-3">
-                              <span className="text-lg">{index===0 ? "🥇" : index===1 ? "🥈" : "🥉"}</span>
-                              <div>
-                                <div className="text-sm font-black">{item.ilce}</div>
-                                <div className="text-[10px] text-slate-500">%{item.oran.toFixed(1)}</div>
-                              </div>
-                            </div>
-                            <div className="text-lg font-black">{item.sayi}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,.06)]">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">ÖZET</div>
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                          <div className="text-[10px] text-slate-500">İlçe Sayısı</div>
-                          <div className="mt-1 text-2xl font-black">{ilceAnalizi.length}</div>
-                        </div>
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                          <div className="text-[10px] text-slate-500">Toplam Kayıt</div>
-                          <div className="mt-1 text-2xl font-black">{ilceAnalizi.reduce((toplam,item)=>toplam+item.sayi,0)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {sayfa==="ilce-analizi"&&<ViewportAnalysis id="ilce-analizi">
+              <Panel baslik="İlçe Dağılımı" altBaslik={dashboardYil?`${dashboardYil} yılı seçili kayıtları`:"Tüm yıllar için seçili kayıtlar"} daraltilabilir acik={acikAnalizler["ilce-analizi"]} onToggle={()=>analizAcKapa("ilce-analizi")}>
+                <DistrictAnalysis items={ilceAnalizi} filterKey={[dashboardYil,dashboardIlce,dashboardBaslangic,dashboardBitis,dashboardHizliFiltre].join("|")} onDistrictClick={ilce=>kayitListesineGit({yil:dashboardYil,ilce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/>
               </Panel>
-            </div>
-
-            </>}
+            </ViewportAnalysis>}
 
             {sayfa==="trafo-guc-analizi"&&<>
             <div className="mt-5 scroll-mt-24" id="trafo-guc-analizi">
@@ -2035,6 +1957,47 @@ function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:stri
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
+function DistrictAnalysis({items,filterKey,onDistrictClick}:{items:{ilce:string;sayi:number;oran:number}[];filterKey:string;onDistrictClick:(district:string)=>void}){
+  const [pagination,setPagination]=useState({key:"",page:1});
+  const key=filterKey+"|"+items.map(item=>`${item.ilce}:${item.sayi}`).join("|");
+  if(pagination.key!==key)setPagination({key,page:1});
+  const pageCount=Math.max(1,Math.ceil(items.length/10));
+  const page=Math.min(pageCount,pagination.key===key?pagination.page:1);
+  const start=(page-1)*10,visible=items.slice(start,start+10),topThree=items.slice(0,3);
+  const total=items.reduce((sum,item)=>sum+item.sayi,0),topShare=topThree.reduce((sum,item)=>sum+item.oran,0);
+  return <div className="district-content">
+    <div className="district-kpis">
+      <div><span>TOPLAM KAYIT</span><strong data-district-total>{total}</strong><small>Seçili filtrelerde</small></div>
+      <div><span>KAYITLI İLÇE</span><strong>{items.length}</strong><small>Kayıt bulunan ilçeler</small></div>
+      <div><span>EN YOĞUN İLÇE</span><strong className="district-leading">{items[0]?.ilce||"—"}</strong><small>{items[0]?`${items[0].sayi} kayıt · %${items[0].oran.toFixed(1)}`:"Kayıt yok"}</small></div>
+      <div><span>İLK 3 İLÇENİN PAYI</span><strong>%{topShare.toFixed(1)}</strong><small>Toplam kayıt içindeki payı</small></div>
+    </div>
+    <div className="district-grid">
+      <section className="district-card district-ranking" aria-labelledby="district-ranking-title">
+        <div className="district-card-heading"><h3 id="district-ranking-title">İlçelere Göre Dağılım</h3><span>{items.length} ilçe</span></div>
+        <div className="district-table-scroll" tabIndex={0} aria-label="İlçe dağılımı tablosu">
+          <table className="district-table" data-full-page={visible.length===10}>
+            <colgroup><col style={{width:"9%"}}/><col style={{width:"35%"}}/><col style={{width:"15%"}}/><col style={{width:"15%"}}/><col style={{width:"26%"}}/></colgroup>
+            <thead><tr><th scope="col">Sıra</th><th scope="col">İlçe</th><th scope="col">Kayıt</th><th scope="col">Pay</th><th scope="col">Dağılım</th></tr></thead>
+            <tbody>{visible.length?visible.map((item,index)=><tr key={item.ilce}>
+              <td><span className="district-rank" data-rank={start+index+1}>{start+index+1}</span></td>
+              <th scope="row"><button type="button" className="district-link" aria-label={`${item.ilce} kayıtlarını aç`} onClick={()=>onDistrictClick(item.ilce)}>{item.ilce}<span aria-hidden="true">↗</span></button></th>
+              <td className="district-count">{item.sayi}</td><td>%{item.oran.toFixed(1)}</td>
+              <td><div className="district-bar-track"><div style={{width:`${item.oran}%`}}/></div></td>
+            </tr>):<tr><td colSpan={5} className="district-empty">Seçili filtrelerde ilçe kaydı bulunamadı.</td></tr>}</tbody>
+          </table>
+        </div>
+        <div className="district-pagination"><span>{items.length?`${start+1}–${Math.min(start+10,items.length)}`:"0"} / {items.length} ilçe</span><div><button type="button" disabled={page===1} onClick={()=>setPagination({key,page:page-1})}>Önceki</button><span>Sayfa {page} / {pageCount}</span><button type="button" disabled={page===pageCount} onClick={()=>setPagination({key,page:page+1})}>Sonraki</button></div></div>
+      </section>
+      <section className="district-card district-top" aria-labelledby="district-top-title">
+        <div className="district-card-heading"><h3 id="district-top-title">En Yoğun 3 İlçe</h3><span>Seçili kayıtlar</span></div>
+        <div className="district-share" role="img" aria-label={`İlk üç ilçenin toplam payı yüzde ${topShare.toFixed(1)}`} style={{background:`conic-gradient(#3b82f6 ${topShare}%,#e8eef7 0)`}}><div><strong>%{topShare.toFixed(1)}</strong><span>İlk 3 ilçe</span></div></div>
+        <div className="district-top-list">{topThree.length?topThree.map((item,index)=><button type="button" key={item.ilce} onClick={()=>onDistrictClick(item.ilce)} aria-label={`${item.ilce} kayıtlarını aç`}><span className="district-rank" data-rank={index+1}>{index+1}</span><span><strong>{item.ilce}</strong><small>Toplamın %{item.oran.toFixed(1)} kadarı</small></span><span className="district-top-count"><strong>{item.sayi}</strong><small>kayıt</small></span></button>):<p className="district-empty">Seçili filtrelerde ilçe kaydı bulunamadı.</p>}</div>
+        <p className="district-note">Bir ilçeye tıklayarak o ilçenin kayıtlarını açabilirsiniz.</p>
+      </section>
+    </div>
+  </div>;
+}
 function ViewportAnalysis({id,children}:{id:string;children:ReactNode}){
   const container=useRef<HTMLDivElement>(null);
   useEffect(()=>{
