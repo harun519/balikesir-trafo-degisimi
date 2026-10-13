@@ -119,7 +119,6 @@ export default function Home() {
   const [yoneticiOzetiAcik,setYoneticiOzetiAcik]=useState(false);
   const analizSayfasi=ANALIZ_SAYFALARI[sayfa as AnalizSayfa];
   const genelGorunum=sayfa==="dashboard"||!!analizSayfasi;
-  const [detayliKpiAcik,setDetayliKpiAcik]=useState(false);
   const [csvYukleniyor,setCsvYukleniyor]=useState(false);
   const [genelArama,setGenelArama]=useState("");
   const [genelAramaAcik,setGenelAramaAcik]=useState(false);
@@ -1295,22 +1294,20 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             {sayfa==="dashboard"&&<>
             <div id="dashboard-scope-kpis" className="grid grid-cols-2 gap-3.5 xl:grid-cols-4"><KpiKart baslik="TOPLAM KAYIT" sayi={dashboardKayitlari.length} renk="#f97316" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><KpiKart baslik={seciliNedenKpi.ad} sayi={nedenSayilari[seciliNedenKpi.ad]||0} renk={seciliNedenKpi.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:seciliNedenKpi.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/><OzetKart ikon="📅" baslik="SON 30 GÜN" deger={String(son30Gun)} alt="Trafo değişim kaydı"/><OzetKart ikon="📍" baslik="EN YOĞUN İLÇE" deger={String(enCokIlce[0])} alt={`${enCokIlce[1]} kayıt`} onClick={()=>enCokIlce[0]!=="-"&&kayitListesineGit({ilce:String(enCokIlce[0]),yil:dashboardYil,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/></div>
-            <div className="mt-3"><button onClick={()=>setDetayliKpiAcik(x=>!x)} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">{detayliKpiAcik?"▲ Detaylı KPI'ları Gizle":"▼ Detaylı KPI'ları Göster"}</button>{detayliKpiAcik&&<div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">{NEDENLER.filter(n=>n.ad!=="ARIZA").map(n=><KpiKart key={n.ad} baslik={n.ad} sayi={nedenSayilari[n.ad]||0} renk={n.renk} onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})}/>)}</div>}</div>
 
             </>}
 
-            {sayfa==="dashboard"&&<div id="degisim-nedenleri" className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 items-stretch gap-3.5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            {sayfa==="dashboard"&&<><div id="dashboard-chart-row"><div id="degisim-nedenleri" className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 items-stretch gap-3.5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
               <Panel baslik="Değişim Nedenleri" altBaslik="Seçili filtreye göre dağılım" className="h-full" daraltilabilir acik={acikAnalizler["degisim-nedenleri"]} onToggle={()=>analizAcKapa("degisim-nedenleri")}>
                 <div className="trafo-reason-layout flex min-h-[430px] flex-col"><div className="trafo-donut-wrap flex flex-1 items-center justify-center py-5"><div className="trafo-donut relative h-44 w-44 rounded-full sm:h-48 sm:w-48" style={{background:`conic-gradient(${donutGradient})`}}><div className="absolute inset-7 flex flex-col items-center justify-center rounded-full border border-slate-200 bg-white"><div className="text-3xl font-black">{dashboardKayitlari.length}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Toplam</div></div></div></div>
                   <div className="trafo-reason-list grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">{NEDENLER.map(n=><button type="button" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})} key={n.ad} className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50/60"><div className="flex min-w-0 items-center gap-2.5"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:n.renk}}/><span className="truncate text-[11px] font-bold text-slate-700">{n.ad}</span></div><span className="ml-3 text-sm font-black">{nedenSayilari[n.ad]||0} →</span></button>)}</div>
                 </div>
               </Panel>
-            </div>}
+            </div>
+<div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Tüm yıllar için grafiği sağa-sola kaydırın" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} compact onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
 
-            {sayfa==="dashboard"&&<>
-<div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
-
-            <div className="mt-5 min-w-0 max-w-full overflow-hidden"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
+            </div>
+            <div id="dashboard-monthly" data-has-year={!!dashboardYil} className="mt-5 min-w-0 max-w-full overflow-hidden"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik compact onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
 
             </>}
 
@@ -2083,7 +2080,7 @@ function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:stri
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
-function BarChart({items,max,aylik=false,onBarClick}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean;onBarClick?:(label:string,neden:string)=>void}){
+function BarChart({items,max,aylik=false,compact=false,onBarClick}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean;compact?:boolean;onBarClick?:(label:string,neden:string)=>void}){
   const kaydirma=useRef<HTMLDivElement>(null);
   const kaydir=(yon:-1|1)=>{
     const alan=kaydirma.current;
@@ -2093,18 +2090,18 @@ function BarChart({items,max,aylik=false,onBarClick}:{items:{label:string;total:
   const minGenislik=aylik?Math.max(760,items.length*66):Math.max(760,items.length*82);
 
   return <div className="mt-5 w-full min-w-0 max-w-full overflow-hidden">
-    <div ref={kaydirma} className="w-0 min-w-full max-w-full overflow-x-auto overscroll-x-contain pb-2" style={{scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}}>
+    <div ref={kaydirma} className="w-0 min-w-full max-w-full overflow-x-auto overscroll-x-contain pb-2" tabIndex={0} aria-label={aylik?"Aylık grafiği yatay kaydır":"Yıllık grafiği yatay kaydır"} style={{scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}}>
       <div style={{minWidth:`${minGenislik}px`}}>
-        <div className={aylik?"relative h-[270px]":"relative h-[320px] sm:h-[350px]"}>
+        <div className={compact?`relative trafo-compact-chart ${aylik?"monthly":"yearly"}`:aylik?"relative h-[270px]":"relative h-[320px] sm:h-[350px]"}>
           <div className="pointer-events-none absolute inset-x-0 bottom-10 top-5 flex flex-col justify-between">
             {[1,2,3,4,5].map(i=><div key={i} className="border-t border-dashed border-slate-200"/>)}
           </div>
           <div className="absolute inset-0 flex items-end gap-2 px-2 sm:gap-3">
             {items.map(it=><div key={it.label} className="flex min-w-[62px] flex-1 flex-col items-center justify-end">
               <div className="mb-2 rounded-full bg-slate-100 px-2 py-1 text-[9px] font-black text-slate-700">{it.total}</div>
-              <div className={`flex items-end justify-center gap-[2px] ${aylik?"h-[180px]":"h-[225px] sm:h-[255px]"}`}>
+              <div className={`flex items-end justify-center gap-[2px] ${compact?"trafo-compact-bars":aylik?"h-[180px]":"h-[225px] sm:h-[255px]"}`}>
                 {NEDENLER.filter(n=>(it.values[n.ad]||0)>0).map(n=>{
-                  const v=it.values[n.ad]||0,h=Math.max(5,(v/max)*(aylik?160:225));
+                  const v=it.values[n.ad]||0,h=Math.max(5,(v/max)*(compact?(aylik?32:64):(aylik?160:225)));
                   return <button type="button" onClick={()=>onBarClick?.(it.label,n.ad)} key={n.ad} title={`${it.label} - ${n.ad}: ${v} • Kayıtlara git`} aria-label={`${it.label}, ${n.ad}, ${v} kayıt`} className={`${aylik?"w-[5px] rounded-t":"w-[7px] rounded-t-md"} ${onBarClick?"cursor-pointer hover:brightness-125":"cursor-default"}`} style={{height:`${h}px`,backgroundColor:n.renk}}/>
                 })}
               </div>
