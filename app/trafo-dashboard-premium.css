@@ -1,61 +1,71 @@
 /* Dashboard scope keeps record forms, backups, maps and their controls intact. */
-main[data-page="dashboard"] #dashboard-hero{min-height:0!important;padding:0 0 12px!important;margin-bottom:0!important;gap:12px!important;align-items:center!important}
-main[data-page="dashboard"] #dashboard-hero:before,main[data-page="dashboard"] #dashboard-hero:after{display:none!important}
-main[data-page="dashboard"] #dashboard-hero>div:first-child>div:first-child{display:none}
-main[data-page="dashboard"] #dashboard-hero h1{font-size:24px!important;line-height:1.2!important;letter-spacing:-.5px!important;margin:0!important}
-main[data-page="dashboard"] #dashboard-hero p{font-size:12px!important;margin-top:5px!important}
-main[data-page="dashboard"] #dashboard-hero button{min-height:36px!important;padding:7px 12px!important;font-size:11px!important;border-radius:8px!important;box-shadow:none!important;transform:none!important}
-main[data-page="dashboard"] #dashboard-kpis{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;margin-bottom:12px!important}
-main[data-page="dashboard"] #dashboard-kpis>*{min-height:88px!important;padding:12px!important;border:1px solid #dce7f7!important;border-radius:12px!important;background:linear-gradient(110deg,#eff5ff,#fafcff)!important;box-shadow:none!important;transform:none!important}
-main[data-page="dashboard"] #dashboard-kpis>*:nth-child(2){background:linear-gradient(110deg,#edf9f2,#fbfefc)!important;border-color:#d4eade!important}
-main[data-page="dashboard"] #dashboard-kpis>*:nth-child(3){background:linear-gradient(110deg,#fff0f1,#fffafb)!important;border-color:#f0d7db!important}
-main[data-page="dashboard"] #dashboard-kpis>*:nth-child(4){background:linear-gradient(110deg,#f3f0ff,#fcfbff)!important;border-color:#e2dcf5!important}
-main[data-page="dashboard"] #dashboard-kpis>*>div{padding:0!important;gap:10px!important;height:auto!important}
-main[data-page="dashboard"] #dashboard-kpis>*>div>div:first-child{width:34px!important;height:34px!important;border:0!important;background:rgba(255,255,255,.8)!important;border-radius:9px!important;font-size:18px!important}
-main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:first-child{font-size:10px!important;letter-spacing:.02em!important;font-weight:650!important}
-main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:nth-child(2){font-size:25px!important;line-height:1.25!important;font-weight:750!important;font-variant-numeric:tabular-nums}
-main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:last-child{font-size:10px!important}
-main[data-page="dashboard"] #dashboard-filters{padding:12px 14px!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important;margin-bottom:12px!important}
-main[data-page="dashboard"] #dashboard-filters>div:first-child{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr)) auto auto!important;gap:9px!important;align-items:end!important}
-main[data-page="dashboard"] #dashboard-filters input,main[data-page="dashboard"] #dashboard-filters select{height:38px!important;min-height:38px!important;border-radius:8px!important;background:#fbfcfe!important;font-size:12px!important;min-width:0!important}
-main[data-page="dashboard"] #dashboard-filters>div:first-child>button{min-height:38px!important;padding:7px 10px!important;font-size:11px!important;white-space:nowrap}
-main[data-page="dashboard"] #dashboard-filters label{min-width:0}
-main[data-page="dashboard"] #dashboard-filters label>span{font-size:9px!important;letter-spacing:.04em!important;margin-bottom:5px!important}
-main[data-page="dashboard"] #dashboard-filters>div:nth-child(2){margin-top:10px!important;padding-top:10px!important;font-size:10px!important;gap:6px!important}
-main[data-page="dashboard"] #dashboard-filters>div:last-child{margin-top:10px!important;gap:6px!important}
-main[data-page="dashboard"] #dashboard-filters>div:last-child button{min-height:30px!important;padding:5px 10px!important;font-size:10px!important;box-shadow:none!important}
-main[data-page="dashboard"] #dashboard-filters>div:last-child button[class*="border-orange-500"]{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important}
-main[data-page="dashboard"] #dashboard-scope-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
-main[data-page="dashboard"] #dashboard-scope-kpis>*{min-height:82px!important;border-radius:11px!important;box-shadow:none!important;transform:none!important;padding:10px 12px!important}
-main[data-page="dashboard"] #dashboard-scope-kpis>button:has(>div+div)>div:first-child{display:none}
-main[data-page="dashboard"] #dashboard-scope-kpis>button>div:last-child{padding:0!important}
-main[data-page="dashboard"] #dashboard-scope-kpis .text-2xl,main[data-page="dashboard"] #dashboard-scope-kpis .text-3xl{font-size:23px!important}
-main[data-page="dashboard"] #degisim-nedenleri{display:grid!important;grid-template-columns:minmax(285px,.85fr) minmax(0,1.4fr)!important;gap:12px!important;margin-top:14px!important;align-items:stretch!important}
-main[data-page="dashboard"] #degisim-nedenleri>div{padding:0!important;border:0!important;border-radius:12px!important;box-shadow:none!important;background:transparent!important}
-main[data-page="dashboard"] #degisim-nedenleri section{padding:14px!important;border:1px solid #dfe7ef!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important}
-main[data-page="dashboard"] #degisim-nedenleri h2{font-size:14px!important;line-height:1.4!important}
-main[data-page="dashboard"] #degisim-nedenleri section>div:first-child p{font-size:11px!important}
-main[data-page="dashboard"] #degisim-nedenleri section>div:first-child button{width:30px!important;height:30px!important;min-height:30px!important;border-radius:8px!important;padding:0!important;font-size:16px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-layout{min-height:0!important;gap:10px}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-donut-wrap{flex:0 0 auto!important;padding:12px 0!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-donut{width:140px!important;height:140px!important;min-width:140px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-donut .absolute{inset:22px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-donut .text-3xl{font-size:25px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list button{border-radius:8px!important;min-height:35px!important;padding:7px 8px!important;font-size:10px!important;box-shadow:none!important;transform:none!important;gap:5px}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list button>div{gap:6px!important}
-main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list button>span{font-size:11px!important;margin-left:4px!important;white-space:nowrap}
-main[data-page="dashboard"] #zaman-analizi{margin-top:0!important}
-main[data-page="dashboard"] #zaman-analizi .relative.h-\[320px\]{height:310px!important}
-main[data-page="dashboard"] #zaman-analizi .mt-4.flex.flex-wrap{margin-top:12px!important;gap:5px!important}
-main[data-page="dashboard"] #zaman-analizi .mt-4.flex.flex-wrap>div{padding:4px 7px!important;box-shadow:none!important;border-radius:7px!important}
-@media(max-width:1200px){main[data-page="dashboard"] #dashboard-filters>div:first-child{grid-template-columns:repeat(4,minmax(0,1fr))!important}main[data-page="dashboard"] #dashboard-filters>div:first-child>button{grid-column:span 2}main[data-page="dashboard"] #degisim-nedenleri{grid-template-columns:minmax(265px,.9fr) minmax(0,1.2fr)!important}}
-@media(max-width:1023px){main[data-page="dashboard"] #dashboard-hero{flex-direction:row!important;align-items:flex-start!important}main[data-page="dashboard"] #dashboard-hero>div:last-child{justify-content:flex-end}main[data-page="dashboard"] #dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-page="dashboard"] #dashboard-scope-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}main[data-page="dashboard"] #degisim-nedenleri{grid-template-columns:minmax(265px,.9fr) minmax(0,1.2fr)!important}}
-@media(max-width:760px){main[data-page="dashboard"] #dashboard-hero{flex-direction:column!important}main[data-page="dashboard"] #dashboard-hero h1{font-size:21px!important}main[data-page="dashboard"] #dashboard-hero>div:last-child{justify-content:flex-start}main[data-page="dashboard"] #dashboard-filters>div:first-child{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-page="dashboard"] #dashboard-filters>div:first-child>button{grid-column:auto}main[data-page="dashboard"] #dashboard-scope-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-page="dashboard"] #degisim-nedenleri{grid-template-columns:1fr!important}main[data-page="dashboard"] #dashboard-filters input,main[data-page="dashboard"] #dashboard-filters select{font-size:16px!important;min-height:44px!important;height:44px!important}}
-@media(max-width:390px){main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-page="dashboard"] #dashboard-kpis>*{padding:10px!important}main[data-page="dashboard"] #dashboard-kpis>*>div{gap:7px!important}main[data-page="dashboard"] #dashboard-kpis>*>div>div:first-child{width:28px!important;height:28px!important}}
+main[data-overview="true"] #dashboard-hero{min-height:0!important;padding:0 0 12px!important;margin-bottom:0!important;gap:12px!important;align-items:center!important}
+main[data-overview="true"] #dashboard-hero:before,main[data-overview="true"] #dashboard-hero:after{display:none!important}
+main[data-overview="true"] #dashboard-hero>div:first-child>div:first-child{display:none}
+main[data-overview="true"] #dashboard-hero h1{font-size:24px!important;line-height:1.2!important;letter-spacing:-.5px!important;margin:0!important}
+main[data-overview="true"] #dashboard-hero p{font-size:12px!important;margin-top:5px!important}
+main[data-overview="true"] #dashboard-hero button{min-height:36px!important;padding:7px 12px!important;font-size:11px!important;border-radius:8px!important;box-shadow:none!important;transform:none!important}
+main[data-overview="true"] #dashboard-kpis{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;margin-bottom:12px!important}
+main[data-overview="true"] #dashboard-kpis>*{min-height:88px!important;padding:12px!important;border:1px solid #dce7f7!important;border-radius:12px!important;background:linear-gradient(110deg,#eff5ff,#fafcff)!important;box-shadow:none!important;transform:none!important}
+main[data-overview="true"] #dashboard-kpis>*:nth-child(2){background:linear-gradient(110deg,#edf9f2,#fbfefc)!important;border-color:#d4eade!important}
+main[data-overview="true"] #dashboard-kpis>*:nth-child(3){background:linear-gradient(110deg,#fff0f1,#fffafb)!important;border-color:#f0d7db!important}
+main[data-overview="true"] #dashboard-kpis>*:nth-child(4){background:linear-gradient(110deg,#f3f0ff,#fcfbff)!important;border-color:#e2dcf5!important}
+main[data-overview="true"] #dashboard-kpis>*>div{padding:0!important;gap:10px!important;height:auto!important}
+main[data-overview="true"] #dashboard-kpis>*>div>div:first-child{width:34px!important;height:34px!important;border:0!important;background:rgba(255,255,255,.8)!important;border-radius:9px!important;font-size:18px!important}
+main[data-overview="true"] #dashboard-kpis>*>div>div:last-child>div:first-child{font-size:10px!important;letter-spacing:.02em!important;font-weight:650!important}
+main[data-overview="true"] #dashboard-kpis>*>div>div:last-child>div:nth-child(2){font-size:25px!important;line-height:1.25!important;font-weight:750!important;font-variant-numeric:tabular-nums}
+main[data-overview="true"] #dashboard-kpis>*>div>div:last-child>div:last-child{font-size:10px!important}
+main[data-overview="true"] #dashboard-filters{padding:12px 14px!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important;margin-bottom:12px!important}
+main[data-overview="true"] #dashboard-filters>div:first-child{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr)) auto auto!important;gap:9px!important;align-items:end!important}
+main[data-overview="true"] #dashboard-filters input,main[data-overview="true"] #dashboard-filters select{height:38px!important;min-height:38px!important;border-radius:8px!important;background:#fbfcfe!important;font-size:12px!important;min-width:0!important}
+main[data-overview="true"] #dashboard-filters>div:first-child>button{min-height:38px!important;padding:7px 10px!important;font-size:11px!important;white-space:nowrap}
+main[data-overview="true"] #dashboard-filters label{min-width:0}
+main[data-overview="true"] #dashboard-filters label>span{font-size:9px!important;letter-spacing:.04em!important;margin-bottom:5px!important}
+main[data-overview="true"] #dashboard-filters>div:nth-child(2){margin-top:10px!important;padding-top:10px!important;font-size:10px!important;gap:6px!important}
+main[data-overview="true"] #dashboard-filters>div:last-child{margin-top:10px!important;gap:6px!important}
+main[data-overview="true"] #dashboard-filters>div:last-child button{min-height:30px!important;padding:5px 10px!important;font-size:10px!important;box-shadow:none!important}
+main[data-overview="true"] #dashboard-filters>div:last-child button[class*="border-orange-500"]{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important}
+main[data-overview="true"] #dashboard-scope-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+main[data-overview="true"] #dashboard-scope-kpis>*{min-height:82px!important;border-radius:11px!important;box-shadow:none!important;transform:none!important;padding:10px 12px!important}
+main[data-overview="true"] #dashboard-scope-kpis>button:has(>div+div)>div:first-child{display:none}
+main[data-overview="true"] #dashboard-scope-kpis>button>div:last-child{padding:0!important}
+main[data-overview="true"] #dashboard-scope-kpis .text-2xl,main[data-overview="true"] #dashboard-scope-kpis .text-3xl{font-size:23px!important}
+main[data-overview="true"] #degisim-nedenleri{display:grid!important;grid-template-columns:minmax(285px,.85fr) minmax(0,1.4fr)!important;gap:12px!important;margin-top:14px!important;align-items:stretch!important}
+main[data-overview="true"] #degisim-nedenleri>div{padding:0!important;border:0!important;border-radius:12px!important;box-shadow:none!important;background:transparent!important}
+main[data-overview="true"] #degisim-nedenleri section{padding:14px!important;border:1px solid #dfe7ef!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important}
+main[data-overview="true"] #degisim-nedenleri h2{font-size:14px!important;line-height:1.4!important}
+main[data-overview="true"] #degisim-nedenleri section>div:first-child p{font-size:11px!important}
+main[data-overview="true"] #degisim-nedenleri section>div:first-child button{width:30px!important;height:30px!important;min-height:30px!important;border-radius:8px!important;padding:0!important;font-size:16px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-reason-layout{min-height:0!important;gap:10px}
+main[data-overview="true"] #degisim-nedenleri .trafo-donut-wrap{flex:0 0 auto!important;padding:12px 0!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-donut{width:140px!important;height:140px!important;min-width:140px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-donut .absolute{inset:22px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-donut .text-3xl{font-size:25px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-reason-list button{border-radius:8px!important;min-height:35px!important;padding:7px 8px!important;font-size:10px!important;box-shadow:none!important;transform:none!important;gap:5px}
+main[data-overview="true"] #degisim-nedenleri .trafo-reason-list button>div{gap:6px!important}
+main[data-overview="true"] #degisim-nedenleri .trafo-reason-list button>span{font-size:11px!important;margin-left:4px!important;white-space:nowrap}
+main[data-overview="true"] #zaman-analizi{margin-top:0!important}
+main[data-overview="true"] #zaman-analizi .relative.h-\[320px\]{height:310px!important}
+main[data-overview="true"] #zaman-analizi .mt-4.flex.flex-wrap{margin-top:12px!important;gap:5px!important}
+main[data-overview="true"] #zaman-analizi .mt-4.flex.flex-wrap>div{padding:4px 7px!important;box-shadow:none!important;border-radius:7px!important}
+@media(max-width:1200px){main[data-overview="true"] #dashboard-filters>div:first-child{grid-template-columns:repeat(4,minmax(0,1fr))!important}main[data-overview="true"] #dashboard-filters>div:first-child>button{grid-column:span 2}main[data-overview="true"] #degisim-nedenleri{grid-template-columns:minmax(265px,.9fr) minmax(0,1.2fr)!important}}
+@media(max-width:1023px){main[data-overview="true"] #dashboard-hero{flex-direction:row!important;align-items:flex-start!important}main[data-overview="true"] #dashboard-hero>div:last-child{justify-content:flex-end}main[data-overview="true"] #dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-overview="true"] #dashboard-scope-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}main[data-overview="true"] #degisim-nedenleri{grid-template-columns:minmax(265px,.9fr) minmax(0,1.2fr)!important}}
+@media(max-width:760px){main[data-overview="true"] #dashboard-hero{flex-direction:column!important}main[data-overview="true"] #dashboard-hero h1{font-size:21px!important}main[data-overview="true"] #dashboard-hero>div:last-child{justify-content:flex-start}main[data-overview="true"] #dashboard-filters>div:first-child{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-overview="true"] #dashboard-filters>div:first-child>button{grid-column:auto}main[data-overview="true"] #dashboard-scope-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-overview="true"] #degisim-nedenleri{grid-template-columns:1fr!important}main[data-overview="true"] #dashboard-filters input,main[data-overview="true"] #dashboard-filters select{font-size:16px!important;min-height:44px!important;height:44px!important}}
+@media(max-width:390px){main[data-overview="true"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-overview="true"] #dashboard-kpis>*{padding:10px!important}main[data-overview="true"] #dashboard-kpis>*>div{gap:7px!important}main[data-overview="true"] #dashboard-kpis>*>div>div:first-child{width:28px!important;height:28px!important}}
 
-main[data-page="dashboard"] #degisim-nedenleri>section:first-child{order:1!important}
-main[data-page="dashboard"] #degisim-nedenleri>#zaman-analizi{order:2!important}
-@media(min-width:761px) and (max-width:1100px){main[data-page="dashboard"] #dashboard-kpis,main[data-page="dashboard"] #dashboard-scope-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+main[data-overview="true"] #degisim-nedenleri>section:first-child{order:1!important}
+main[data-overview="true"] #degisim-nedenleri>#zaman-analizi{order:2!important}
+@media(min-width:761px) and (max-width:1100px){main[data-overview="true"] #dashboard-kpis,main[data-overview="true"] #dashboard-scope-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
-main[data-page="dashboard"] #zaman-analizi .overflow-x-auto>div{min-width:100%!important}
+main[data-overview="true"] #zaman-analizi .overflow-x-auto>div{min-width:100%!important}
+
+/* Each analysis is a standalone page reached from the sidebar. */
+main[data-page="dashboard"] #degisim-nedenleri{grid-template-columns:1fr!important}
+main[data-page="dashboard"] .trafo-reason-layout{display:grid!important;grid-template-columns:200px minmax(0,1fr);align-items:center;gap:20px!important;margin-top:12px}
+main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list button{min-height:42px!important}
+main[data-overview="true"] section>div.mx-auto>div[id$="analizi"]{margin-top:14px!important}
+main[data-page="zaman-analizi"] #zaman-analizi>section{padding:16px!important;border:1px solid #dfe7ef!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important}
+main[data-overview="true"] aside nav button[aria-current="page"]{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
+@media(max-width:760px){main[data-page="dashboard"] .trafo-reason-layout{grid-template-columns:1fr!important;gap:10px!important}}
