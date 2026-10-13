@@ -30,7 +30,6 @@ const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
 const ANALIZ_SAYFALARI = {
-  "zaman-analizi": {baslik:"Yıllık / Aylık Analiz",aciklama:"Trafo değişimlerinin yıllara ve aylara göre eğilimi."},
   "neden-guc-analizi": {baslik:"Neden × Güç Analizi",aciklama:"Değişim nedenleri ile güç geçişlerini birlikte inceleyin."},
   "ilce-analizi": {baslik:"İlçe Analizi",aciklama:"İlçelere göre trafo değişimlerinin dağılımı."},
   "trafo-guc-analizi": {baslik:"Trafo Güç Analizi",aciklama:"Sökülen ve takılan trafo güçlerini karşılaştırın."},
@@ -1308,7 +1307,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
               </Panel>
             </div>}
 
-            {sayfa==="zaman-analizi"&&<>
+            {sayfa==="dashboard"&&<>
 <div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Her renk ayrı bir değişim nedenini gösterir" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
 
             <div className="mt-5 min-w-0 max-w-full overflow-hidden"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}><GrafikLegend/>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
@@ -1912,7 +1911,6 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,misafirModu,rol}:{say
   return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu>
 <div className="my-2 border-t border-slate-200 pt-2">
   <div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">ANALİZLER</div>
-  <MenuAlt aktif={sayfa==="zaman-analizi"} onClick={()=>bolumeGit("zaman-analizi")}>▥ Yıllık / Aylık Analiz</MenuAlt>
   <MenuAlt aktif={sayfa==="neden-guc-analizi"} onClick={()=>bolumeGit("neden-guc-analizi")}>⚡ Neden × Güç Analizi</MenuAlt>
   <MenuAlt aktif={sayfa==="ilce-analizi"} onClick={()=>bolumeGit("ilce-analizi")}>📍 İlçe Analizi</MenuAlt>
   <MenuAlt aktif={sayfa==="trafo-guc-analizi"} onClick={()=>bolumeGit("trafo-guc-analizi")}>↗ Trafo Güç Analizi</MenuAlt>
