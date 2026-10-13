@@ -161,3 +161,85 @@ main[data-page="dashboard"] #dashboard-chart-row #degisim-nedenleri .trafo-donut
  main[data-page="dashboard"] #dashboard-monthly{margin-top:4px!important}
  main[data-page="dashboard"] section>div.mx-auto{padding-bottom:0!important}
 }
+
+/* Chart bars must not inherit the minimum height of ordinary action buttons. */
+main .trafo-data-bar{min-height:0!important;padding:0!important;border:0!important;flex-shrink:0;box-shadow:none!important}
+main[data-page="dashboard"] section>div.mx-auto{max-width:none!important}
+main[data-page="dashboard"] #zaman-analizi .overflow-x-auto>div{min-width:1080px!important;height:100%}
+main[data-page="dashboard"] .trafo-chart-shell{display:flex;flex-direction:column;min-height:0}
+main[data-page="dashboard"] .trafo-chart-shell>.overflow-x-auto{flex:1;min-height:0;overflow-y:hidden}
+main[data-page="dashboard"] .trafo-compact-chart.yearly{height:100%;min-height:95px}
+main[data-page="dashboard"] .trafo-chart-group{height:100%}
+main[data-page="dashboard"] .trafo-compact-chart .trafo-compact-bars{height:calc(100% - 52px);min-height:30px}
+main[data-page="dashboard"] .trafo-compact-chart .trafo-data-bar{width:9px!important;border-radius:4px 4px 0 0!important}
+main[data-page="dashboard"] .trafo-chart-navigation{flex-shrink:0;justify-content:flex-end;margin-top:6px;gap:8px}
+main[data-page="dashboard"] .trafo-chart-navigation button{height:28px!important;min-height:28px!important;width:36px!important;padding:0!important;border-radius:7px!important;box-shadow:none!important}
+main[data-page="dashboard"] .trafo-chart-navigation span{font-size:11px!important}
+main[data-page="dashboard"] #dashboard-monthly .trafo-compact-chart.monthly{height:clamp(72px,11vh,128px)}
+main[data-page="dashboard"] #dashboard-monthly .trafo-compact-bars{height:calc(100% - 42px)}
+@media(min-width:768px){
+ main[data-page="dashboard"] #dashboard-chart-row{height:var(--dashboard-chart-height,300px);grid-template-columns:minmax(280px,.85fr) minmax(0,1.45fr);gap:12px}
+ main[data-page="dashboard"] #dashboard-chart-row :is(#degisim-nedenleri>section,#zaman-analizi>section){display:flex;flex-direction:column;height:100%!important;padding:12px!important}
+ main[data-page="dashboard"] #zaman-analizi .trafo-chart-shell{flex:1;margin-top:8px!important}
+ main[data-page="dashboard"] #dashboard-chart-row h2,main[data-page="dashboard"] #dashboard-monthly h2{font-size:15px!important}
+ main[data-page="dashboard"] #dashboard-chart-row section>div:first-child p,main[data-page="dashboard"] #dashboard-monthly section>div:first-child p{font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-layout{flex:1;grid-template-columns:clamp(80px,10vw,150px) minmax(0,1fr)!important;gap:12px!important;margin-top:10px!important}
+ main[data-page="dashboard"] #dashboard-chart-row #degisim-nedenleri .trafo-donut{width:clamp(80px,10vw,150px)!important;height:clamp(80px,10vw,150px)!important;min-width:80px!important}
+ main[data-page="dashboard"] #dashboard-chart-row #degisim-nedenleri .trafo-donut .absolute{inset:17%!important}
+ main[data-page="dashboard"] #dashboard-chart-row #degisim-nedenleri .trafo-donut .text-3xl{font-size:clamp(20px,2vw,30px)!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list{grid-template-columns:1fr!important;gap:3px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button{min-height:22px!important;padding:3px 6px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button>div>span:last-child{font-size:11px!important;white-space:normal!important;line-height:14px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button>span{font-size:12px!important}
+ main[data-page="dashboard"] #dashboard-monthly{margin-top:10px!important}
+}
+@media(min-width:768px) and (min-height:850px){
+ main[data-page="dashboard"] section>div.mx-auto{padding:14px 20px!important}
+ main[data-page="dashboard"] #dashboard-hero h1{font-size:24px!important}
+ main[data-page="dashboard"] #dashboard-kpis>*{min-height:78px!important;padding:10px 12px!important}
+ main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:first-child{font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:nth-child(2){font-size:26px!important}
+ main[data-page="dashboard"] #dashboard-kpis>*>div>div:last-child>div:last-child{font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-filters{padding:12px!important}
+ main[data-page="dashboard"] #dashboard-filters :is(input,select){height:38px!important;font-size:13px!important}
+ main[data-page="dashboard"] #dashboard-filters label>span{font-size:10px!important}
+ main[data-page="dashboard"] #dashboard-filters>div.mt-3.flex.flex-wrap.gap-2>button{min-height:30px!important;font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-scope-kpis>*{min-height:66px!important;padding:9px 12px!important}
+ main[data-page="dashboard"] #dashboard-scope-kpis .min-h-7,main[data-page="dashboard"] #dashboard-scope-kpis> :is(div,button)>div.flex>div:last-child>div:first-child{font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-scope-kpis :is(.text-2xl,.text-3xl),main[data-page="dashboard"] #dashboard-scope-kpis> :is(div,button)>div.flex>div:last-child>div:nth-child(2){font-size:23px!important}
+ main[data-page="dashboard"] #dashboard-scope-kpis> :is(div,button)>div.flex>div:last-child>div:last-child{font-size:11px!important}
+ main[data-page="dashboard"] #dashboard-chart-row :is(#degisim-nedenleri>section,#zaman-analizi>section){padding:16px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button{min-height:32px!important;padding:7px 9px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button>div>span:last-child{font-size:12px!important}
+ main[data-page="dashboard"] #zaman-analizi .mt-4.flex.flex-wrap>div{padding:4px 7px!important}
+ main[data-page="dashboard"] #zaman-analizi .mt-4.flex.flex-wrap>div span:last-child{font-size:10px!important}
+}
+@media(max-width:767px){
+ main[data-page="dashboard"] #zaman-analizi .trafo-chart-shell{height:260px}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-chart-shell{height:auto}
+}
+@media(min-width:768px) and (max-height:849px){
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-layout{margin-top:8px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list{gap:2px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button{min-height:18px!important;padding:2px 5px!important;line-height:12px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button :is(div,span){line-height:12px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button>div>span:last-child{font-size:11px!important;line-height:12px!important;white-space:nowrap!important}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-compact-chart.monthly{height:50px}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-compact-bars{height:22px;min-height:0}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-chart-group>.mb-2{padding:1px 5px;margin-bottom:1px;line-height:9px}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-chart-group>.mt-3{margin-top:2px;padding-top:2px;line-height:10px}
+}
+@media(min-width:768px) and (max-width:1100px){
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-layout{grid-template-columns:80px minmax(0,1fr)!important;gap:8px!important}
+ main[data-page="dashboard"] #dashboard-chart-row #degisim-nedenleri .trafo-donut{width:80px!important;height:80px!important}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-list button>div>span:last-child{font-size:10px!important;white-space:nowrap!important}
+}
+main[data-page="dashboard"] :is(#zaman-analizi,#dashboard-monthly) .trafo-data-bar{min-height:0!important;padding:0!important;border:0!important}
+@media(min-width:768px) and (max-height:849px){
+ main[data-page="dashboard"] #dashboard-monthly .trafo-chart-group>.mb-2{padding:0 4px!important;margin-bottom:2px!important;line-height:9px!important;font-size:8px!important}
+ main[data-page="dashboard"] #dashboard-monthly .trafo-chart-group>.mt-3{margin-top:2px!important;padding-top:2px!important;line-height:10px!important;font-size:9px!important}
+}
+@media(min-width:768px){main[data-page="dashboard"] section>div.mx-auto{padding-bottom:8px!important}}
+
+main[data-page="dashboard"] #zaman-analizi .overflow-x-auto>div{min-width:100%!important}
+main[data-page="dashboard"] .trafo-chart-navigation button:disabled{opacity:.35!important;cursor:default}
