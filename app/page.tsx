@@ -1312,106 +1312,61 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </>}
 
             {sayfa==="neden-guc-analizi"&&<>
-            <div className="mt-5 scroll-mt-24" id="neden-guc-analizi">
+            <ViewportAnalysis id="neden-guc-analizi">
               <Panel
-                baslik="Değişim Nedeni × Güç Analizi"
-                altBaslik="Değişim nedenlerine göre güç artışı / aynı / azalış dağılımı ve öne çıkan geçişler"
+                baslik="Güç Değişim Dağılımı"
+                altBaslik="Seçili filtreye göre karşılaştırılabilir kayıtlar ve güç geçişleri"
                 daraltilabilir acik={acikAnalizler["neden-guc-analizi"]} onToggle={()=>analizAcKapa("neden-guc-analizi")}
               >
-                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="ng-kpis mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
                   <GucKpi baslik="GÜÇ ARTIRILAN" sayi={gucAnalizi.artan} alt={`%${((gucAnalizi.artan/gucToplam)*100).toFixed(1)}`} ikon="↗" ton="emerald"/>
                   <GucKpi baslik="GÜÇ AZALTILAN" sayi={gucAnalizi.azalan} alt={`%${((gucAnalizi.azalan/gucToplam)*100).toFixed(1)}`} ikon="↘" ton="red"/>
                   <GucKpi baslik="AYNI GÜÇ" sayi={gucAnalizi.ayni} alt={`%${((gucAnalizi.ayni/gucToplam)*100).toFixed(1)}`} ikon="→" ton="blue"/>
                   <GucKpi baslik="KARŞILAŞTIRILABİLEN" sayi={gucAnalizi.karsilastirilabilir} alt={`${dashboardKayitlari.length} toplam kayıttan`} ikon="⚡" ton="orange"/>
                 </div>
 
-                <div className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,.9fr)]">
-                  <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-5">
-                    <div className="mb-4 flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-black">Değişim Nedenine Göre Güç Dağılımı</div>
-                        <div className="mt-1 text-xs text-slate-500">Her neden için karşılaştırılabilir güç kayıtları</div>
-                      </div>
+                <div className="ng-analysis-grid">
+                  <section className="ng-card ng-distribution" aria-labelledby="ng-distribution-title">
+                    <div className="ng-card-heading"><h3 id="ng-distribution-title">Nedenlere Göre Güç Dağılımı</h3><p>Artan, aynı kalan ve azalan güç kayıtları</p></div>
+                    <div className="ng-table-scroll" tabIndex={0} aria-label="Güç dağılımı tablosunu kaydır">
+                      <table className="ng-table">
+                        <colgroup><col style={{width:"24%"}}/><col style={{width:"9%"}}/><col style={{width:"17%"}}/><col style={{width:"17%"}}/><col style={{width:"17%"}}/><col style={{width:"16%"}}/></colgroup>
+                        <thead><tr><th scope="col">Değişim Nedeni</th><th scope="col">Kayıt</th><th scope="col" className="ng-up">↗ Artan</th><th scope="col" className="ng-same">→ Aynı</th><th scope="col" className="ng-down">↘ Azalan</th><th scope="col">Artış Oranı</th></tr></thead>
+                        <tbody>{nedenGucAnalizi.length===0&&<tr><td colSpan={6} className="ng-empty">Seçili filtrelerde kayıt bulunamadı.</td></tr>}{nedenGucAnalizi.map(item=><tr key={item.neden}>
+                          <th scope="row"><span className="ng-reason"><span className="ng-dot" style={{backgroundColor:item.renk}}/>{item.neden}</span></th>
+                          <td className="ng-count">{item.karsilastirilabilir}</td>
+                          <td><NedenGucHucre sayi={item.artan} oran={item.artisOrani} ton="emerald"/></td>
+                          <td><NedenGucHucre sayi={item.ayni} oran={item.ayniOrani} ton="blue"/></td>
+                          <td><NedenGucHucre sayi={item.azalan} oran={item.azalisOrani} ton="red"/></td>
+                          <td className="ng-up ng-count">%{item.artisOrani.toFixed(1)}</td>
+                        </tr>)}</tbody>
+                      </table>
                     </div>
-
-                    <div className="w-0 min-w-full max-w-full overflow-x-auto overscroll-x-contain">
-                      <div className="min-w-[760px]">
-                        <div className="grid grid-cols-[1.35fr_.55fr_1fr_1fr_1fr_.7fr] gap-3 border-b border-slate-200 px-3 pb-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          <div>Değişim Nedeni</div>
-                          <div>Kayıt</div>
-                          <div className="text-emerald-400">↗ Artan</div>
-                          <div className="text-blue-400">→ Aynı</div>
-                          <div className="text-red-400">↘ Azalan</div>
-                          <div>Artış Oranı</div>
-                        </div>
-
-                        <div className="mt-2 space-y-2">
-                          {nedenGucAnalizi.map(item=>(
-                            <div
-                              key={item.neden}
-                              className="grid grid-cols-[1.35fr_.55fr_1fr_1fr_1fr_.7fr] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3"
-                            >
-                              <div className="flex min-w-0 items-center gap-3">
-                                <span className="h-3 w-3 shrink-0 rounded-full" style={{backgroundColor:item.renk}}/>
-                                <span className="truncate text-xs font-black">{item.neden}</span>
-                              </div>
-
-                              <div className="text-sm font-black">{item.karsilastirilabilir}</div>
-
-                              <NedenGucHucre sayi={item.artan} oran={item.artisOrani} ton="emerald"/>
-                              <NedenGucHucre sayi={item.ayni} oran={item.ayniOrani} ton="blue"/>
-                              <NedenGucHucre sayi={item.azalan} oran={item.azalisOrani} ton="red"/>
-
-                              <div className="text-sm font-black text-emerald-400">
-                                %{item.artisOrani.toFixed(1)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                  </section>
+                  <section className="ng-card ng-transitions" aria-labelledby="ng-transitions-title">
+                    <div className="ng-card-heading"><h3 id="ng-transitions-title">En Sık Güç Geçişleri (kVA) <span className="ng-count-heading">Kayıt</span></h3><p>Sökülen → takılan güç (kVA)</p></div>
+                    <div className="ng-transition-list" tabIndex={0} aria-label="Nedenlere göre güç geçişleri">
+                      {nedenGucAnalizi.length===0&&<p className="ng-empty">Seçili filtrelerde kayıt bulunamadı.</p>}
+                      {nedenGucAnalizi.map(item=><div className="ng-transition" key={item.neden}>
+                        <span className="ng-reason"><span className="ng-dot" style={{backgroundColor:item.renk}}/>{item.neden}</span>
+                        <strong>{item.enSikGecisSayisi?item.enSikGecis:"Veri yok"}</strong>
+                        <span className="ng-transition-count" title={`${item.enSikGecisSayisi} kayıt`}>{item.enSikGecisSayisi}</span>
+                      </div>)}
                     </div>
-                  </div>
-
-                  <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-5">
-                    <div>
-                      <div className="text-sm font-black">Nedene Göre En Sık Güç Geçişleri</div>
-                      <div className="mt-1 text-xs text-slate-500">Sökülen → takılan güç</div>
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      {nedenGucAnalizi.map(item=>(
-                        <div key={item.neden} className="rounded-xl border border-slate-200 bg-white p-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:item.renk}}/>
-                              <span className="truncate text-xs font-black">{item.neden}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-500">En sık geçiş</span>
-                          </div>
-
-                          <div className="mt-2 flex items-center justify-between gap-3">
-                            <div className="truncate text-sm font-black">{item.enSikGecis} kVA</div>
-                            <span className="shrink-0 rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-black text-orange-300">
-                              {item.enSikGecisSayisi} kayıt
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  </section>
                 </div>
 
-                <div className="mt-5">
-                  <div className="mb-3 text-sm font-black">Öne Çıkan Özetler</div>
+                <div className="ng-highlights mt-5">
+                  <h3 className="mb-3 text-sm font-black">Öne Çıkan Özetler</h3>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <OzelOzet
-                      baslik="GÜÇ DEĞİŞİMİ KAYITLARINDA GERÇEK ARTIŞ ORANI"
+                      baslik="GÜÇ DEĞİŞİMİ: ARTIŞ ORANI"
                       deger={gucDegisimiNedeni ? `%${gucDegisimiNedeni.artisOrani.toFixed(1)}` : "-"}
                       alt={gucDegisimiNedeni ? `${gucDegisimiNedeni.artan} / ${gucDegisimiNedeni.karsilastirilabilir} kayıt` : "Veri yok"}
                       ton="emerald"
                     />
                     <OzelOzet
-                      baslik="ARIZA KAYITLARINDA GERÇEK ARTIŞ ORANI"
+                      baslik="ARIZA: ARTIŞ ORANI"
                       deger={arizaNedeni ? `%${arizaNedeni.artisOrani.toFixed(1)}` : "-"}
                       alt={arizaNedeni ? `${arizaNedeni.artan} / ${arizaNedeni.karsilastirilabilir} kayıt` : "Veri yok"}
                       ton="red"
@@ -1431,7 +1386,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   </div>
                 </div>
               </Panel>
-            </div>
+            </ViewportAnalysis>
 
             </>}
 
@@ -2080,6 +2035,23 @@ function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:stri
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
+function ViewportAnalysis({id,children}:{id:string;children:ReactNode}){
+  const container=useRef<HTMLDivElement>(null);
+  useEffect(()=>{
+    const element=container.current;if(!element)return;
+    let frame=0;
+    const measure=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
+      if(window.innerWidth<768){element.style.removeProperty("--analysis-height");return;}
+      const top=element.getBoundingClientRect().top+window.scrollY;
+      element.style.setProperty("--analysis-height",`${Math.max(430,Math.floor(window.innerHeight-top-16))}px`);
+    })};
+    const observer=new ResizeObserver(measure);
+    [document.getElementById("dashboard-filters"),document.getElementById("dashboard-hero")].forEach(e=>{if(e)observer.observe(e)});
+    window.addEventListener("resize",measure);measure();
+    return()=>{observer.disconnect();window.removeEventListener("resize",measure);cancelAnimationFrame(frame)};
+  },[]);
+  return <div ref={container} id={id} className="ng-viewport">{children}</div>;
+}
 function DashboardChartRow({year,children}:{year:string;children:ReactNode}){
   const row=useRef<HTMLDivElement>(null);
   useEffect(()=>{
@@ -2156,9 +2128,9 @@ function NedenGucHucre({sayi,oran,ton}:{sayi:number;oran:number;ton:"emerald"|"b
   }[ton];
 
   const text={
-    emerald:"text-emerald-400",
-    blue:"text-blue-400",
-    red:"text-red-400",
+    emerald:"text-emerald-700",
+    blue:"text-blue-700",
+    red:"text-red-700",
   }[ton];
 
   return <div>
@@ -2167,7 +2139,7 @@ function NedenGucHucre({sayi,oran,ton}:{sayi:number;oran:number;ton:"emerald"|"b
       <span className={`text-[10px] font-bold ${text}`}>%{oran.toFixed(1)}</span>
     </div>
     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
-      <div className={`h-full rounded-full ${bar}`} style={{width:`${Math.max(oran>0?3:0,oran)}%`}}/>
+      <div className={`h-full rounded-full ${bar}`} style={{width:`${oran}%`}}/>
     </div>
   </div>
 }
@@ -2197,7 +2169,7 @@ function GucKpi({baslik,sayi,alt,ikon,ton}:{baslik:string;sayi:number;alt:string
     <div className="flex items-start justify-between gap-3">
       <div>
         <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{baslik}</div>
-        <div className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{sayi}</div>
+        <div className="ng-kpi-value mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{sayi}</div>
         <div className="mt-1 text-[10px] font-bold">{alt}</div>
       </div>
       <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-current/15 bg-white text-xl font-black shadow-sm">{ikon}</div>
