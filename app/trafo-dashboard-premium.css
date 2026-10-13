@@ -506,3 +506,139 @@ main[data-page="ilce-analizi"] .district-table .district-rank{width:22px;height:
 .district-dialog-table-scroll td:last-child{padding-left:4px;padding-right:4px}
 .district-dialog-table-scroll td button{white-space:nowrap}
 .district-dialog-table-scroll td:first-child{white-space:nowrap;font-size:11px}
+
+/* Transformer power analysis shares the analysis layout. */
+/* Standalone reason × power analysis. */
+main[data-page="trafo-guc-analizi"] section>div.mx-auto{max-width:none!important;padding:12px 16px 8px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-hero{padding-bottom:8px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-hero h1{font-size:23px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-hero p{font-size:12px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters{padding:10px 12px!important;margin-bottom:10px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters>div:first-child{grid-template-columns:minmax(80px,.8fr) minmax(90px,1fr) minmax(110px,1fr) minmax(110px,1fr) auto auto!important;gap:7px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters>div:first-child>button{grid-column:auto!important;min-height:34px!important;padding:5px 8px!important;font-size:11px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters :is(input,select){height:34px!important;min-height:34px!important;padding:5px 7px!important;font-size:12px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters label>span{font-size:9px!important;margin-bottom:3px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters>div:nth-child(2){display:none}
+main[data-page="trafo-guc-analizi"] #dashboard-filters>div:last-child{margin-top:8px!important;gap:4px!important}
+main[data-page="trafo-guc-analizi"] #dashboard-filters>div.mt-3.flex.flex-wrap.gap-2>button{min-height:27px!important;padding:4px 7px!important;font-size:10px!important;line-height:15px!important}
+main[data-page="trafo-guc-analizi"] #trafo-guc-analizi{margin-top:0!important}
+main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section{padding:14px!important;border-radius:14px!important;box-shadow:0 4px 18px #172b4605!important}
+main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section>div:first-child h2{font-size:16px!important}
+main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section>div:first-child p{font-size:11px!important;margin-top:2px!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis{margin-top:10px!important;gap:9px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis>div{padding:9px 11px!important;border-radius:11px!important;box-shadow:none!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis>div>div{gap:6px!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis .text-3xl{font-size:25px!important;line-height:1.1!important;margin-top:3px!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis .text-\[10px\]{font-size:10px!important;line-height:1.2!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis .mt-2{margin-top:3px!important;font-size:11px!important}
+main[data-page="trafo-guc-analizi"] .ng-kpis .h-10{height:30px!important;width:30px!important;font-size:17px!important;box-shadow:none!important}
+main[data-page="trafo-guc-analizi"] .ng-analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(240px,1fr);gap:12px;margin-top:12px;min-height:0}
+main[data-page="trafo-guc-analizi"] .ng-card{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid #e1e8f0;border-radius:11px;background:#fbfcfe;padding:12px;overflow:hidden}
+main[data-page="trafo-guc-analizi"] .ng-card-heading{flex-shrink:0;margin-bottom:9px}
+main[data-page="trafo-guc-analizi"] .ng-card-heading h3{font-size:13px;line-height:18px;font-weight:700;color:#1e3552}
+main[data-page="trafo-guc-analizi"] .ng-card-heading p{font-size:11px;line-height:16px;color:#64748b;margin-top:2px}
+main[data-page="trafo-guc-analizi"] .ng-table-scroll{min-height:0;flex:1;overflow:auto;scrollbar-width:thin;overscroll-behavior:contain;border:1px solid #e3eaf3;border-radius:8px;background:white}
+main[data-page="trafo-guc-analizi"] .ng-table{table-layout:fixed;min-width:650px;width:100%;height:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+main[data-page="trafo-guc-analizi"] .ng-table :is(th,td){padding:7px 9px;border-bottom:1px solid #e8edf4;text-align:left;vertical-align:middle;font-size:12px;line-height:16px;white-space:normal;letter-spacing:normal}
+main[data-page="trafo-guc-analizi"] .ng-table thead th{position:sticky;top:0;background:#eef3fa;color:#526781;font-size:10px;font-weight:700;height:34px;z-index:1}
+main[data-page="trafo-guc-analizi"] .ng-table tbody th{font-weight:650}
+main[data-page="trafo-guc-analizi"] .ng-table tbody tr:last-child :is(th,td){border-bottom:0}
+main[data-page="trafo-guc-analizi"] .ng-table tbody tr:hover{background:#f6f9ff}
+main[data-page="trafo-guc-analizi"] .ng-reason{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;line-height:15px;font-weight:650}
+main[data-page="trafo-guc-analizi"] .ng-dot{width:8px;height:8px;flex-shrink:0;border-radius:50%}
+main[data-page="trafo-guc-analizi"] .ng-count{font-weight:750}
+main[data-page="trafo-guc-analizi"] .ng-up{color:#047857!important}
+main[data-page="trafo-guc-analizi"] .ng-same{color:#1d4ed8!important}
+main[data-page="trafo-guc-analizi"] .ng-down{color:#b91c1c!important}
+main[data-page="trafo-guc-analizi"] .ng-table .mt-1\.5{margin-top:3px!important;height:4px!important}
+main[data-page="trafo-guc-analizi"] .ng-table .text-\[10px\]{font-size:10px!important}
+main[data-page="trafo-guc-analizi"] .ng-transition-list{display:grid;grid-template-rows:repeat(8,minmax(28px,1fr));gap:4px;min-height:0;flex:1;overflow:auto;scrollbar-width:thin}
+main[data-page="trafo-guc-analizi"] .ng-transition{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 27px;align-items:center;gap:6px;min-height:28px;background:#fff;border:1px solid #e7edf5;border-radius:7px;padding:4px 7px}
+main[data-page="trafo-guc-analizi"] .ng-transition strong{font-size:12px;font-weight:700;line-height:16px;white-space:nowrap;color:#1e3552;text-align:right;font-variant-numeric:tabular-nums}
+main[data-page="trafo-guc-analizi"] .ng-transition-count{background:#fff2e8;color:#b45309;border-radius:5px;padding:2px 3px;text-align:center;font-size:11px;font-weight:700}
+main[data-page="trafo-guc-analizi"] .ng-transition-note{font-size:10px;color:#64748b;line-height:14px;margin-top:7px;flex-shrink:0}
+main[data-page="trafo-guc-analizi"] .ng-highlights{margin-top:10px!important}
+main[data-page="trafo-guc-analizi"] .ng-highlights h3{font-size:12px!important;margin-bottom:6px!important}
+main[data-page="trafo-guc-analizi"] .ng-highlights>div{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}
+main[data-page="trafo-guc-analizi"] .ng-highlights>div>div{padding:8px 10px!important;border-radius:9px!important;box-shadow:none!important}
+main[data-page="trafo-guc-analizi"] .ng-highlights .text-2xl{font-size:21px!important;margin-top:4px!important;line-height:1.1!important}
+main[data-page="trafo-guc-analizi"] .ng-highlights .tracking-wider{letter-spacing:.02em!important;font-size:9px!important;line-height:12px!important}
+@media(min-width:768px){
+ main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section{height:var(--analysis-height,520px);display:flex;flex-direction:column}
+ main[data-page="trafo-guc-analizi"] .ng-analysis-grid{flex:1}
+ main[data-page="trafo-guc-analizi"] :is(.ng-kpis,.ng-highlights){flex-shrink:0}
+}
+@media(min-width:768px) and (max-height:849px){
+ main[data-page="trafo-guc-analizi"] #dashboard-hero p{display:none}
+ main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section{padding:10px!important}
+ main[data-page="trafo-guc-analizi"] .ng-kpis>div{padding:7px 9px!important}
+ main[data-page="trafo-guc-analizi"] .ng-kpis .text-3xl{font-size:21px!important}
+ main[data-page="trafo-guc-analizi"] .ng-card{padding:9px}
+ main[data-page="trafo-guc-analizi"] .ng-card-heading{margin-bottom:6px}
+ main[data-page="trafo-guc-analizi"] .ng-table :is(th,td){padding:4px 7px}
+ main[data-page="trafo-guc-analizi"] .ng-highlights>div>div{padding:6px 8px!important}
+ main[data-page="trafo-guc-analizi"] .ng-highlights .text-2xl{font-size:19px!important}
+}
+@media(min-width:768px) and (max-width:1100px){
+ main[data-page="trafo-guc-analizi"] .ng-analysis-grid{grid-template-columns:minmax(0,1.35fr) minmax(230px,1fr);gap:8px}
+ main[data-page="trafo-guc-analizi"] .ng-transition{padding:3px 5px;gap:3px}
+ main[data-page="trafo-guc-analizi"] .ng-transition .ng-reason{font-size:10px;line-height:13px;gap:4px}
+ main[data-page="trafo-guc-analizi"] .ng-transition strong{font-size:11px}
+}
+@media(max-width:767px){
+ main[data-page="trafo-guc-analizi"] #dashboard-filters>div:first-child{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ main[data-page="trafo-guc-analizi"] #dashboard-filters :is(input,select){height:44px!important;font-size:16px!important}
+ main[data-page="trafo-guc-analizi"] .ng-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ main[data-page="trafo-guc-analizi"] .ng-analysis-grid{grid-template-columns:1fr}
+ main[data-page="trafo-guc-analizi"] .ng-table{height:auto}
+ main[data-page="trafo-guc-analizi"] .ng-highlights>div{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ main[data-page="trafo-guc-analizi"] .ng-transition-list{overflow:visible}
+}
+main[data-page="trafo-guc-analizi"] .ng-kpis .ng-kpi-value{font-size:25px!important;line-height:1.1!important;margin-top:3px!important}
+main[data-page="trafo-guc-analizi"] .ng-table{height:auto}
+main[data-page="trafo-guc-analizi"] .ng-table tbody tr{height:clamp(30px,calc((var(--analysis-height,520px) - 420px)/8),64px)}
+main[data-page="trafo-guc-analizi"] .ng-empty{padding:20px!important;text-align:center!important;font-size:12px!important;color:#64748b}
+@media(min-width:768px) and (max-height:849px){main[data-page="trafo-guc-analizi"] .ng-kpis .ng-kpi-value{font-size:21px!important}}
+
+main[data-page="trafo-guc-analizi"] .ng-count-heading{float:right;font-size:10px;font-weight:600;color:#64748b}
+main[data-page="trafo-guc-analizi"] .ng-transition-list{grid-template-rows:repeat(8,minmax(24px,1fr));gap:3px}
+main[data-page="trafo-guc-analizi"] .ng-transition{min-height:24px;grid-template-columns:minmax(92px,1.15fr) minmax(72px,1fr) 24px;gap:3px;padding:3px 5px}
+main[data-page="trafo-guc-analizi"] .ng-transition .ng-reason{white-space:nowrap}
+@media(min-width:768px) and (max-height:849px){main[data-page="trafo-guc-analizi"] .ng-table tbody tr{height:24px}main[data-page="trafo-guc-analizi"] .ng-table :is(th,td){padding:3px 7px}main[data-page="trafo-guc-analizi"] .ng-table thead th{height:28px}}
+
+main[data-page="trafo-guc-analizi"] .ng-table thead th{padding-top:6px!important;padding-bottom:6px!important;background:#eef3fa!important}
+@media(min-width:768px) and (max-height:849px){
+ main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section>div:first-child p,main[data-page="trafo-guc-analizi"] .ng-card-heading p{display:none}
+ main[data-page="trafo-guc-analizi"] #trafo-guc-analizi>section>div:first-child button{height:30px!important;min-height:30px!important;width:30px!important;padding:0!important}
+ main[data-page="trafo-guc-analizi"] .ng-table thead th{height:24px;padding-top:3px!important;padding-bottom:3px!important;line-height:14px!important}
+ main[data-page="trafo-guc-analizi"] .ng-table tbody tr{height:20px}
+ main[data-page="trafo-guc-analizi"] .ng-table tbody :is(th,td){padding:2px 7px;line-height:12px;font-size:11px}
+ main[data-page="trafo-guc-analizi"] .ng-table tbody td>div{position:relative;padding-bottom:3px}
+ main[data-page="trafo-guc-analizi"] .ng-table tbody td>div>.flex>span{font-size:10px!important;line-height:12px!important}
+ main[data-page="trafo-guc-analizi"] .ng-table .mt-1\.5{position:absolute;left:0;right:0;bottom:0;height:2px!important;margin:0!important}
+ main[data-page="trafo-guc-analizi"] .ng-table .ng-reason{line-height:12px}
+ main[data-page="trafo-guc-analizi"] .ng-transition-list{grid-template-rows:repeat(8,minmax(20px,1fr));gap:2px}
+ main[data-page="trafo-guc-analizi"] .ng-transition{min-height:20px;padding:2px 5px}
+ main[data-page="trafo-guc-analizi"] .ng-transition strong,main[data-page="trafo-guc-analizi"] .ng-transition .ng-reason{line-height:12px}
+ main[data-page="trafo-guc-analizi"] .ng-transition-count{line-height:12px;padding:1px 3px}
+}
+
+
+main[data-page="trafo-guc-analizi"] .power-panels{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+main[data-page="trafo-guc-analizi"] .power-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+main[data-page="trafo-guc-analizi"] .power-leading{flex-shrink:0;max-width:45%;border:1px solid #f2dfc9;background:#fff5e8;color:#a45b16;padding:5px 7px;border-radius:7px;font-size:11px;font-weight:650;line-height:16px;white-space:normal}
+main[data-page="trafo-guc-analizi"] .power-leading-removed{border-color:#dbe6f7;background:#eff5ff;color:#3b608e}
+main[data-page="trafo-guc-analizi"] .power-table{min-width:330px;height:auto}
+main[data-page="trafo-guc-analizi"] .power-table[data-full="true"]{height:100%}
+main[data-page="trafo-guc-analizi"] .power-table tbody tr{height:40px}
+main[data-page="trafo-guc-analizi"] .power-table[data-full="true"] tbody tr{height:auto}
+main[data-page="trafo-guc-analizi"] .power-table th{white-space:nowrap}
+main[data-page="trafo-guc-analizi"] .power-table tbody th{font-size:12px;color:#243b58}
+main[data-page="trafo-guc-analizi"] .power-table tbody td>div{padding:0!important;position:static}
+main[data-page="trafo-guc-analizi"] .power-track{height:6px;overflow:hidden;background:#fff0dd;border-radius:5px}
+main[data-page="trafo-guc-analizi"] .power-track>div{height:100%;background:#f59e0b;border-radius:5px}
+main[data-page="trafo-guc-analizi"] .power-track-blue{background:#e8f0fb}
+main[data-page="trafo-guc-analizi"] .power-track-blue>div{background:#3b82f6}
+main[data-page="trafo-guc-analizi"] .ng-table-scroll{scrollbar-width:thin}
+@media(min-width:768px) and (max-height:849px){main[data-page="trafo-guc-analizi"] .power-table tbody :is(th,td){padding:4px 7px;line-height:15px;font-size:11px}main[data-page="trafo-guc-analizi"] .power-table tbody tr{height:30px}}
+@media(max-width:767px){main[data-page="trafo-guc-analizi"] .power-panels{grid-template-columns:1fr!important}main[data-page="trafo-guc-analizi"] .power-table[data-full="true"]{height:auto}}

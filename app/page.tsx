@@ -805,6 +805,7 @@ async function kayitlariGetir(){
   },[dashboardKayitlari]);
 
   const gucToplam=Math.max(1,gucAnalizi.karsilastirilabilir);
+  const takilanGucKayitSayisi=dashboardKayitlari.filter(record=>!!record.takilan_gucu).length;
 
   const nedenGucAnalizi=useMemo(()=>{
     const sayiDeger=(v:string|null)=>{
@@ -1397,75 +1398,37 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </ViewportAnalysis>}
 
             {sayfa==="trafo-guc-analizi"&&<>
-            <div className="mt-5 scroll-mt-24" id="trafo-guc-analizi">
+            <ViewportAnalysis id="trafo-guc-analizi">
               <Panel
-                baslik="Trafo Güç Analizi"
+                baslik="Güç Karşılaştırması"
                 altBaslik="Sökülen ve takılan trafo güçlerinin karşılaştırması"
                 daraltilabilir acik={acikAnalizler["trafo-guc-analizi"]} onToggle={()=>analizAcKapa("trafo-guc-analizi")}
               >
-                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="ng-kpis mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
                   <GucKpi baslik="GÜÇ ARTIRILAN" sayi={gucAnalizi.artan} alt={`%${((gucAnalizi.artan/gucToplam)*100).toFixed(1)}`} ikon="↗" ton="emerald"/>
                   <GucKpi baslik="GÜÇ AZALTILAN" sayi={gucAnalizi.azalan} alt={`%${((gucAnalizi.azalan/gucToplam)*100).toFixed(1)}`} ikon="↘" ton="red"/>
                   <GucKpi baslik="AYNI GÜÇ" sayi={gucAnalizi.ayni} alt={`%${((gucAnalizi.ayni/gucToplam)*100).toFixed(1)}`} ikon="→" ton="blue"/>
                   <GucKpi baslik="KARŞILAŞTIRILABİLEN" sayi={gucAnalizi.karsilastirilabilir} alt={`${dashboardKayitlari.length} toplam kayıttan`} ikon="⚡" ton="orange"/>
                 </div>
 
-                <div className="mt-5 grid gap-5 xl:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,.06)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-black">En Çok Kullanılan Takılan Güçler</div>
-                        <div className="mt-1 text-xs text-slate-500">İlk 8 güç değeri</div>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-right">
-                        <div className="text-[9px] font-black uppercase text-slate-500">En Çok</div>
-                        <div className="text-sm font-black text-orange-400">{String(gucAnalizi.enCokTakilan[0])} kVA</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {gucAnalizi.takilanSirali.length ? gucAnalizi.takilanSirali.map(([guc,sayi],index)=>{
-                        const max=Math.max(1,Number(gucAnalizi.takilanSirali[0]?.[1]||1));
-                        return <div key={guc}>
-                          <div className="mb-1.5 flex items-center justify-between text-xs">
-                            <span className="font-black">{index+1}. {guc} kVA</span>
-                            <span className="font-bold text-slate-400">{sayi} kayıt</span>
-                          </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                            <div className="h-full rounded-full bg-orange-500" style={{width:`${Math.max(4,(Number(sayi)/max)*100)}%`}}/>
-                          </div>
-                        </div>
-                      }) : <BosAlan>Takılan güç verisi bulunmuyor.</BosAlan>}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,.06)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-black">En Sık Güç Geçişleri</div>
-                        <div className="mt-1 text-xs text-slate-500">Sökülen güç → takılan güç</div>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-right">
-                        <div className="text-[9px] font-black uppercase text-slate-500">En Çok Sökülen</div>
-                        <div className="text-sm font-black text-slate-200">{String(gucAnalizi.enCokSokulen[0])} kVA</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-2">
-                      {gucAnalizi.gecisSirali.length ? gucAnalizi.gecisSirali.map(([gecis,sayi],index)=>(
-                        <div key={gecis} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-xs font-black text-slate-400">{index+1}</div>
-                            <div className="truncate text-sm font-black">{gecis} kVA</div>
-                          </div>
-                          <div className="shrink-0 rounded-full bg-orange-500/15 px-3 py-1 text-xs font-black text-orange-300">{sayi} kayıt</div>
-                        </div>
-                      )) : <BosAlan>Karşılaştırılabilir güç geçişi bulunmuyor.</BosAlan>}
-                    </div>
-                  </div>
+                <div className="ng-analysis-grid power-panels">
+                  <section className="ng-card power-card" aria-labelledby="installed-power-title">
+                    <div className="ng-card-heading power-heading"><div><h3 id="installed-power-title">En Çok Kullanılan Takılan Güçler</h3><p>İlk 8 güç değeri · toplam içindeki payı</p></div><span className="power-leading">{gucAnalizi.takilanSirali.length?`${gucAnalizi.enCokTakilan[0]} kVA`:"Veri yok"}</span></div>
+                    <div className="ng-table-scroll"><table className="ng-table power-table" data-full={gucAnalizi.takilanSirali.length===8}><colgroup><col style={{width:"28%"}}/><col style={{width:"17%"}}/><col style={{width:"18%"}}/><col style={{width:"37%"}}/></colgroup><thead><tr><th scope="col">Güç (kVA)</th><th scope="col">Kayıt</th><th scope="col">Pay</th><th scope="col">Dağılım</th></tr></thead><tbody>{gucAnalizi.takilanSirali.length?gucAnalizi.takilanSirali.map(([guc,sayi])=>{
+                      const share=takilanGucKayitSayisi?Number(sayi)/takilanGucKayitSayisi*100:0;
+                      return <tr key={guc}><th scope="row">{guc}</th><td className="ng-count">{sayi}</td><td>%{share.toFixed(1)}</td><td><div className="power-track"><div style={{width:`${share}%`}}/></div></td></tr>;
+                    }):<tr><td colSpan={4} className="ng-empty">Takılan güç verisi bulunmuyor.</td></tr>}</tbody></table></div>
+                  </section>
+                  <section className="ng-card power-card" aria-labelledby="power-transitions-title">
+                    <div className="ng-card-heading power-heading"><div><h3 id="power-transitions-title">En Sık Güç Geçişleri</h3><p>Sökülen → takılan güç (kVA) · ilk 8 geçiş</p></div><span className="power-leading power-leading-removed">{gucAnalizi.gecisSirali.length?`${gucAnalizi.enCokSokulen[0]} kVA sökülen`:"Veri yok"}</span></div>
+                    <div className="ng-table-scroll"><table className="ng-table power-table power-transition-table" data-full={gucAnalizi.gecisSirali.length===8}><colgroup><col style={{width:"40%"}}/><col style={{width:"17%"}}/><col style={{width:"18%"}}/><col style={{width:"25%"}}/></colgroup><thead><tr><th scope="col">Güç Geçişi</th><th scope="col">Kayıt</th><th scope="col">Pay</th><th scope="col">Dağılım</th></tr></thead><tbody>{gucAnalizi.gecisSirali.length?gucAnalizi.gecisSirali.map(([gecis,sayi])=>{
+                      const share=Number(sayi)/gucToplam*100;
+                      return <tr key={gecis}><th scope="row">{gecis}</th><td className="ng-count">{sayi}</td><td>%{share.toFixed(1)}</td><td><div className="power-track power-track-blue"><div style={{width:`${share}%`}}/></div></td></tr>;
+                    }):<tr><td colSpan={4} className="ng-empty">Karşılaştırılabilir güç geçişi bulunmuyor.</td></tr>}</tbody></table></div>
+                  </section>
                 </div>
               </Panel>
-            </div>
+            </ViewportAnalysis>
 
             </>}
 
