@@ -1594,28 +1594,6 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             </>}
 
-{sayfa==="dashboard"&&<>
-<div className="mt-5"><Panel baslik="Son Trafo Değişimleri" altBaslik="En son eklenen kayıtlar • tek bakışta önce / sonra" sagIcerik={<button onClick={()=>sayfayaGit("kayitlar")} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">Tüm Kayıtlar →</button>}>
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">{kayitlar.slice(0,8).map(k=><button type="button" key={k.id} onClick={()=>setDetayKayit(k)} className="group rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-[0_8px_24px_rgba(15,23,42,.06)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_14px_34px_rgba(15,23,42,.10)]">
-                <div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-black text-slate-900">{k.tr||k.trafo_id||"Trafo Kaydı"}</div><div className="mt-1 truncate text-[10px] font-bold text-slate-500">{k.ilce||"-"}{k.mahalle?` / ${k.mahalle}`:""}</div></div><NedenEtiketi neden={k.degisim_nedeni}/></div>
-                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2"><div className="rounded-xl border border-red-100 bg-red-50 p-3"><div className="text-[8px] font-black uppercase text-red-500">Sökülen</div><div className="mt-1 text-sm font-black text-red-800">{k.sokulen_gucu||"-"} kVA</div><div className="mt-1 truncate text-[9px] text-red-500">{k.sokulen_markasi||"-"}</div></div><div className="text-lg font-black text-slate-300">→</div><div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3"><div className="text-[8px] font-black uppercase text-emerald-600">Takılan</div><div className="mt-1 text-sm font-black text-emerald-800">{k.takilan_gucu||"-"} kVA</div><div className="mt-1 truncate text-[9px] text-emerald-600">{k.takilan_markasi||"-"}</div></div></div>
-                <div className="mt-3 flex items-center justify-between text-[10px]"><span className="font-bold text-slate-400">{tarihGoster(k.tarih)}</span><span className="font-black text-blue-600 group-hover:translate-x-0.5">Detay →</span></div>
-              </button>)}</div>
-            </Panel></div>
-            
-            
-            <div className="mt-5"><Panel baslik="⚡ Son Sistem Hareketleri" altBaslik="Son kayıt işlemleri"><div className="mt-4 grid gap-3 lg:grid-cols-2">{(yonetici?auditLoglar.slice(0,6).map(l=>({id:`a-${l.id}`,tarih:l.created_at,ikon:l.action==="INSERT"?"➕":l.action==="UPDATE"?"✏️":"🗑️",baslik:`Kayıt ${l.action==="INSERT"?"eklendi":l.action==="UPDATE"?"güncellendi":"silindi"}`,alt:`#${l.record_id||"-"} • ${l.user_email||"Kullanıcı"}`})):[]).map(x=><div key={x.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">{x.ikon}</div><div className="min-w-0"><div className="truncate text-xs font-black text-slate-800">{x.baslik}</div><div className="mt-1 truncate text-[10px] text-slate-400">{x.alt}</div></div><div className="ml-auto shrink-0 text-[9px] text-slate-400">{new Date(x.tarih).toLocaleDateString("tr-TR")}</div></div>)}</div></Panel></div>
-
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-                  <span className="font-black text-slate-700">Sistem Durumu</span>
-                  <span className="font-bold text-emerald-600">● Manuel senkron • otomatik veri yenileme kapalı</span>
-                </div>
-                {yonetici&&<button type="button" onClick={()=>sayfayaGit("yedekleme")} className="self-start rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 hover:bg-slate-100 sm:self-auto">Yedekleme Merkezi →</button>}
-              </div>
-            </div>
-            </>}
           </>}
 
           {sayfa==="yeni"&&duzenleyebilir&&<form onSubmit={kaydet} className="space-y-5">
