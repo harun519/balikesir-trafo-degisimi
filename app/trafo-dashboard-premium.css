@@ -61,11 +61,11 @@ main[data-overview="true"] #degisim-nedenleri>#zaman-analizi{order:2!important}
 main[data-overview="true"] #zaman-analizi .overflow-x-auto>div{min-width:100%!important}
 
 /* Each analysis is a standalone page reached from the sidebar. */
-main[data-page="degisim-nedenleri"] #degisim-nedenleri{grid-template-columns:1fr!important}
-main[data-page="degisim-nedenleri"] .trafo-reason-layout{display:grid!important;grid-template-columns:200px minmax(0,1fr);align-items:center;gap:20px!important;margin-top:12px}
-main[data-page="degisim-nedenleri"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-main[data-page="degisim-nedenleri"] #degisim-nedenleri .trafo-reason-list button{min-height:42px!important}
+main[data-page="dashboard"] #degisim-nedenleri{grid-template-columns:1fr!important}
+main[data-page="dashboard"] .trafo-reason-layout{display:grid!important;grid-template-columns:200px minmax(0,1fr);align-items:center;gap:20px!important;margin-top:12px}
+main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+main[data-page="dashboard"] #degisim-nedenleri .trafo-reason-list button{min-height:42px!important}
 main[data-overview="true"] section>div.mx-auto>div[id$="analizi"]{margin-top:14px!important}
 main[data-page="zaman-analizi"] #zaman-analizi>section{padding:16px!important;border:1px solid #dfe7ef!important;border-radius:12px!important;box-shadow:0 3px 14px #20354b04!important}
 main[data-overview="true"] aside nav button[aria-current="page"]{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
-@media(max-width:760px){main[data-page="degisim-nedenleri"] .trafo-reason-layout{grid-template-columns:1fr!important;gap:10px!important}}
+@media(max-width:760px){main[data-page="dashboard"] .trafo-reason-layout{grid-template-columns:1fr!important;gap:10px!important}}

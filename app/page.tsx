@@ -30,7 +30,6 @@ const BU_YIL = new Date().getFullYear();
 const YIL_SECENEKLERI = Array.from({ length: Math.max(BU_YIL + 2, 2026) - 2017 + 1 }, (_, i) => String(2017 + i));
 
 const ANALIZ_SAYFALARI = {
-  "degisim-nedenleri": {baslik:"Değişim Nedenleri",aciklama:"Trafo değişim nedenlerinin seçili filtreye göre dağılımı."},
   "zaman-analizi": {baslik:"Yıllık / Aylık Analiz",aciklama:"Trafo değişimlerinin yıllara ve aylara göre eğilimi."},
   "neden-guc-analizi": {baslik:"Neden × Güç Analizi",aciklama:"Değişim nedenleri ile güç geçişlerini birlikte inceleyin."},
   "ilce-analizi": {baslik:"İlçe Analizi",aciklama:"İlçelere göre trafo değişimlerinin dağılımı."},
@@ -1301,7 +1300,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             </>}
 
-            {sayfa==="degisim-nedenleri"&&<div id="degisim-nedenleri" className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 items-stretch gap-3.5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            {sayfa==="dashboard"&&<div id="degisim-nedenleri" className="mt-5 grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] scroll-mt-24 items-stretch gap-3.5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
               <Panel baslik="Değişim Nedenleri" altBaslik="Seçili filtreye göre dağılım" className="h-full" daraltilabilir acik={acikAnalizler["degisim-nedenleri"]} onToggle={()=>analizAcKapa("degisim-nedenleri")}>
                 <div className="trafo-reason-layout flex min-h-[430px] flex-col"><div className="trafo-donut-wrap flex flex-1 items-center justify-center py-5"><div className="trafo-donut relative h-44 w-44 rounded-full sm:h-48 sm:w-48" style={{background:`conic-gradient(${donutGradient})`}}><div className="absolute inset-7 flex flex-col items-center justify-center rounded-full border border-slate-200 bg-white"><div className="text-3xl font-black">{dashboardKayitlari.length}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Toplam</div></div></div></div>
                   <div className="trafo-reason-list grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">{NEDENLER.map(n=><button type="button" onClick={()=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,neden:n.ad,baslangic:dashboardBaslangic,bitis:dashboardBitis})} key={n.ad} className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50/60"><div className="flex min-w-0 items-center gap-2.5"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{backgroundColor:n.renk}}/><span className="truncate text-[11px] font-bold text-slate-700">{n.ad}</span></div><span className="ml-3 text-sm font-black">{nedenSayilari[n.ad]||0} →</span></button>)}</div>
@@ -1913,7 +1912,6 @@ function Nav({sayfa,duzenlenenId,formTemizle,git,bolumeGit,misafirModu,rol}:{say
   return <nav className="flex-1 space-y-2 overflow-y-auto p-3"><MenuButonu aktif={sayfa==="dashboard"} onClick={()=>git("dashboard")}>📊 Kontrol Paneli</MenuButonu>
 <div className="my-2 border-t border-slate-200 pt-2">
   <div className="mb-1 px-3 text-[9px] font-black uppercase tracking-[.18em] text-slate-600">ANALİZLER</div>
-  <MenuAlt aktif={sayfa==="degisim-nedenleri"} onClick={()=>bolumeGit("degisim-nedenleri")}>◉ Değişim Nedenleri</MenuAlt>
   <MenuAlt aktif={sayfa==="zaman-analizi"} onClick={()=>bolumeGit("zaman-analizi")}>▥ Yıllık / Aylık Analiz</MenuAlt>
   <MenuAlt aktif={sayfa==="neden-guc-analizi"} onClick={()=>bolumeGit("neden-guc-analizi")}>⚡ Neden × Güç Analizi</MenuAlt>
   <MenuAlt aktif={sayfa==="ilce-analizi"} onClick={()=>bolumeGit("ilce-analizi")}>📍 İlçe Analizi</MenuAlt>
