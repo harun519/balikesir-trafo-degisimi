@@ -1670,73 +1670,73 @@ const filtrelenmisKayitlar=useMemo(()=>{
             </Panel></div>
           </section>}
 
-          {sayfa==="yedekleme"&&yonetici&&<>
-            <div className="mb-5">
-              <div className="text-2xl font-black text-slate-900">💾 Yedekleme Merkezi</div>
+          {sayfa==="yedekleme"&&yonetici&&<section id="trafo-backups">
+            <div className="backup-header">
+              <div className="text-2xl font-black text-slate-900">Yedekleme Merkezi</div>
               <div className="mt-1 text-sm text-slate-500">Otomatik ve manuel sunucu yedekleri ile dışa aktarma araçlarını tek yerden yönetin.</div>
             </div>
 
-            <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="backup-summary">
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Otomatik Yedekleme</div>
-                <div className="mt-2 flex items-center gap-2 text-lg font-black text-emerald-800"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500"/> AKTİF</div>
-                <div className="mt-1 text-xs text-emerald-600">2 haftada bir otomatik</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Yedekleme Takvimi</div>
+                <div className="mt-2 flex items-center gap-2 text-lg font-black text-emerald-800"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500"/> PLANLI</div>
+                <div className="mt-1 text-xs text-emerald-600">Her ayın 1 ve 15. günü</div>
               </div>
               <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
                 <div className="text-[10px] font-black uppercase tracking-wider text-blue-600">Son Sunucu Yedeği</div>
-                <div className="mt-2 text-base font-black text-blue-900">{sistemYedekleri[0]?.created_at?new Date(sistemYedekleri[0].created_at).toLocaleString("tr-TR"):"Henüz yok"}</div>
-                <div className="mt-1 text-xs text-blue-600">{sistemYedekleri[0]?baytGoster(sistemYedekleri[0].size):"İlk yedek bekleniyor"}</div>
+                <div className="mt-2 text-base font-black text-blue-900">{sistemYedekleri[0]?.created_at?new Date(sistemYedekleri[0].created_at).toLocaleString("tr-TR"):yedekListesiYukleniyor?"Yükleniyor…":sunucuYedekHata?"Bilgi alınamadı":"Henüz yok"}</div>
+                <div className="mt-1 text-xs text-blue-600">{sistemYedekleri[0]?baytGoster(sistemYedekleri[0].size):sunucuYedekHata?"Listeyi yenileyerek tekrar deneyin":"Sunucudaki son yedek"}</div>
               </div>
               <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
                 <div className="text-[10px] font-black uppercase tracking-wider text-violet-600">Yedek Sayısı</div>
-                <div className="mt-2 text-2xl font-black text-violet-900">{sistemYedekleri.length}</div>
+                <div className="mt-2 text-2xl font-black text-violet-900">{yedekListesiYukleniyor?"…":sunucuYedekHata&&!sistemYedekleri.length?"—":sistemYedekleri.length}</div>
                 <div className="mt-1 text-xs text-violet-600">Sunucuda saklanan sistem yedeği</div>
               </div>
             </div>
 
-            <Panel baslik="☁️ Sunucu Yedeği" altBaslik="Supabase verileri güvenli özel depolama alanına JSON olarak kaydedilir">
-              <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-5">
+            <div className="backup-main-grid"><div className="backup-create"><Panel baslik="Sunucu Yedeği" altBaslik="Supabase verileri güvenli özel depolama alanına JSON olarak kaydedilir">
+              <div className="backup-create-content">
+                <div className="backup-create-action">
                   <div className="text-xl font-black text-slate-900">Tam Sistem Yedeği</div>
                   <div className="mt-2 max-w-2xl text-xs leading-6 text-slate-600">Mevcut uygulama verileri sunucuda tek yedek dosyasında saklanır.</div>
-                  <button type="button" onClick={sunucuYedegiAl} disabled={sunucuYedekleniyor} className="mt-5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 disabled:opacity-50">{sunucuYedekleniyor?"Yedek Alınıyor...":"💾 Şimdi Tam Yedek Al"}</button>
+                  <button type="button" onClick={sunucuYedegiAl} disabled={sunucuYedekleniyor} className="mt-5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 disabled:opacity-50">{sunucuYedekleniyor?"Yedek Alınıyor...":"Şimdi Tam Yedek Al"}</button>
                 </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                  <div className="text-sm font-black text-emerald-800">✓ Otomatik Koruma</div>
-                  <div className="mt-2 text-xs leading-6 text-emerald-700">Vercel 2 haftada bir otomatik yedek alır. Yeni yedek başarıyla oluşunca önceki yedek silinir ve yalnızca son 1 yedek saklanır.</div>
+                <div className="backup-policy">
+                  <div className="text-sm font-black text-emerald-800">Saklama Düzeni</div>
+                  <div className="mt-2 text-xs leading-6 text-emerald-700">Otomatik yedekleme her ayın 1 ve 15. günü için planlanmıştır. Yeni yedek başarıyla oluşunca önceki yedek silinir ve yalnızca son 1 yedek saklanır.</div>
                 </div>
               </div>
-              {sunucuYedekHata&&<div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">{sunucuYedekHata}</div>}
-            </Panel>
+              {sunucuYedekHata&&<div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">{sunucuYedekHata}</div>}
+            </Panel></div>
 
-            <div className="mt-5">
-              <Panel baslik="🕘 Yedek Geçmişi" altBaslik="Sunucuda yalnızca son 1 sistem yedeği saklanır">
-                <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                  {yedekListesiYukleniyor?<div className="p-5 text-sm text-slate-500">Yedekler yükleniyor...</div>:sistemYedekleri.length?sistemYedekleri.map((y,i)=><div key={y.name} className="flex flex-col gap-3 border-b border-slate-100 p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className="backup-history">
+              <Panel baslik="Yedek Geçmişi" altBaslik="Sunucuda yalnızca son 1 sistem yedeği saklanır">
+                <div className="backup-history-list">
+                  {yedekListesiYukleniyor?<div className="p-5 text-sm text-slate-500">Yedekler yükleniyor...</div>:sistemYedekleri.length?sistemYedekleri.map((y,i)=><div key={y.name} className="backup-history-row">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2"><span className="text-lg">{y.name.includes("_otomatik")?"🤖":"💾"}</span><div className="truncate text-sm font-black text-slate-800">{y.name}</div>{i===0&&<span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">SON YEDEK</span>}</div>
+                      <div className="backup-file-name"><span className="text-lg">{y.name.includes("_otomatik")?"🤖":"💾"}</span><div className="backup-file-title">{y.name}</div>{i===0&&<span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">SON YEDEK</span>}</div>
                       <div className="mt-1 text-[10px] text-slate-500">{y.created_at?new Date(y.created_at).toLocaleString("tr-TR"):"-"} • {baytGoster(y.size)} • {y.name.includes("_otomatik")?"Otomatik":"Manuel"}</div>
                     </div>
                     <a href={y.url} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-center text-xs font-black text-blue-700 hover:bg-blue-100">⬇️ İndir</a>
-                  </div>):<div className="p-5 text-sm text-slate-500">Henüz sunucu yedeği yok. “Şimdi Tam Yedek Al” ile ilk yedeği oluşturabilirsiniz.</div>}
+                  </div>):sunucuYedekHata?<div className="backup-empty">Yedek listesi alınamadı. Listeyi yenileyerek tekrar deneyin.</div>:<div className="backup-empty">Henüz sunucu yedeği yok. “Şimdi Tam Yedek Al” ile ilk yedeği oluşturabilirsiniz.</div>}
                 </div>
                 <button type="button" onClick={sistemYedekleriniGetir} disabled={yedekListesiYukleniyor} className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-black text-slate-600 hover:bg-slate-50">↻ Listeyi Yenile</button>
               </Panel>
-            </div>
+            </div></div>
 
-            <div className="mt-5">
-              <Panel baslik="🛡️ Dışa Aktarma Araçları" altBaslik="Bilgisayara indirebileceğiniz ek yedek formatları">
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="backup-exports">
+              <Panel baslik="Dışa Aktarma Araçları" altBaslik="Bu cihazda yüklü kayıtları bilgisayarınıza indirin">
+                <div className="backup-export-grid">
                   <button type="button" onClick={excelAktar} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-left transition hover:border-emerald-300 hover:shadow-sm">
-                    <div className="text-3xl">📊</div><div className="mt-3 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-xs leading-5 text-emerald-600">Trafo değişim kayıtlarını Excel dosyası olarak bilgisayara indir.</div>
+                    <div className="text-3xl">📊</div><div className="mt-3 text-sm font-black text-emerald-800">Tüm Kayıtları Excel</div><div className="mt-1 text-xs leading-5 text-emerald-600">Bu cihazda yüklü tüm trafo kayıtlarını Excel dosyası olarak indir.</div>
                   </button>
                   <button type="button" onClick={jsonSistemYedegiAl} disabled={yedekHazirlaniyor} className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-left transition hover:border-blue-300 hover:shadow-sm disabled:opacity-50">
-                    <div className="text-3xl">💾</div><div className="mt-3 text-sm font-black text-blue-800">{yedekHazirlaniyor?"Yedek Hazırlanıyor...":"Bilgisayara JSON Yedeği"}</div><div className="mt-1 text-xs leading-5 text-blue-600">Mevcut verileri doğrudan bu bilgisayara JSON olarak indir.</div>
+                    <div className="text-3xl">💾</div><div className="mt-3 text-sm font-black text-blue-800">{yedekHazirlaniyor?"Yedek Hazırlanıyor...":"Bilgisayara JSON Yedeği"}</div><div className="mt-1 text-xs leading-5 text-blue-600">Bu cihazda yüklü kayıtları ve mevcut işlem geçmişini JSON olarak indir.</div>
                   </button>
                 </div>
               </Panel>
             </div>
-          </>}
+          </section>}
 
           {sayfa==="loglar"&&yonetici&&<>
             <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,.06)] ring-1 ring-slate-100 p-4"><div className="flex flex-col gap-3 sm:flex-row"><input value={logArama} onChange={e=>setLogArama(e.target.value)} placeholder="Kullanıcı, kayıt no veya değişen değer ara..." className={inputSinif}/><button onClick={auditLoglariGetir} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-black">↻ Yenile</button></div></div>
