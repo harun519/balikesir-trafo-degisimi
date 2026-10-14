@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { getSupabaseBrowserClient } from "./supabaseClient";
 
 declare global {
@@ -567,8 +568,8 @@ export default function TrafoHarita() {
     const layers = [pointLayer.current, buildingLayer.current].filter(Boolean);
     if (layers.length) {
       const bounds = L.featureGroup(layers).getBounds();
-      if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || nedenFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
-      else if (bounds.isValid()) map.fitBounds(bounds.pad(.04), { maxZoom: 11 });
+      if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || nedenFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12, paddingBottomRight:[0,(legendRef.current?.offsetHeight||60)+36] });
+      else if (bounds.isValid()) map.fitBounds(bounds.pad(.04), { maxZoom: 11, paddingBottomRight:[0,(legendRef.current?.offsetHeight||60)+36] });
     }
     requestAnimationFrame(() => map.invalidateSize({ pan: false }));
   }, [hazir, veriHazir, ilce, arama, tipFiltre, mulkiyetFiltre, degisimFiltre, nedenFiltre, noktaAcik, binaAcik, degisimKayitlari]);
@@ -593,14 +594,22 @@ export default function TrafoHarita() {
     finally { setEnvanterIslem(false); }
   };
   const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setMulkiyetFiltre(""); setDegisimFiltre("TUMU"); setNedenFiltre(""); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
+  const optionsRef=useRef<HTMLDetailsElement>(null),legendRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{
+    const outside=(event:PointerEvent)=>{if(optionsRef.current&&!optionsRef.current.contains(event.target as Node))optionsRef.current.open=false};
+    const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"&&optionsRef.current?.open){optionsRef.current.open=false;optionsRef.current.querySelector<HTMLElement>("summary")?.focus()}};
+    document.addEventListener("pointerdown",outside);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",outside);document.removeEventListener("keydown",escape)};
+  },[]);
+  useEffect(()=>{if(hazir&&legendRef.current&&window.L){window.L.DomEvent.disableClickPropagation(legendRef.current);window.L.DomEvent.disableScrollPropagation(legendRef.current)}},[hazir]);
+  const legend=<div ref={legendRef} className="map-legend" data-trafo-harita-lejant="1"><span>▲ Direk · ■ Bina</span><button type="button" aria-pressed={degisimFiltre==="DEGISMEYEN"} onClick={()=>{setNedenFiltre("");setDegisimFiltre("DEGISMEYEN")}}><i style={{background:"#94a3b8"}}/>Değişim yok</button>{NEDEN_RENKLERI.map(x=><button type="button" key={x.ad} aria-pressed={nedenFiltre===x.ad} onClick={()=>{setNedenFiltre(v=>v===x.ad?"":x.ad);setDegisimFiltre("TUMU")}}><i style={{background:x.renk}}/>{x.ad}</button>)}</div>;
   const gorunenNokta=noktaAcik?noktaSayisi:0;
   const toplam=gorunenNokta+(binaAcik&&degisimFiltre==="TUMU"&&!nedenFiltre?binaSayisi:0);
   return <div className="trafo-map-workspace" data-native-map-filters="true">
     <div className="map-summary" aria-label="Harita özeti">
-      <div><span>GÖRÜNEN TRAFO</span><strong data-map-count>{veriHazir?gorunenNokta:"—"}</strong></div>
-      <div><span>DEĞİŞİM GÖRMÜŞ</span><strong data-map-changed>{veriHazir&&!degisimYukleniyor?(noktaAcik?eslesenSayisi:0):"—"}</strong></div>
-      <div><span>MONTAJ TİPİ</span><strong className="map-summary-types">{direkTipiSayisi} direk · {binaTipiSayisi} bina</strong></div>
-      <div><span>İLÇE</span><strong className="map-summary-district">{ilce||"Tüm ilçeler"}</strong></div>
+      <div><span>Görünen Trafo</span><strong data-map-count>{veriHazir?gorunenNokta:"—"}</strong></div>
+      <div><span>Değişim Görmüş</span><strong data-map-changed>{veriHazir&&!degisimYukleniyor?(noktaAcik?eslesenSayisi:0):"—"}</strong></div>
+      <div><span>Montaj Tipi</span><strong className="map-summary-types">{direkTipiSayisi} direk · {binaTipiSayisi} bina</strong></div>
+      <div><span>İlçe</span><strong className="map-summary-district">{ilce||"Tüm ilçeler"}</strong></div>
     </div>
     <section className="map-filters" aria-label="Harita filtreleri">
       <div className="map-filter-grid">
@@ -610,17 +619,17 @@ export default function TrafoHarita() {
         <label><span>Değişim nedeni</span><select aria-label="Harita değişim nedeni" value={nedenFiltre} onChange={e=>{setNedenFiltre(e.target.value);if(e.target.value)setDegisimFiltre("TUMU")}} disabled={!veriHazir}><option value="">Tüm Nedenler</option>{NEDEN_RENKLERI.map(x=><option key={x.ad}>{x.ad}</option>)}</select></label>
         <button type="button" className="map-clear" onClick={tumunuGoster}>Filtreyi Temizle</button>
       </div>
-      <div className="map-filter-bottom"><div className="map-status-tabs" aria-label="Değişim durumu">{([["TUMU","Tümü"],["DEGISEN","Değişim Yapılanlar"],["DEGISMEYEN","Değişim Yapılmayanlar"]] as const).map(([value,label])=><button type="button" key={value} aria-pressed={degisimFiltre===value} onClick={()=>{setDegisimFiltre(value);if(value==="DEGISMEYEN")setNedenFiltre("")}}>{label}</button>)}</div><button type="button" className="map-basemap" onClick={()=>setHaritaTipi(x=>x==="standart"?"uydu":"standart")}>{haritaTipi==="standart"?"Uydu Görünümü":"Standart Harita"}</button></div>
-      <details className="map-options"><summary>Katmanlar ve gösterim</summary><div className="map-options-content">
+      <div className="map-filter-bottom"><div className="map-status-tabs" aria-label="Değişim durumu">{([["TUMU","Tümü"],["DEGISEN","Değişim Yapılanlar"],["DEGISMEYEN","Değişim Yapılmayanlar"]] as const).map(([value,label])=><button type="button" key={value} aria-pressed={degisimFiltre===value} onClick={()=>{setDegisimFiltre(value);if(value==="DEGISMEYEN")setNedenFiltre("")}}>{label}</button>)}</div><button type="button" className="map-basemap" onClick={()=>setHaritaTipi(x=>x==="standart"?"uydu":"standart")}>{haritaTipi==="standart"?"Uydu Görünümü":"Standart Harita"}</button>
+      <details ref={optionsRef} className="map-options"><summary>Katmanlar ve gösterim</summary><div className="map-options-content">
         <div className="map-layer-row"><button type="button" aria-pressed={noktaAcik} onClick={()=>setNoktaAcik(v=>!v)}>Trafo Noktaları ({noktaSayisi})</button><button type="button" aria-pressed={binaAcik} disabled={degisimFiltre!=="TUMU"||!!nedenFiltre} onClick={()=>setBinaAcik(v=>!v)}>Yapı Poligonları ({binaSayisi})</button><select aria-label="Harita mülkiyeti" value={mulkiyetFiltre} onChange={e=>setMulkiyetFiltre(e.target.value as ""|"EDAS"|"DEVIRLI")}><option value="">Tüm Mülkiyetler</option><option value="EDAS">EDAŞ</option><option value="DEVIRLI">Devirli</option></select></div>
-        <div className="map-legend" data-trafo-harita-lejant="1"><span>▲ Direk · ■ Bina</span><button type="button" aria-pressed={degisimFiltre==="DEGISMEYEN"} onClick={()=>{setNedenFiltre("");setDegisimFiltre("DEGISMEYEN")}}><i style={{background:"#94a3b8"}}/>Değişim yok</button>{NEDEN_RENKLERI.map(x=><button type="button" key={x.ad} aria-pressed={nedenFiltre===x.ad} onClick={()=>{setNedenFiltre(v=>v===x.ad?"":x.ad);setDegisimFiltre("TUMU")}}><i style={{background:x.renk}}/>{x.ad}</button>)}</div>
+
         <div className="map-source"><div><strong>🗺️ Trafo Envanteri</strong><p>{dosyaAdi||"Envanter hazırlanıyor"} · {durum}</p><small>{degisimKayitlari.length} değişim kaydı · {tekDegisimSayisi} tek / {cokDegisimSayisi} çoklu · {uyumsuzSayisi} tip kontrolü{merkezi?" · Merkezi envanter":""}</small></div>{adminMi&&<label className="map-upload">{envanterIslem?"Güncelleniyor…":"Envanteri Güncelle"}<input type="file" accept=".zip,application/zip" onChange={adminGuncelle} disabled={envanterIslem} className="hidden"/></label>}</div>
-      </div></details>
+      </div></details></div>
     </section>
     {hata&&<div className="map-error" role="alert">{hata}</div>}
     <section className="map-canvas-card" aria-label="Balıkesir trafo haritası">
       <div className="map-canvas-heading"><span><strong>Balıkesir</strong> · {toplam} görünür öğe</span><span className="map-ready" data-ready={hazir&&veriHazir}>{hazir&&veriHazir?"Harita hazır":"Envanter yükleniyor…"}</span></div>
-      <div ref={mapEl} className="map-canvas"/>
+      <div ref={mapEl} className="map-canvas"/>{hazir&&mapEl.current&&createPortal(legend,mapEl.current)}
       <div className="map-canvas-footer"><span>▲ Direk · ■ Bina · Renkler son değişim nedenini gösterir.</span><span>Bir trafoya tıklayarak detaylarını açın.</span></div>
     </section>
   </div>;
