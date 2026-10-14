@@ -1434,7 +1434,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
           </>}
 
-          {sayfa==="yeni"&&duzenleyebilir&&<form onSubmit={kaydet} className="space-y-5">
+          {sayfa==="yeni"&&duzenleyebilir&&<form onSubmit={kaydet} className="space-y-5 trafo-new-record">
             <div id="new-record-hero" className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -1456,7 +1456,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   ["3","Değişim & Onay","Neden, açıklama ve kayıt onayı"],
                 ].map((a,i)=>{
                   const n=i+1,aktif=formAdim===n,tamam=formAdim>n;
-                  return <button type="button" key={n} onClick={()=>setFormAdim(n)} className={`relative flex min-h-[84px] items-center gap-3 border-b-4 px-5 text-left transition ${aktif?"border-orange-500 bg-orange-50/70":"border-transparent hover:bg-slate-50"}`}>
+                  return <button type="button" key={n} aria-current={aktif?"step":undefined} onClick={()=>setFormAdim(n)} className={`relative flex min-h-[84px] items-center gap-3 border-b-4 px-5 text-left transition ${aktif?"border-orange-500 bg-orange-50/70":"border-transparent hover:bg-slate-50"}`}>
                     <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black ${aktif?"bg-orange-500 text-white shadow-md shadow-orange-200":tamam?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{tamam?"✓":a[0]}</span>
                     <span className="min-w-0"><span className={`block text-xs font-black ${aktif?"text-orange-700":"text-slate-800"}`}>{a[1]}</span><span className="mt-1 block text-[9px] leading-4 text-slate-400">{a[2]}</span></span>
                   </button>
@@ -1470,7 +1470,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
 
             <div id="new-record-main" className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0">
-                {formAdim===1&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
+                {formAdim===1&&<div className="nr-location nr-panel rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-xl">📍</div>
                     <div><h2 className="text-lg font-black text-slate-900">Tarih & Konum Bilgileri</h2><p className="mt-1 text-xs text-slate-500">Önce değişim tarihini, ardından konum ve sistem bilgilerini girin.</p></div>
@@ -1487,7 +1487,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="text-xs font-black text-blue-700">ⓘ Bilgi</div><div className="mt-1 text-[11px] leading-5 text-slate-500">Trafo ID, Lokasyon ID veya TR alanlarından en az birini girin. Bu bilgiler geçmiş kayıt ve form eşleştirmesinde kullanılır.</div></div>
                 </div>}
 
-                {formAdim===2&&<div className="space-y-4">
+                {formAdim===2&&<div className="space-y-4 nr-transformer-step">
                   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div><div className="text-[10px] font-black uppercase tracking-[.14em] text-orange-500">Adım 2</div><h2 className="mt-1 text-lg font-black text-slate-900">Trafo Değişimi</h2><p className="mt-1 text-xs text-slate-500">Sökülen ve takılan trafoyu aynı ekranda karşılaştırarak girin.</p></div>
@@ -1499,8 +1499,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
-                      <div className="flex items-start gap-3 border-b border-red-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-lg">🔴</div><div><h3 className="text-base font-black text-slate-900">Sökülen Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahadan sökülen mevcut trafo.</p></div></div>
+                    <section className="nr-transformer nr-removed rounded-2xl border border-red-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
+                      <div className="flex items-start gap-3 border-b border-red-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-lg" aria-hidden="true">−</div><div><h3 className="text-base font-black text-slate-900">Sökülen Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahadan sökülen mevcut trafo.</p></div></div>
                       <div className="mt-5 grid gap-4 sm:grid-cols-2">
                         <ComboAlani baslik="Gücü" deger={form.sokulen_gucu} degistir={v=>formDegistir("sokulen_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="sguc"/>
                         <ComboAlani baslik="Gerilim" deger={form.sokulen_gerilim} degistir={v=>formDegistir("sokulen_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="sger"/>
@@ -1514,8 +1514,8 @@ const filtrelenmisKayitlar=useMemo(()=>{
                       </div>
                     </section>
 
-                    <section className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
-                      <div className="flex items-start gap-3 border-b border-emerald-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-lg">🟢</div><div><h3 className="text-base font-black text-slate-900">Takılan Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahaya takılan yeni trafo.</p></div></div>
+                    <section className="nr-transformer nr-installed rounded-2xl border border-emerald-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
+                      <div className="flex items-start gap-3 border-b border-emerald-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-lg" aria-hidden="true">+</div><div><h3 className="text-base font-black text-slate-900">Takılan Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahaya takılan yeni trafo.</p></div></div>
                       <div className="mt-5 grid gap-4 sm:grid-cols-2">
                         <ComboAlani baslik="Gücü" deger={form.takilan_gucu} degistir={v=>formDegistir("takilan_gucu",v)} secenekler={GUC_SECENEKLERI} listeId="tguc"/>
                         <ComboAlani baslik="Gerilim" deger={form.takilan_gerilim} degistir={v=>formDegistir("takilan_gerilim",v)} secenekler={GERILIM_SECENEKLERI} listeId="tger"/>
@@ -1530,12 +1530,12 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   </div>
                 </div>}
 
-                {formAdim===3&&<div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
+                {formAdim===3&&<div className="nr-confirm nr-panel rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] sm:p-6">
                   <div className="flex items-start gap-3 border-b border-slate-100 pb-5"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-xl">✓</div><div><h2 className="text-lg font-black text-slate-900">Değişim & Onay</h2><p className="mt-1 text-xs text-slate-500">İşlem bilgilerini tamamlayın ve kaydı son kez kontrol edin.</p></div></div>
 
                   <div className="mt-6 grid gap-4">
                     <ComboAlani baslik="Değişim Nedeni *" deger={form.degisim_nedeni} degistir={v=>formDegistir("degisim_nedeni",v)} secenekler={NEDENLER.map(n=>n.ad)} listeId="degisim-nedeni" gerekli/>
-                    <Alan baslik="Açıklama"><textarea rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan>
+                    <Alan baslik="Açıklama"><textarea aria-label="Açıklama" rows={4} value={form.aciklama} onChange={e=>formDegistir("aciklama",e.target.value)} placeholder="İşlemle ilgili not veya açıklama..." className={inputSinif}/></Alan>
                   </div>
 
                   <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -1800,11 +1800,17 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   }
 
   return <div className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-600">{baslik}</span>
+    <label htmlFor={`combo-${listeId}`} className="nr-field-label mb-2 block text-sm font-semibold text-slate-600">{baslik}</label>
     <div ref={kutuRef} className="relative">
       <div className="relative">
         <input
           ref={anaInputRef}
+          id={`combo-${listeId}`}
+          role="combobox"
+          aria-expanded={acik}
+          aria-controls={acik?`options-${listeId}`:undefined}
+          aria-autocomplete="list"
+          aria-activedescendant={acik&&aktifIndex>=0?`option-${listeId}-${aktifIndex}`:undefined}
           required={gerekli}
           autoComplete="off"
           value={acik?arama:deger}
@@ -1872,13 +1878,16 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
         >▼</button>
       </div>
 
-      {acik&&<div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,.16)]">
+      {acik&&<div id={`options-${listeId}`} role="listbox" aria-label={baslik} className="absolute left-0 right-0 top-[calc(100%+6px)] z-[80] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,.16)]">
         <div className="max-h-56 overflow-y-auto p-1.5">
           {filtreli.length?filtreli.map((x,i)=>{
             const secili=x===deger;
             const aktif=i===aktifIndex;
             return <button
               ref={el=>{secenekRefleri.current[i]=el;}}
+              id={`option-${listeId}-${i}`}
+              role="option"
+              aria-selected={x===deger}
               key={x}
               type="button"
               tabIndex={-1}
