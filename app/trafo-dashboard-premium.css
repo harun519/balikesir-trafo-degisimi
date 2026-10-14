@@ -739,3 +739,78 @@ main[data-page="yeni"] button:focus-visible{outline:2px solid #2563eb;outline-of
 
 main[data-page="yeni"] #new-record-stepper button>span:last-child>span{width:auto!important;height:auto!important;min-height:0!important;flex:none!important;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}
 main[data-page="yeni"] #new-record-main#new-record-main .nr-location input[type="date"]+span{font-size:11px!important;font-weight:400!important;line-height:16px!important;margin-top:5px!important;color:#71859e!important}
+
+/* Transformer records: compact filters and ten-row lists. */
+main[data-page="kayitlar"] section>div.mx-auto{max-width:1720px!important;padding:20px 24px 24px!important}
+#trafo-records{display:grid;gap:16px;min-width:0}
+#trafo-records .records-hero{display:flex;align-items:center;justify-content:space-between;gap:16px}
+#trafo-records .records-hero h1{margin:0;color:#16304e;font-size:22px;font-weight:750;line-height:28px;letter-spacing:-.025em}
+#trafo-records .records-hero p{margin:4px 0 0;color:#71859e;font-size:12px;line-height:18px}
+#trafo-records .records-hero button{min-height:40px!important;padding:9px 15px;border:1px solid #f97316;border-radius:9px;background:#f97316;color:#fff;font-size:13px;font-weight:650;white-space:nowrap}
+#trafo-records .records-filters{margin:0!important;padding:16px!important;border:1px solid #dce5ef;border-radius:12px;background:#fff;box-shadow:0 3px 14px #12345605}
+#trafo-records .records-filter-grid{display:grid;grid-template-columns:2fr .8fr .9fr 1fr 1.1fr;gap:12px;align-items:end}
+#trafo-records label{min-width:0}
+#trafo-records .records-filter-grid label>span,#trafo-records .records-date-grid label>span{display:block;margin-bottom:6px;color:#375779;font-size:12px;font-weight:600;line-height:17px}
+#trafo-records .records-filter-grid :is(input,select),#trafo-records .records-date-grid input{width:100%;min-width:0;min-height:40px!important;padding:9px 11px!important;border:1px solid #d9e3ee!important;border-radius:8px!important;background:white!important;font-size:13px!important;font-weight:500!important;color:#294763!important;box-shadow:none!important}
+#trafo-records .records-filter-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;font-size:11px;color:#71859e;line-height:18px}
+#trafo-records .records-filter-footer button{padding:0;min-height:28px!important;border:0;background:transparent;color:#3973b9;font-size:12px;font-weight:600}
+#trafo-records .records-extra{margin-top:8px;padding-top:10px;border-top:1px solid #edf1f6}
+#trafo-records .records-extra>summary{width:fit-content;cursor:pointer;font-size:12px;font-weight:650;color:#375779;line-height:22px}
+#trafo-records .records-extra>summary>span{margin-left:10px;color:#8a9ab0;font-weight:400;font-size:11px}
+#trafo-records .records-extra-content{padding-top:14px}
+#trafo-records .records-date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:12px}
+#trafo-records .recordTransferBar{margin-top:14px!important;padding-top:12px!important}
+#trafo-records .recordTransferMeta{display:none!important}
+#trafo-records .recordTransferTools{display:flex!important;flex-wrap:wrap;gap:8px;width:100%!important}
+#trafo-records .recordTransferTools .recordTransferAction{width:auto!important;font-size:12px!important;min-height:38px!important;box-shadow:none!important}
+#trafo-records .records-panel{padding:16px!important;border-radius:12px!important;box-shadow:0 3px 14px #12345605!important;overflow:visible!important}
+#trafo-records .records-panel>div:first-child h2{font-size:16px!important;color:#16304e!important;line-height:22px!important}
+#trafo-records .records-panel>div:first-child p{font-size:11px!important;line-height:17px!important;margin-top:3px!important}
+#trafo-records .records-selection-hint{margin:12px 0 9px;font-size:11px;line-height:16px;color:#8a9ab0}
+#trafo-records .records-bulk{margin:12px 0!important;padding:10px!important;border-radius:9px!important;flex-wrap:wrap;flex-direction:row!important;align-items:center}
+#trafo-records .records-bulk :is(button,select){min-height:36px!important;font-size:12px!important;border-radius:7px!important}
+#trafo-records .records-table-scroll{margin-top:12px!important;max-height:none!important;border:1px solid #e1e8f1;border-radius:9px!important;box-shadow:none!important;overflow:auto!important;scrollbar-width:thin}
+#trafo-records .records-table{width:100%;min-width:900px!important;table-layout:fixed;border-collapse:separate;border-spacing:0}
+#trafo-records .records-table :is(th,td){position:static!important;left:auto!important;min-width:0!important;max-width:none!important;width:auto!important;padding:10px 9px!important;border-right:0!important;box-shadow:none!important;white-space:normal!important;overflow-wrap:normal!important;text-align:left;font-size:12px!important;line-height:17px!important}
+#trafo-records .records-table th{position:sticky!important;top:0;z-index:2;background:#f4f7fb!important;color:#66809e;font-weight:600!important;text-transform:none!important;letter-spacing:normal!important;border-bottom:1px solid #e1e8f1}
+#trafo-records .records-table td{border-bottom:1px solid #edf1f6;background:transparent!important;color:#375779}
+#trafo-records .records-table tbody tr:last-child td{border-bottom:0}
+#trafo-records .records-table tbody tr:hover{background:#f7faff}
+#trafo-records .record-selected{background:#eef5ff!important}
+#trafo-records .records-table strong{font-weight:600}
+#trafo-records .records-table small{display:block;color:#8a9ab0;font-size:10px;line-height:15px;margin-top:3px}
+#trafo-records .record-value{display:block;white-space:nowrap!important;text-overflow:ellipsis;overflow:hidden}
+#trafo-records .records-table .record-date strong{white-space:nowrap}
+#trafo-records .record-power{white-space:nowrap!important;font-variant-numeric:tabular-nums;font-size:11px!important}
+#trafo-records input[type="checkbox"]{width:16px!important;height:16px!important;min-height:16px!important;accent-color:#2563eb;cursor:pointer}
+#trafo-records .records-table td:first-child{padding-left:12px!important}
+#trafo-records .records-table td>span.rounded-full{max-width:100%;display:inline-block!important;white-space:normal;line-height:14px;font-size:10px!important;padding:5px 7px!important;box-shadow:none!important}
+#trafo-records .record-row-actions{display:flex;align-items:center;gap:4px}
+#trafo-records .record-row-actions button{min-height:32px!important;padding:5px 7px!important;border-radius:6px!important;white-space:nowrap;font-size:11px!important;line-height:18px!important;font-weight:600!important;box-shadow:none!important}
+#trafo-records .record-detail-button{background:#fff4ea;border:1px solid #ffe0c5;color:#c35d1b}
+#trafo-records .record-actions-trigger{background:#fff;border:1px solid #dce5ef;color:#59718e}
+.record-actions-popup{position:fixed;z-index:90;width:176px;padding:6px;border:1px solid #dce5ef;border-radius:10px;background:#fff;box-shadow:0 12px 32px #16304e29}
+.record-actions-popup button{display:block;width:100%;height:40px;padding:9px 10px;text-align:left;border:0;border-radius:6px;background:white;color:#375779;font-size:12px;font-weight:500}
+.record-actions-popup button:hover,.record-actions-popup button:focus-visible{background:#f1f6fd;outline:none}
+.record-actions-popup .record-action-danger{color:#c74949;border-top:1px solid #edf1f6;border-radius:0 0 6px 6px}
+#trafo-records .recordPagination{margin-top:14px!important;gap:12px;font-size:11px;color:#71859e;line-height:18px}
+#trafo-records .recordPagination>div{gap:12px}
+#trafo-records .recordPagination button{min-height:36px!important;padding:7px 11px!important;font-size:12px!important;border-radius:7px!important}
+#trafo-records .records-empty{padding:32px!important;text-align:center!important;color:#71859e}
+#trafo-records button:focus-visible,#trafo-records summary:focus-visible{outline:2px solid #2563eb;outline-offset:3px}
+#trafo-records .recordMobileCards{margin-top:14px}
+#trafo-records .record-mobile-card{padding:14px;border:1px solid #dce5ef;border-radius:10px;background:white;margin-top:10px}
+#trafo-records .record-mobile-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#375779}
+#trafo-records .record-mobile-heading>div{display:flex;align-items:center;gap:9px}
+#trafo-records .record-mobile-heading>span{font-size:11px;color:#8a9ab0;white-space:nowrap}
+#trafo-records .record-mobile-location{margin-top:12px;display:flex;flex-direction:column;gap:3px;font-size:13px;color:#294763;overflow-wrap:anywhere}
+#trafo-records .record-mobile-location>span{font-size:11px;color:#8a9ab0}
+#trafo-records .record-mobile-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+#trafo-records .record-mobile-card dt{color:#8a9ab0;font-size:10px;margin-bottom:3px}
+#trafo-records .record-mobile-card dd{margin:0;color:#375779;font-size:12px;overflow-wrap:anywhere}
+#trafo-records .record-mobile-card footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid #edf1f6}
+@media(max-width:1200px){#trafo-records .records-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}#trafo-records .records-search{grid-column:1/-1}}
+@media(max-width:900px){main[data-page="kayitlar"] section>div.mx-auto{padding:16px!important}#trafo-records .records-filter-grid{gap:10px}#trafo-records .records-extra>summary>span{display:none}#trafo-records .records-bulk{gap:8px!important}}
+@media(max-width:767px){main[data-page="kayitlar"] section>div.mx-auto{padding:14px 10px!important}#trafo-records .records-hero h1{font-size:20px}#trafo-records .records-hero button{padding:8px 11px;font-size:12px}#trafo-records .records-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#trafo-records .records-filters,#trafo-records .records-panel{padding:14px!important}#trafo-records .records-date-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#trafo-records .records-extra>summary{font-size:13px}#trafo-records .record-row-actions button{min-height:36px!important}#trafo-records .recordPagination{flex-direction:column;align-items:stretch}#trafo-records .recordPagination>div{justify-content:space-between}}
+#trafo-records .records-hero h1{font-size:22px!important;line-height:28px!important;font-weight:750!important}
+@media(max-width:767px){#trafo-records .records-hero h1{font-size:20px!important}}
