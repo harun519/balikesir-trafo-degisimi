@@ -814,3 +814,57 @@ main[data-page="kayitlar"] section>div.mx-auto{max-width:1720px!important;paddin
 @media(max-width:767px){main[data-page="kayitlar"] section>div.mx-auto{padding:14px 10px!important}#trafo-records .records-hero h1{font-size:20px}#trafo-records .records-hero button{padding:8px 11px;font-size:12px}#trafo-records .records-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#trafo-records .records-filters,#trafo-records .records-panel{padding:14px!important}#trafo-records .records-date-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#trafo-records .records-extra>summary{font-size:13px}#trafo-records .record-row-actions button{min-height:36px!important}#trafo-records .recordPagination{flex-direction:column;align-items:stretch}#trafo-records .recordPagination>div{justify-content:space-between}}
 #trafo-records .records-hero h1{font-size:22px!important;line-height:28px!important;font-weight:750!important}
 @media(max-width:767px){#trafo-records .records-hero h1{font-size:20px!important}}
+
+/* New record refinement: separated step cards and searchable floating selects. */
+main[data-page="yeni"]{background:#f3f6fb!important}
+main[data-page="yeni"] #new-record-stepper{border:0!important;border-radius:0!important;overflow:visible!important;background:transparent!important}
+main[data-page="yeni"] #new-record-stepper>div{gap:12px!important}
+main[data-page="yeni"] #new-record-stepper button{border:1px solid #e0e7f0!important;border-radius:11px!important;background:white!important;min-height:68px!important;padding:12px 16px!important;box-shadow:0 2px 5px #17304e03!important}
+main[data-page="yeni"] #new-record-stepper button[aria-current="step"]{background:#fff!important;border-color:#f4b78e!important;box-shadow:inset 3px 0 #f97316,0 3px 12px #f9731608!important}
+main[data-page="yeni"] #new-record-stepper button>span:first-child{border-radius:10px!important;width:32px!important;height:32px!important;flex-basis:32px!important}
+main[data-page="yeni"] #new-record-stepper button[aria-current="step"]>span:first-child{background:#fff1e6!important;color:#d9681e!important;border-color:#ffdfc5!important}
+main[data-page="yeni"] #new-record-hero h1{font-size:21px!important;font-weight:750!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-panel{padding:22px!important;border-color:#e0e7f0!important;box-shadow:0 5px 24px #15304e05!important;border-radius:14px!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-location>.mt-6:first-of-type{border:0!important;padding:0!important;background:transparent!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-location>div:nth-child(2){border:0!important;padding:0!important;background:transparent!important;margin-top:20px!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-location>div:last-child{background:#f7f9fc!important;border:1px solid #e9edf4!important;padding:12px 14px!important;margin-top:20px!important}
+main[data-page="yeni"] #new-record-main#new-record-main :is(input:not([type="checkbox"]),textarea){border-radius:9px!important;min-height:44px!important;background:#fcfdff!important;border-color:#e0e7f0!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-field-label,main[data-page="yeni"] #new-record-main#new-record-main label>span{color:#53677f!important;font-weight:550!important;font-size:12px!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-select-control{position:relative;border-radius:9px;cursor:pointer}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-select-control input{cursor:pointer!important;padding:11px 38px 11px 13px!important;line-height:20px!important;outline:none;font-weight:500!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-select-control input::placeholder{font-size:13px!important;color:#94a3b8!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-select-control[data-filled="true"] input{color:#203d60!important;background:#fff!important}
+main[data-page="yeni"] #new-record-main#new-record-main .nr-select-control[data-open="true"] input{border-color:#79a6e4!important;box-shadow:0 0 0 3px #3b82f60c!important;background:#fff!important}
+.nr-select-chevron{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#8b9bb0;display:flex}
+.nr-select-chevron svg{width:18px;height:18px;transition:transform .15s}
+.nr-select-control[data-open="true"] .nr-select-chevron{color:#3974c4}
+.nr-select-control[data-open="true"] .nr-select-chevron svg{transform:rotate(180deg)}
+.nr-select-popup{position:fixed;z-index:150;display:flex;flex-direction:column;box-sizing:border-box;background:white;border:1px solid #dce5f0;border-radius:14px;box-shadow:0 16px 48px #18335424,0 3px 10px #1833540b;overflow:hidden;color:#203d60}
+.nr-select-popup-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 10px;flex-shrink:0;font-size:12px;line-height:18px}
+.nr-select-popup-heading strong{font-weight:650}
+.nr-select-popup-heading>span{color:#95a3b6;font-size:10px;background:#f3f6fa;border-radius:5px;padding:2px 6px}
+.nr-select-search{margin:0 10px 8px;position:relative;flex-shrink:0}
+.nr-select-search>svg{position:absolute;left:11px;top:12px;width:18px;height:18px;color:#95a3b6;pointer-events:none}
+.nr-select-search input{width:100%;box-sizing:border-box;min-height:42px;border:1px solid #e1e8f1;background:#f7f9fc;border-radius:8px;padding:10px 12px 10px 36px;font-size:13px;line-height:20px;color:#203d60;outline:none;box-shadow:none}
+.nr-select-search input:focus{border-color:#c3d6ed;background:#f9fbfe}
+.nr-select-search input::placeholder{color:#95a3b6}
+.nr-select-options{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d9e3ef transparent;padding:0 6px 6px}
+.nr-select-options>button{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;min-height:40px;padding:9px 12px;border:0;border-radius:7px;margin:2px 0;background:white;color:#53677f;font-size:13px;line-height:20px;font-weight:500;text-align:left;cursor:pointer}
+.nr-select-options>button[data-active="true"]{background:#f3f7fc;color:#23466f}
+.nr-select-options>button[aria-selected="true"]{background:#edf5ff;color:#2870c3;font-weight:650}
+.nr-select-options>button>small{font-size:11px;font-weight:400;color:#94a3b8;margin-left:auto}
+.nr-select-check{width:18px;height:18px;border-radius:50%;font-size:11px;text-align:center;line-height:18px;flex-shrink:0;margin-left:auto}
+.nr-select-options>button[aria-selected="true"] .nr-select-check{background:#3b82f6;color:white}
+.nr-select-empty{margin:0;padding:24px 12px;text-align:center;color:#94a3b8;font-size:12px}
+.nr-select-create{flex-shrink:0;margin:3px 10px 9px;padding:8px 10px;background:#f8fbff;border:1px dashed #cadbee;border-radius:7px;text-align:left;font-size:12px;line-height:18px;color:#3974c4;overflow-wrap:anywhere;cursor:pointer}
+.nr-select-popup-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;padding:9px 14px;border-top:1px solid #edf1f6;background:#fbfcfe;font-size:10px;line-height:16px;color:#95a3b6}
+.nr-select-popup-footer>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.nr-select-popup-footer button{border:0;background:none;padding:0;color:#3974c4;font-size:11px;cursor:pointer}
+.nr-select-popup button:focus-visible{outline:2px solid #79a6e4;outline-offset:-2px}
+main[data-page="yeni"] #new-record-summary{padding:18px!important;background:#fff!important;border-color:#e0e7f0!important;border-radius:14px!important;box-shadow:0 5px 24px #15304e05!important}
+main[data-page="yeni"] #new-record-summary .space-y-3>div{grid-template-columns:18px 86px minmax(0,1fr)!important;padding-bottom:7px!important;min-height:30px!important}
+main[data-page="yeni"] #new-record-summary .space-y-3>div span:nth-child(2){font-size:11px!important;font-weight:450!important;color:#8a9ab0!important}
+main[data-page="yeni"] #new-record-summary .space-y-3>div span:last-child{font-size:12px!important;font-weight:600!important;color:#375779!important}
+main[data-page="yeni"] #new-record-summary>div:last-child{background:#f7f9fc!important;border-color:#e7edf5!important;box-shadow:none!important}
+main[data-page="yeni"] #new-record-actions{border-color:#e0e7f0!important;box-shadow:0 5px 20px #15304e08!important;border-radius:12px!important}
+@media(max-width:600px){main[data-page="yeni"] #new-record-stepper>div{gap:6px!important}main[data-page="yeni"] #new-record-stepper button{padding:10px 5px!important;border-radius:9px!important;min-height:82px!important}main[data-page="yeni"] #new-record-main#new-record-main .nr-panel{padding:16px!important}.nr-select-search input{font-size:16px}.nr-select-options>button{min-height:44px;font-size:14px}}

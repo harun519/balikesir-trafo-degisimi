@@ -35,7 +35,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  }
  await page.setViewportSize({width:1366,height:768});await stepper.locator('button').nth(0).click();
  await form.locator('input[type=date]').fill('2026-10-14');assert.equal(await page.locator('#combo-yil').inputValue(),'2026');assert.equal(await page.locator('#combo-ay').inputValue(),'EKİM');
- const choose=async(id,value)=>{const input=page.locator('#combo-'+id);await input.fill(value);await input.press('Enter');assert.equal(await input.inputValue(),value)};
+ const choose=async(id,value)=>{const input=page.locator('#combo-'+id);await input.click();const search=page.locator('.nr-select-search input');await search.fill(value);await search.press('Enter');assert.equal(await input.inputValue(),value)};
  await choose('ilce','BALYA');await form.getByLabel('Trafo ID',{exact:true}).fill('NEW-FIXTURE-101');await form.getByLabel('Lokasyon ID',{exact:true}).fill('LK-999');
  await page.locator('#new-record-actions').getByRole('button',{name:'Trafo Değişimine Geç'}).click();await choose('sguc','100');await choose('tguc','160');
  await form.locator('.nr-removed').getByLabel('Seri No',{exact:true}).fill('REMOVED-101');await form.locator('.nr-installed').getByLabel('Seri No',{exact:true}).fill('INSTALLED-101');
