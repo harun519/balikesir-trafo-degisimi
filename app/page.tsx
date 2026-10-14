@@ -1768,7 +1768,6 @@ const filtrelenmisKayitlar=useMemo(()=>{
         </div>
       </section>
     </div>
-    <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500 text-xl font-black text-white shadow-2xl hover:bg-orange-400" title="Yukarı çık">↑</button>
     
     {sayfa==="ilce-analizi"&&acikIlce!==null&&typeof document!=="undefined"&&createPortal(<DistrictRecordsDialog district={acikIlce} records={dashboardKayitlari.filter(record=>((record.ilce||"BELİRTİLMEMİŞ").trim()||"BELİRTİLMEMİŞ")===acikIlce)} onClose={()=>setAcikIlce(null)}/>,document.body)}
     {detayKayit&&typeof document!=="undefined"&&createPortal(<DetayModal
