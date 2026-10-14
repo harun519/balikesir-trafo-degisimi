@@ -1,25 +1,3 @@
 "use client";
-
-import { useEffect } from "react";
-
-const NEDENLER=[["ARIZA","#ef4444"],["DÖNÜŞÜM","#3b82f6"],["GÜÇ DEĞİŞİMİ","#84cc16"],["TRAFO İPTAL","#38bdf8"],["YATIRIM","#facc15"],["YENİ TESİS","#22d3ee"],["ARIZA RİSKİ","#fb7185"],["KISMİ ARIZALI","#f97316"]] as const;
-type Durum="TUMU"|"DEGISEN"|"DEGISMEYEN";
-const renkBul=(el:HTMLElement)=>{const html=el.innerHTML.toLowerCase().replace(/\s/g,"");return NEDENLER.find(([,r])=>html.includes(r.toLowerCase()))?.[0]||"";};
-
-export default function HaritaNedenFiltresi(){
- useEffect(()=>{
-  let seciliNeden="",durum:Durum="TUMU",timer:number|undefined,deneme=0;
-  const gorunum=()=>{document.querySelectorAll<HTMLElement>("[data-harita-hizli]").forEach(el=>{const a=el.dataset.haritaHizli===durum;el.style.background=a?"#0f172a":"#fff";el.style.color=a?"#fff":"#475569";el.style.borderColor=a?"#0f172a":"#cbd5e1";});document.querySelectorAll<HTMLElement>("[data-harita-neden]").forEach(el=>{const a=el.dataset.haritaNeden===seciliNeden;el.style.outline=a?"3px solid #0f172a":"none";el.style.outlineOffset=a?"2px":"0";el.style.fontWeight=a?"900":"700";});const s=document.querySelector<HTMLSelectElement>('[data-neden-filtre="1"]');if(s&&s.value!==seciliNeden)s.value=seciliNeden;};
-  const uygula=()=>{document.querySelectorAll<HTMLElement>(".leaflet-marker-pane .leaflet-marker-icon").forEach(el=>{const n=renkBul(el);el.style.display=seciliNeden?(n===seciliNeden?"":"none"):durum==="DEGISEN"?(n?"":"none"):durum==="DEGISMEYEN"?(!n?"":"none"):"";});gorunum();};
-  const kur=()=>{
-   const hedef=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(b=>(b.textContent||"").includes("Değişim Yapılmayanlar"));
-   if(hedef&&!document.querySelector('[data-neden-filtre="1"]')){const s=document.createElement("select");s.dataset.nedenFiltre="1";s.className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600";s.innerHTML=`<option value="">🎨 Tüm Değişim Nedenleri</option>${NEDENLER.map(([a])=>`<option value="${a}">${a}</option>`).join("")}`;s.onchange=()=>{seciliNeden=s.value;durum=seciliNeden?"DEGISEN":"TUMU";uygula();};hedef.insertAdjacentElement("afterend",s);}
-   const harita=document.querySelector<HTMLElement>(".leaflet-container");
-   if(harita&&!harita.querySelector('[data-harita-lejant="1"]')){const k=document.createElement("div");k.dataset.haritaLejant="1";k.style.cssText="position:absolute;left:12px;bottom:24px;z-index:820;width:min(330px,calc(100% - 24px));background:rgba(255,255,255,.96);border:1px solid #cbd5e1;border-radius:14px;padding:10px;box-shadow:0 8px 28px rgba(15,23,42,.18);font-family:inherit";k.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px"><div style="font-size:11px;font-weight:900;color:#0f172a">🎨 HARİTA FİLTRESİ</div><div style="font-size:9px;color:#64748b">Renge tıkla → filtrele</div></div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px"><button type="button" data-harita-hizli="TUMU" style="border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font-size:9px;font-weight:900">Tümü</button><button type="button" data-harita-hizli="DEGISEN" style="border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font-size:9px;font-weight:900">✓ Değişim Yapılan</button><button type="button" data-harita-hizli="DEGISMEYEN" style="border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font-size:9px;font-weight:900">○ Değişim Yapılmayan</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${NEDENLER.map(([a,r])=>`<button type="button" data-harita-neden="${a}" style="display:flex;align-items:center;gap:7px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:6px 7px;font-size:9px;color:#334155;text-align:left"><span style="width:11px;height:11px;min-width:11px;border-radius:3px;background:${r}"></span><span>${a}</span></button>`).join("")}</div>`;k.querySelectorAll<HTMLButtonElement>("[data-harita-hizli]").forEach(b=>b.onclick=e=>{e.stopPropagation();durum=b.dataset.haritaHizli as Durum;if(durum!=="DEGISEN")seciliNeden="";uygula();});k.querySelectorAll<HTMLButtonElement>("[data-harita-neden]").forEach(b=>b.onclick=e=>{e.stopPropagation();const n=b.dataset.haritaNeden||"";seciliNeden=seciliNeden===n?"":n;durum=seciliNeden?"DEGISEN":"TUMU";uygula();});harita.appendChild(k);gorunum();}
-   const temizle=Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(b=>(b.textContent||"").includes("Filtreyi Temizle"));if(temizle&&!temizle.dataset.nedenTemizleBagli){temizle.dataset.nedenTemizleBagli="1";temizle.addEventListener("click",()=>{seciliNeden="";durum="TUMU";window.setTimeout(uygula,120);});}
-   return !!document.querySelector('[data-neden-filtre="1"]')&&!!document.querySelector('[data-harita-lejant="1"]')&&!!temizle?.dataset.nedenTemizleBagli;
-  };
-  if(!kur())timer=window.setInterval(()=>{deneme++;if(kur()||deneme>30){if(timer)window.clearInterval(timer);}},400);
-  return()=>{if(timer)window.clearInterval(timer);};
- },[]);return null;
-}
+// Reason filters and legend are owned by TrafoHarita state.
+export default function HaritaNedenFiltresi(){return null;}
