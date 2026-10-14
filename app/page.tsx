@@ -438,6 +438,18 @@ async function kayitlariGetir(){
     setPassword("");
     setMobilMenuAcik(false);
   }
+  useEffect(()=>{
+    const fromMap=(event:Event)=>{
+      if(!duzenleyebilir)return;
+      const data=(event as CustomEvent).detail||{};if(!data.lokasyonId)return;
+      setForm({...BOS_FORM,ilce:String(data.ilce||"").toLocaleUpperCase("tr-TR"),mahalle:String(data.mahalle||""),tr:String(data.tr||""),lokasyon_id:String(data.lokasyonId),trafo_id:String(data.trafoId||""),trafo_tipi:String(data.trafoTipi||"")});
+      setDuzenlenenId(null);setFormAdim(1);setKontrolOnayi(false);setFormHatalari([]);setSayfa("yeni");setMobilMenuAcik(false);
+      if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});
+      window.dispatchEvent(new Event("trafo-harita-kapat"));window.scrollTo({top:0,behavior:"instant"});
+    };
+    window.addEventListener("trafo-harita-yeni-kayit",fromMap);return()=>window.removeEventListener("trafo-harita-yeni-kayit",fromMap);
+  },[duzenleyebilir]);
+
   function sayfayaGit(s:Sayfa){
     if((s==="loglar"||s==="markalar")&&!yonetici)return;
     if(s==="yeni"&&!duzenleyebilir)return;

@@ -269,6 +269,7 @@ export default function TrafoHarita() {
   const [degisimKayitlari, setDegisimKayitlari] = useState<DegisimKaydi[]>([]), [degisimYukleniyor, setDegisimYukleniyor] = useState(false), [eslesenSayisi, setEslesenSayisi] = useState(0), [tekDegisimSayisi, setTekDegisimSayisi] = useState(0), [cokDegisimSayisi, setCokDegisimSayisi] = useState(0);
   const [merkezi, setMerkezi] = useState(false), [adminMi, setAdminMi] = useState(false), [envanterIslem, setEnvanterIslem] = useState(false);
 
+  const [nedenFiltre,setNedenFiltre]=useState("");
   const supabase = useMemo(getSupabaseBrowserClient, []);
   const degisimIndex = useMemo(() => {
     const idx = new Map<string, DegisimKaydi[]>();
@@ -367,6 +368,8 @@ export default function TrafoHarita() {
         const map = L.map(mapEl.current, { zoomControl: true, preferCanvas: true, renderer: L.canvas({ padding: .5, tolerance: 12 }) }).setView([39.65, 27.9], 9);
         tileLayer.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20, attribution: '&copy; OpenStreetMap' }).addTo(map);
         mapRef.current = map;
+        window.__trafoMap=map;
+        (mapEl.current as any).__trafoMap=map;
         // Ilk gorunumde gizli/yeniden boyutlanan container kaynakli gri-bos haritayi engelle.
         requestAnimationFrame(()=>{ try { map.invalidateSize({pan:false}); } catch {} });
         window.setTimeout(()=>{ try { map.invalidateSize({pan:false}); } catch {} },120);
@@ -522,18 +525,17 @@ export default function TrafoHarita() {
       }
       return true;
     };
-    const tumFiltreli = pointData.current.features.filter(temelUygun);
-    let eslesenToplam = 0, tek = 0, cok = 0;
-    for (const f of tumFiltreli) { const n = eslesen(f.properties || {}).length; if (n > 0) { eslesenToplam++; if (n === 1) tek++; else cok++; } }
-    setEslesenSayisi(eslesenToplam); setTekDegisimSayisi(tek); setCokDegisimSayisi(cok);
-
     const pts = { type: "FeatureCollection", features: pointData.current.features.filter(f => {
       if (!temelUygun(f)) return false;
-      const n = eslesen(f.properties || {}).length;
+      const kayitlar=eslesen(f.properties||{}),n=kayitlar.length;
+      if(nedenFiltre&&anahtar(kayitlar[0]?.degisim_nedeni)!==anahtar(nedenFiltre))return false;
       if (degisimFiltre === "DEGISEN" && n === 0) return false;
       if (degisimFiltre === "DEGISMEYEN" && n > 0) return false;
       return true;
     }) } as GeoJSON;
+    let eslesenToplam=0,tek=0,cok=0;
+    for(const f of pts.features){const n=eslesen(f.properties||{}).length;if(n>0){eslesenToplam++;if(n===1)tek++;else cok++;}}
+    setEslesenSayisi(eslesenToplam);setTekDegisimSayisi(tek);setCokDegisimSayisi(cok);
     const bins = { type: "FeatureCollection", features: buildingData.current.features.filter(f => {
       const p = f.properties || {}, fi = norm(prop(p, "ILCE", "ilce"));
       if (ilce && fi.toLocaleLowerCase("tr-TR") !== ilce.toLocaleLowerCase("tr-TR")) return false;
@@ -547,7 +549,7 @@ export default function TrafoHarita() {
     setBinaTipiSayisi(pts.features.filter(f => f.properties?.__HARITA_SINIFI === "BINA").length);
     setUyumsuzSayisi(pointData.current.features.filter(f => !!f.properties?.__TIP_UYUMSUZ).length);
 
-    if (binaAcik && degisimFiltre === "TUMU") buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
+    if (binaAcik && degisimFiltre === "TUMU" && !nedenFiltre) buildingLayer.current = L.geoJSON(bins, { style: () => ({ color: "#6d28d9", weight: 1.5, fillColor: "#8b5cf6", fillOpacity: .16 }), onEachFeature: (f: any, l: any) => l.bindPopup(binaPopup(f.properties || {}), { maxWidth: 320 }) }).addTo(map);
     if (noktaAcik) pointLayer.current = L.geoJSON(pts, {
       pointToLayer: (f: any, ll: any) => {
         const p = f.properties || {}, kayitlar = eslesen(p), son = kayitlar[0], fill = kayitlar.length ? nedenRengi(son?.degisim_nedeni) : "#94a3b8", sinif = p.__HARITA_SINIFI as HaritaSinifi;
@@ -565,11 +567,11 @@ export default function TrafoHarita() {
     const layers = [pointLayer.current, buildingLayer.current].filter(Boolean);
     if (layers.length) {
       const bounds = L.featureGroup(layers).getBounds();
-      if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
+      if (bounds.isValid() && (ilce || q || tipFiltre || mulkiyetFiltre || nedenFiltre || degisimFiltre !== "TUMU")) map.fitBounds(bounds.pad(.08), { maxZoom: q ? 17 : 12 });
       else if (bounds.isValid()) map.fitBounds(bounds.pad(.04), { maxZoom: 11 });
     }
     requestAnimationFrame(() => map.invalidateSize({ pan: false }));
-  }, [hazir, veriHazir, ilce, arama, tipFiltre, mulkiyetFiltre, degisimFiltre, noktaAcik, binaAcik, degisimKayitlari]);
+  }, [hazir, veriHazir, ilce, arama, tipFiltre, mulkiyetFiltre, degisimFiltre, nedenFiltre, noktaAcik, binaAcik, degisimKayitlari]);
 
   const adminGuncelle = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
@@ -590,53 +592,36 @@ export default function TrafoHarita() {
     catch (err: any) { setHata(err?.message || "Merkezi envanter güncellenemedi"); }
     finally { setEnvanterIslem(false); }
   };
-  const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setMulkiyetFiltre(""); setDegisimFiltre("TUMU"); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
-  const toplam = useMemo(() => noktaSayisi + binaSayisi, [noktaSayisi, binaSayisi]);
-
-  return <div className="space-y-4">
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Kart ikon="⚡" baslik="TRAFO NOKTALARI" deger={veriHazir ? String(noktaSayisi) : "—"} alt={`${direkTipiSayisi} direk tipi • ${binaTipiSayisi} bina tipi`} />
-      <Kart ikon="🕘" baslik="DEĞİŞİM GÖRMÜŞ" deger={veriHazir && !degisimYukleniyor ? String(eslesenSayisi) : "—"} alt={`${tekDegisimSayisi} tek • ${cokDegisimSayisi} çoklu değişim`} />
-      <Kart ikon="⚠️" baslik="TIP UYUMSUZLUĞU" deger={veriHazir ? String(uyumsuzSayisi) : "—"} alt="SHP tipi / geometrik sınıf" />
-      <Kart ikon="📍" baslik="İLÇE" deger={ilce || "Tümü"} alt="Aktif harita filtresi" />
+  const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setMulkiyetFiltre(""); setDegisimFiltre("TUMU"); setNedenFiltre(""); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
+  const gorunenNokta=noktaAcik?noktaSayisi:0;
+  const toplam=gorunenNokta+(binaAcik&&degisimFiltre==="TUMU"&&!nedenFiltre?binaSayisi:0);
+  return <div className="trafo-map-workspace" data-native-map-filters="true">
+    <div className="map-summary" aria-label="Harita özeti">
+      <div><span>GÖRÜNEN TRAFO</span><strong data-map-count>{veriHazir?gorunenNokta:"—"}</strong></div>
+      <div><span>DEĞİŞİM GÖRMÜŞ</span><strong data-map-changed>{veriHazir&&!degisimYukleniyor?(noktaAcik?eslesenSayisi:0):"—"}</strong></div>
+      <div><span>MONTAJ TİPİ</span><strong className="map-summary-types">{direkTipiSayisi} direk · {binaTipiSayisi} bina</strong></div>
+      <div><span>İLÇE</span><strong className="map-summary-district">{ilce||"Tüm ilçeler"}</strong></div>
     </div>
-
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,.07)]">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div><div className="flex flex-wrap items-center gap-2"><div className="text-sm font-black text-slate-800">🗺️ Trafo Envanteri</div>{merkezi && <span className="rounded-full bg-emerald-100 px-2 py-1 text-[9px] font-black text-emerald-700">☁ MERKEZİ</span>}</div><div className="mt-1 text-xs text-slate-500">{dosyaAdi || "Trafo envanteri hazırlanıyor"}{durum && ` • ${durum}`}{degisimYukleniyor ? " • değişim kayıtları eşleştiriliyor..." : ` • ${degisimKayitlari.length} değişim kaydı tarandı`}</div></div>
-        {adminMi && <label className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-black text-white shadow-sm ${envanterIslem ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"}`}>☁ {envanterIslem ? "Güncelleniyor..." : "Envanteri Güncelle"}<input type="file" accept=".zip,application/zip" onChange={adminGuncelle} disabled={envanterIslem} className="hidden" /></label>}
+    <section className="map-filters" aria-label="Harita filtreleri">
+      <div className="map-filter-grid">
+        <label className="map-search"><span>Trafo ara</span><input aria-label="Haritada ara" value={arama} onChange={e=>setArama(e.target.value)} placeholder="Trafo, lokasyon, mahalle veya seri no…" disabled={!veriHazir}/></label>
+        <label><span>İlçe</span><select aria-label="Harita ilçesi" value={ilce} onChange={e=>setIlce(e.target.value)} disabled={!veriHazir}><option value="">Tüm İlçeler</option>{ILCE_LISTESI.map(x=><option key={x}>{x}</option>)}</select></label>
+        <label><span>Montaj tipi</span><select aria-label="Harita montaj tipi" value={tipFiltre} onChange={e=>setTipFiltre(e.target.value as ""|"DIREK"|"BINA")} disabled={!veriHazir}><option value="">Tüm Tipler</option><option value="DIREK">Direk tipi</option><option value="BINA">Bina tipi</option></select></label>
+        <label><span>Değişim nedeni</span><select aria-label="Harita değişim nedeni" value={nedenFiltre} onChange={e=>{setNedenFiltre(e.target.value);if(e.target.value)setDegisimFiltre("TUMU")}} disabled={!veriHazir}><option value="">Tüm Nedenler</option>{NEDEN_RENKLERI.map(x=><option key={x.ad}>{x.ad}</option>)}</select></label>
+        <button type="button" className="map-clear" onClick={tumunuGoster}>Filtreyi Temizle</button>
       </div>
-      {veriHazir && <><div className="my-4 border-t border-slate-100" />
-        <div className="grid gap-3 lg:grid-cols-[175px_175px_175px_minmax(0,1fr)_auto]">
-          <select value={ilce} onChange={e => setIlce(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm İlçeler</option>{ILCE_LISTESI.map(x => <option key={x}>{x}</option>)}</select>
-          <select value={tipFiltre} onChange={e => setTipFiltre(e.target.value as "" | "DIREK" | "BINA")} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm Tipler</option><option value="DIREK">▲ Direk Tipi</option><option value="BINA">■ Bina Tipi</option></select>
-          <select value={mulkiyetFiltre} onChange={e => setMulkiyetFiltre(e.target.value as "" | "EDAS" | "DEVIRLI")} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">Tüm Mülkiyetler</option><option value="EDAS">EDAŞ</option><option value="DEVIRLI">Devirli</option></select>
-          <input value={arama} onChange={e => setArama(e.target.value)} placeholder="Trafo adı, Lokasyon ID, Trafo ID, mahalle, marka, seri no, güç, direk/bina tipi ara..." className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" />
-          <button type="button" onClick={tumunuGoster} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-600">Filtreyi Temizle</button>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-          <button onClick={() => setNoktaAcik(v => !v)} className={`rounded-xl border px-3 py-2 text-xs font-black ${noktaAcik ? "border-slate-300 bg-slate-100 text-slate-700" : "border-slate-200 bg-white text-slate-500"}`}>⚡ Trafo Noktaları ({noktaSayisi})</button>
-          <button onClick={() => setBinaAcik(v => !v)} disabled={degisimFiltre !== "TUMU"} className={`rounded-xl border px-3 py-2 text-xs font-black disabled:opacity-40 ${binaAcik ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500"}`}>🏢 Yapı Poligonları ({binaSayisi})</button>
-          <button onClick={() => setDegisimFiltre(v => v === "DEGISEN" ? "TUMU" : "DEGISEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISEN" ? "border-emerald-300 bg-emerald-600 text-white" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>🕘 Değişim Yapılanlar</button>
-          <button onClick={() => setDegisimFiltre(v => v === "DEGISMEYEN" ? "TUMU" : "DEGISMEYEN")} className={`rounded-xl border px-3 py-2 text-xs font-black ${degisimFiltre === "DEGISMEYEN" ? "border-slate-400 bg-slate-600 text-white" : "border-slate-200 bg-slate-50 text-slate-600"}`}>○ Değişim Yapılmayanlar</button>
-          <button onClick={() => setHaritaTipi(x => x === "standart" ? "uydu" : "standart")} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600">{haritaTipi === "standart" ? "🛰️ Uydu Görünümü" : "🗺️ Standart Harita"}</button>
-          <span className="ml-auto text-[11px] font-bold text-slate-400">Görünen toplam: {toplam}</span>
-        </div>
-      </>}
-      <div data-trafo-harita-lejant="1" className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-slate-100 pt-3 text-[10px] font-bold text-slate-600">
-        <span>▲ Direk tipi</span><span>■ Bina tipi</span><span><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />Değişim yok</span>
-        {NEDEN_RENKLERI.map(x => <span key={x.ad}><i className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: x.renk }} />{x.ad}</span>)}
-      </div>
-    </div>
-
-    {hata && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{hata}</div>}
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,.08)]">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3"><div><div className="text-sm font-black text-slate-800">Balıkesir Trafo Envanter Haritası</div><div className="mt-0.5 text-[10px] text-slate-400">Sembol şekli montaj tipini, renk ise son değişim nedenini gösterir.</div></div><span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${hazir && veriHazir ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{hazir && veriHazir ? "HARİTA HAZIR" : "YÜKLENİYOR"}</span></div>
-      <div ref={mapEl} className="h-[72vh] min-h-[580px] w-full" />
-    </div>
+      <div className="map-filter-bottom"><div className="map-status-tabs" aria-label="Değişim durumu">{([["TUMU","Tümü"],["DEGISEN","Değişim Yapılanlar"],["DEGISMEYEN","Değişim Yapılmayanlar"]] as const).map(([value,label])=><button type="button" key={value} aria-pressed={degisimFiltre===value} onClick={()=>{setDegisimFiltre(value);if(value==="DEGISMEYEN")setNedenFiltre("")}}>{label}</button>)}</div><button type="button" className="map-basemap" onClick={()=>setHaritaTipi(x=>x==="standart"?"uydu":"standart")}>{haritaTipi==="standart"?"Uydu Görünümü":"Standart Harita"}</button></div>
+      <details className="map-options"><summary>Katmanlar ve gösterim</summary><div className="map-options-content">
+        <div className="map-layer-row"><button type="button" aria-pressed={noktaAcik} onClick={()=>setNoktaAcik(v=>!v)}>Trafo Noktaları ({noktaSayisi})</button><button type="button" aria-pressed={binaAcik} disabled={degisimFiltre!=="TUMU"||!!nedenFiltre} onClick={()=>setBinaAcik(v=>!v)}>Yapı Poligonları ({binaSayisi})</button><select aria-label="Harita mülkiyeti" value={mulkiyetFiltre} onChange={e=>setMulkiyetFiltre(e.target.value as ""|"EDAS"|"DEVIRLI")}><option value="">Tüm Mülkiyetler</option><option value="EDAS">EDAŞ</option><option value="DEVIRLI">Devirli</option></select></div>
+        <div className="map-legend" data-trafo-harita-lejant="1"><span>▲ Direk · ■ Bina</span><button type="button" aria-pressed={degisimFiltre==="DEGISMEYEN"} onClick={()=>{setNedenFiltre("");setDegisimFiltre("DEGISMEYEN")}}><i style={{background:"#94a3b8"}}/>Değişim yok</button>{NEDEN_RENKLERI.map(x=><button type="button" key={x.ad} aria-pressed={nedenFiltre===x.ad} onClick={()=>{setNedenFiltre(v=>v===x.ad?"":x.ad);setDegisimFiltre("TUMU")}}><i style={{background:x.renk}}/>{x.ad}</button>)}</div>
+        <div className="map-source"><div><strong>🗺️ Trafo Envanteri</strong><p>{dosyaAdi||"Envanter hazırlanıyor"} · {durum}</p><small>{degisimKayitlari.length} değişim kaydı · {tekDegisimSayisi} tek / {cokDegisimSayisi} çoklu · {uyumsuzSayisi} tip kontrolü{merkezi?" · Merkezi envanter":""}</small></div>{adminMi&&<label className="map-upload">{envanterIslem?"Güncelleniyor…":"Envanteri Güncelle"}<input type="file" accept=".zip,application/zip" onChange={adminGuncelle} disabled={envanterIslem} className="hidden"/></label>}</div>
+      </div></details>
+    </section>
+    {hata&&<div className="map-error" role="alert">{hata}</div>}
+    <section className="map-canvas-card" aria-label="Balıkesir trafo haritası">
+      <div className="map-canvas-heading"><span><strong>Balıkesir</strong> · {toplam} görünür öğe</span><span className="map-ready" data-ready={hazir&&veriHazir}>{hazir&&veriHazir?"Harita hazır":"Envanter yükleniyor…"}</span></div>
+      <div ref={mapEl} className="map-canvas"/>
+      <div className="map-canvas-footer"><span>▲ Direk · ■ Bina · Renkler son değişim nedenini gösterir.</span><span>Bir trafoya tıklayarak detaylarını açın.</span></div>
+    </section>
   </div>;
-}
-
-function Kart({ ikon, baslik, deger, alt }: { ikon: string; baslik: string; deger: string; alt: string }) {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{baslik}</div><div className="mt-1 truncate text-xl font-black text-slate-900">{deger}</div><div className="mt-0.5 truncate text-[10px] text-slate-400">{alt}</div></div></div></div>;
 }
