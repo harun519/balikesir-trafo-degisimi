@@ -72,6 +72,7 @@ const inputSinif="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5
 
 // MAP_HISTORY_COMPACT_FIX_20260924
 // NEW_RECORD_STEPPER_LAYOUT_FIX_20260924
+const TRAFO_BRAND_CACHE_KEY="trafo_markalari_cache_v1";
 const TRAFO_CACHE_KEY="trafo_degisim_cache_v1";
 const TRAFO_CACHE_TIME_KEY="trafo_degisim_cache_time_v1";
 const TRAFO_ROLE_CACHE_KEY="trafo_user_role_cache_v1";
@@ -104,6 +105,14 @@ export default function Home() {
   const [yetkiHazir,setYetkiHazir]=useState(false);
   const [auditLoglar,setAuditLoglar]=useState<AuditLog[]>([]);
   const [trafoMarkalari,setTrafoMarkalari]=useState<TrafoMarkasi[]>([]);
+  const [markaYuklendi,setMarkaYuklendi]=useState(false);
+  const [markaYukleniyor,setMarkaYukleniyor]=useState(false);
+  const [markaHata,setMarkaHata]=useState("");
+  const [markaArama,setMarkaArama]=useState("");
+  const [markaDurum,setMarkaDurum]=useState("");
+  const [markaSayfa,setMarkaSayfa]=useState(1);
+  const markaIstek=useRef(false);
+  const markaSahibi=useRef<string|undefined>(undefined);
   const [markaYeniAd,setMarkaYeniAd]=useState("");
   const [markaDuzenlenenId,setMarkaDuzenlenenId]=useState<number|null>(null);
   const [markaDuzenlenenAd,setMarkaDuzenlenenAd]=useState("");
@@ -292,20 +301,39 @@ export default function Home() {
     setYetkiHazir(true);
     try{localStorage.setItem(TRAFO_ROLE_CACHE_KEY,JSON.stringify({userId:session.user.id,role:rol,cachedAt:Date.now()}));}catch{}
   }
+  useEffect(()=>{
+    markaSahibi.current=session?.user.id;
+    setTrafoMarkalari([]);setMarkaYuklendi(false);setMarkaHata("");
+  },[session?.user.id]);
+  useEffect(()=>{
+    if(!session||!yetkiHazir||!(sayfa==="markalar"||sayfa==="yeni")||markaYuklendi||markaIstek.current)return;
+    try{
+      const cached=JSON.parse(localStorage.getItem(TRAFO_BRAND_CACHE_KEY)||"null");
+      if(cached?.userId===session.user.id&&Date.now()-cached.cachedAt<24*60*60*1000&&Array.isArray(cached.rows)&&cached.rows.every((m:TrafoMarkasi)=>typeof m.id==="number"&&typeof m.ad==="string"&&typeof m.aktif==="boolean")){
+        setTrafoMarkalari(cached.rows);setMarkaYuklendi(true);return;
+      }
+    }catch{}
+    void trafoMarkalariniGetir();
+  },[session?.user.id,yetkiHazir,sayfa,markaYuklendi]);
   async function trafoMarkalariniGetir(){
-    if(!supabase)return;
-    const {data,error}=await supabase.from("trafo_markalari").select("id,ad,aktif,sira,created_at,updated_at").order("sira",{ascending:true}).order("ad",{ascending:true});
-    if(error){
-      console.warn("Trafo markaları yüklenemedi:",error.message);
-      setTrafoMarkalari([]);
-      return;
-    }
-    setTrafoMarkalari((data||[]) as TrafoMarkasi[]);
+    if(!supabase||!session||markaIstek.current)return;
+    const owner=session.user.id;
+    markaIstek.current=true;setMarkaYukleniyor(true);setMarkaHata("");
+    try{
+      const {data,error}=await supabase.from("trafo_markalari").select("id,ad,aktif,sira,created_at,updated_at").order("sira",{ascending:true}).order("ad",{ascending:true});
+      if(markaSahibi.current!==owner)return;
+      if(error)throw error;
+      const rows=(data||[]) as TrafoMarkasi[];
+      setTrafoMarkalari(rows);
+      try{localStorage.setItem(TRAFO_BRAND_CACHE_KEY,JSON.stringify({userId:owner,cachedAt:Date.now(),rows}));}catch{}
+    }catch{if(markaSahibi.current===owner)setMarkaHata("Markalar yüklenemedi. Bağlantınızı kontrol edip Yenile düğmesini kullanın.");}
+    finally{markaIstek.current=false;setMarkaYukleniyor(false);if(markaSahibi.current===owner)setMarkaYuklendi(true);}
   }
   async function trafoMarkasiEkle(){
     if(!supabase||!yonetici||!markaYeniAd.trim())return;
-    setMarkaIslem(true);setGenelHata("");
     const ad=markaYeniAd.trim().toLocaleUpperCase("tr-TR");
+    if(trafoMarkalari.some(m=>m.ad.trim().toLocaleUpperCase("tr-TR")===ad)){setMarkaHata("Bu marka zaten mevcut.");return;}
+    setMarkaIslem(true);setGenelHata("");setMarkaHata("");
     const sira=(trafoMarkalari.reduce((m,x)=>Math.max(m,Number(x.sira||0)),0)||0)+10;
     const {error}=await supabase.from("trafo_markalari").insert({ad,aktif:true,sira});
     if(error)setGenelHata("Marka eklenemedi: "+error.message);
@@ -315,7 +343,9 @@ export default function Home() {
   async function trafoMarkasiGuncelle(id:number){
     if(!supabase||!yonetici||!markaDuzenlenenAd.trim())return;
     setMarkaIslem(true);setGenelHata("");
-    const {error}=await supabase.from("trafo_markalari").update({ad:markaDuzenlenenAd.trim().toLocaleUpperCase("tr-TR"),updated_at:new Date().toISOString()}).eq("id",id);
+    const ad=markaDuzenlenenAd.trim().toLocaleUpperCase("tr-TR");
+    if(trafoMarkalari.some(m=>m.id!==id&&m.ad.trim().toLocaleUpperCase("tr-TR")===ad)){setMarkaHata("Bu marka zaten mevcut.");setMarkaIslem(false);return;}
+    const {error}=await supabase.from("trafo_markalari").update({ad,updated_at:new Date().toISOString()}).eq("id",id);
     if(error)setGenelHata("Marka güncellenemedi: "+error.message);
     else{setMarkaDuzenlenenId(null);setMarkaDuzenlenenAd("");await trafoMarkalariniGetir();setBasariMesaji("Trafo markası güncellendi.");setTimeout(()=>setBasariMesaji(""),2500);}
     setMarkaIslem(false);
@@ -590,7 +620,11 @@ async function kayitlariGetir(){
 
   const yillar=useMemo(()=>Array.from(new Set(kayitlar.map(k=>k.yil).filter(Boolean) as number[])).sort((a,b)=>b-a),[kayitlar]);
   const ilceler=useMemo(()=>Array.from(new Set([...ILCE_SECENEKLERI,...kayitlar.map(x=>x.ilce?.trim()).filter(Boolean) as string[]])).sort((a,b)=>a.localeCompare(b,"tr")),[kayitlar]);
-  const markaSecenekleri=useMemo(()=>{const aktif=trafoMarkalari.filter(x=>x.aktif).map(x=>x.ad);return aktif.length?aktif:MARKA_SECENEKLERI;},[trafoMarkalari]);
+  const markaSecenekleri=useMemo(()=>{const aktif=trafoMarkalari.filter(x=>x.aktif).map(x=>x.ad);return markaYuklendi&&!markaHata||trafoMarkalari.length?aktif:MARKA_SECENEKLERI;},[trafoMarkalari,markaYuklendi,markaHata]);
+  const markaFiltreli=useMemo(()=>trafoMarkalari.filter(m=>(!markaDurum||String(m.aktif)===markaDurum)&&m.ad.toLocaleLowerCase("tr-TR").includes(markaArama.trim().toLocaleLowerCase("tr-TR"))),[trafoMarkalari,markaDurum,markaArama]);
+  const markaSayfaSayisi=Math.max(1,Math.ceil(markaFiltreli.length/10));
+  const markaGecerliSayfa=Math.min(markaSayfa,markaSayfaSayisi);
+  const markaGorunen=markaFiltreli.slice((markaGecerliSayfa-1)*10,markaGecerliSayfa*10);
   const veriKaliteUyarilari=useMemo(()=>{
     const u:string[]=[];
     if(form.tarih&&new Date(form.tarih+"T00:00:00").getTime()>Date.now())u.push("Değişim tarihi gelecekte görünüyor.");
@@ -1703,21 +1737,25 @@ const filtrelenmisKayitlar=useMemo(()=>{
           </>}
 
           {sayfa==="markalar"&&yonetici&&<>
-            <Panel baslik="🏷️ Trafo Markaları" altBaslik="Sökülen ve takılan trafo formlarındaki marka listesini buradan yönetin.">
-              <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <div id="trafo-brands"><Panel baslik="Trafo Markaları" altBaslik="Sökülen ve takılan trafo formlarındaki marka listesini buradan yönetin.">
+              <div className="brands-summary"><span><b>{trafoMarkalari.length}</b> Toplam marka</span><span className="brands-active"><b>{trafoMarkalari.filter(m=>m.aktif).length}</b> Aktif</span><span><b>{trafoMarkalari.filter(m=>!m.aktif).length}</b> Pasif</span><button type="button" disabled={markaYukleniyor||markaIslem} onClick={()=>void trafoMarkalariniGetir()}>↻ {markaYukleniyor?"Yükleniyor…":"Yenile"}</button></div>
+              {markaHata&&<div className="brands-error" role="alert">{markaHata}</div>}
+              <div className="brands-filters"><input aria-label="Marka ara" placeholder="Marka adı ara…" value={markaArama} onChange={e=>{setMarkaArama(e.target.value);setMarkaSayfa(1);}}/><select aria-label="Marka durumu" value={markaDurum} onChange={e=>{setMarkaDurum(e.target.value);setMarkaSayfa(1);}}><option value="">Tüm markalar</option><option value="true">Aktif</option><option value="false">Pasif</option></select></div>
+              <div className="brands-add">
                 <input value={markaYeniAd} onChange={e=>setMarkaYeniAd(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();trafoMarkasiEkle();}}} placeholder="Yeni marka adı..." className={inputSinif}/>
-                <button type="button" disabled={markaIslem||!markaYeniAd.trim()} onClick={trafoMarkasiEkle} className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-blue-200 disabled:opacity-40">＋ Yeni Marka Ekle</button>
+                <button type="button" disabled={markaIslem||markaYukleniyor||!markaYuklendi||!markaYeniAd.trim()} onClick={trafoMarkasiEkle} className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-blue-200 disabled:opacity-40">＋ Yeni Marka Ekle</button>
               </div>
               <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <div className="grid grid-cols-[minmax(0,1fr)_110px_170px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[10px] font-black uppercase tracking-wide text-slate-500"><div>Marka</div><div>Durum</div><div className="text-right">İşlem</div></div>
-                {trafoMarkalari.length?trafoMarkalari.map(m=><div key={m.id} className="grid grid-cols-[minmax(0,1fr)_110px_170px] items-center gap-2 border-b border-slate-100 px-4 py-3 last:border-0">
+                <div className="brands-row brands-heading border-b border-slate-200 bg-slate-50 px-4 py-3 text-[10px] font-black uppercase tracking-wide text-slate-500"><div>Marka</div><div>Durum</div><div className="text-right">İşlem</div></div>
+                {markaGorunen.length?markaGorunen.map(m=><div key={m.id} className="brands-row brands-data items-center gap-2 border-b border-slate-100 px-4 py-3 last:border-0">
                   <div>{markaDuzenlenenId===m.id?<input autoFocus value={markaDuzenlenenAd} onChange={e=>setMarkaDuzenlenenAd(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();trafoMarkasiGuncelle(m.id);}if(e.key==="Escape"){setMarkaDuzenlenenId(null);setMarkaDuzenlenenAd("");}}} className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm font-bold outline-none ring-2 ring-blue-500/10"/>:<span className={`text-sm font-black ${m.aktif?"text-slate-800":"text-slate-400 line-through"}`}>{m.ad}</span>}</div>
                   <div><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${m.aktif?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{m.aktif?"AKTİF":"PASİF"}</span></div>
                   <div className="flex justify-end gap-2">{markaDuzenlenenId===m.id?<><button type="button" disabled={markaIslem} onClick={()=>trafoMarkasiGuncelle(m.id)} className="rounded-lg border border-emerald-300 px-2.5 py-2 text-xs font-bold text-emerald-700">Kaydet</button><button type="button" onClick={()=>{setMarkaDuzenlenenId(null);setMarkaDuzenlenenAd("");}} className="rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-bold text-slate-600">İptal</button></>:<><button type="button" onClick={()=>{setMarkaDuzenlenenId(m.id);setMarkaDuzenlenenAd(m.ad);}} className="rounded-lg border border-blue-300 px-2.5 py-2 text-xs font-bold text-blue-600">Düzenle</button><button type="button" disabled={markaIslem} onClick={()=>trafoMarkasiAktiflikDegistir(m)} className={`rounded-lg border px-2.5 py-2 text-xs font-bold ${m.aktif?"border-amber-300 text-amber-700":"border-emerald-300 text-emerald-700"}`}>{m.aktif?"Pasife Al":"Aktif Et"}</button></>}</div>
-                </div>):<div className="p-6 text-center text-sm text-slate-500">Marka tablosu henüz hazır değil. Aşağıdaki SQL dosyasını Supabase'de bir kez çalıştırın.</div>}
+                </div>):<div className="p-6 text-center text-sm text-slate-500">{markaYukleniyor?"Markalar yükleniyor…":markaHata?"Marka listesi alınamadı.":trafoMarkalari.length?"Filtrelere uygun marka bulunamadı.":"Henüz marka eklenmemiş."}</div>}
               </div>
+              <div className="brands-pagination"><span>{markaFiltreli.length?`${(markaGecerliSayfa-1)*10+1}–${Math.min(markaGecerliSayfa*10,markaFiltreli.length)}`:"0"} / {markaFiltreli.length} marka · Sayfa {markaGecerliSayfa} / {markaSayfaSayisi}</span><div><button type="button" disabled={markaGecerliSayfa===1} onClick={()=>setMarkaSayfa(markaGecerliSayfa-1)}>Önceki</button><b>{markaGecerliSayfa}</b><button type="button" disabled={markaGecerliSayfa===markaSayfaSayisi} onClick={()=>setMarkaSayfa(markaGecerliSayfa+1)}>Sonraki</button></div></div>
               <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-800"><b>Not:</b> Bir markayı pasife almak eski kayıtlardaki marka bilgisini silmez; yalnızca yeni kayıt ekranındaki seçim listesinden kaldırır.</div>
-            </Panel>
+            </Panel></div>
           </>}
 
         </div>
