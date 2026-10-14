@@ -985,3 +985,24 @@ body:has(#trafo-map-screen[aria-hidden="false"]) button[title="Yukarı çık"]{d
 .map-options-content{top:calc(100% + 7px);left:auto;right:0;width:min(580px,100%)}
 @media(max-width:1200px){.map-status-tabs button{padding:6px 8px}}
 @media(max-width:639px){.map-filter-bottom{flex-wrap:wrap}.map-status-tabs{flex-basis:100%}.map-status-tabs button{padding:6px 4px}}
+
+/* Brand management: readable, compact and responsive. */
+#trafo-brands .brands-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0;color:#64748b;font-size:13px}
+#trafo-brands .brands-summary span{border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;padding:10px 14px}
+#trafo-brands .brands-summary b{color:#0f172a;margin-right:5px;font-size:17px}
+#trafo-brands .brands-summary .brands-active{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+#trafo-brands .brands-summary button{margin-left:auto}
+#trafo-brands .brands-summary button,#trafo-brands .brands-pagination button{border:1px solid #cbd5e1;border-radius:9px;padding:9px 14px;background:white;color:#334155;font-size:12px;font-weight:700}
+#trafo-brands button:disabled{opacity:.4;cursor:not-allowed}
+#trafo-brands .brands-filters,#trafo-brands .brands-add{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:12px;margin:14px 0}
+#trafo-brands .brands-filters input,#trafo-brands .brands-filters select{min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:11px 13px;background:white;color:#334155;font-size:13px}
+#trafo-brands .brands-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 190px;gap:16px;min-height:49px}
+#trafo-brands .brands-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;font-size:12px;color:#64748b}
+#trafo-brands .brands-pagination>div{display:flex;align-items:center;gap:12px}
+#trafo-brands .brands-pagination b{background:#2563eb;color:white;padding:8px 12px;border-radius:8px}
+#trafo-brands .brands-error{padding:12px 14px;border:1px solid #fecaca;border-radius:10px;background:#fff1f2;color:#9f1239;font-size:13px}
+#trafo-brands input:focus-visible,#trafo-brands select:focus-visible,#trafo-brands button:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+@media(max-width:600px){#trafo-brands .brands-row{grid-template-columns:minmax(0,1fr) 72px;gap:8px}#trafo-brands .brands-heading>div:last-child{display:none}#trafo-brands .brands-data>div:last-child{grid-column:1/-1;justify-content:flex-start}#trafo-brands .brands-filters,#trafo-brands .brands-add{grid-template-columns:minmax(0,1fr)}#trafo-brands .brands-pagination{align-items:flex-start;flex-direction:column}}
+#trafo-brands .brands-data button{font-size:12px!important;line-height:16px!important;padding:7px 10px!important;min-height:32px!important;white-space:nowrap}
+#trafo-brands .brands-add button{font-size:13px!important;padding:10px 12px!important;min-height:40px!important;white-space:nowrap}
+#trafo-brands .brands-data{padding-top:8px!important;padding-bottom:8px!important}
