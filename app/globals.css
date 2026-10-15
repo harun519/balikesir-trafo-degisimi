@@ -414,3 +414,10 @@ main .space-y-6>:not([hidden])~:not([hidden]){margin-top:1.25rem!important}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+
+/* Stable pagination widths across records, analysis dialogs, brands and data quality. */
+:is(.recordPagination,.district-pagination,.district-dialog-pagination,.brands-pagination,.quality-pagination)>div{display:grid!important;grid-template-columns:80px 110px 80px!important;gap:6px!important;align-items:center!important;width:282px!important;flex:none!important}
+:is(.recordPagination,.district-pagination,.district-dialog-pagination,.brands-pagination,.quality-pagination)>div>button{width:80px!important;min-width:80px!important;max-width:80px!important;padding:7px 8px!important;white-space:nowrap!important;box-sizing:border-box}
+:is(.recordPagination,.district-pagination,.district-dialog-pagination,.brands-pagination,.quality-pagination)>div>:is(span,b){display:block!important;width:110px!important;min-width:110px!important;text-align:center!important;font-variant-numeric:tabular-nums;white-space:nowrap!important;margin:0!important;padding:0!important}
+@media(max-width:650px){:is(.recordPagination,.district-pagination,.district-dialog-pagination,.brands-pagination,.quality-pagination){flex-direction:column!important;align-items:flex-end!important;gap:8px!important}}
+
