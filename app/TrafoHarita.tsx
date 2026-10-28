@@ -257,13 +257,19 @@ function noktaPopup(p: any, kayitlar: DegisimKaydi[]) {
     ? `<div style="margin-top:8px;padding:9px 10px;border-radius:9px;background:#f8fafc;border-left:5px solid ${nedenRengi(son?.degisim_nedeni)};color:#334155;font-weight:800"><div>🕘 ${adet} değişim kaydı</div><div style="margin-top:3px;font-size:11px">Son neden: <b>${esc(son?.degisim_nedeni || "Belirtilmemiş")}</b></div>${son?.tarih ? `<div style="margin-top:2px;font-size:10px;font-weight:700;color:#64748b">Son değişim: ${esc(tarihGoster(son.tarih))}</div>` : ""}</div>`
     : `<div style="margin-top:8px;padding:8px 10px;border-radius:9px;background:#f1f5f9;color:#64748b;font-weight:800">Değişim kaydı yok</div>`;
   const uyari = p?.__TIP_UYUMSUZ ? `<div style="margin-top:8px;padding:7px 9px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:800">⚠ SHP TIPI ile geometrik sınıf uyuşmuyor</div>` : "";
-  return `<div style="min-width:250px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">⚡ ${esc(prop(p, "ADI") || "Trafo")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Montaj Tipi:</b> ${esc(haritaSinifiEtiket(p))}</div><div><b>Mülkiyet:</b> ${esc(mulkiyetEtiket(p))}</div><div><b>SHP TIPI:</b> ${esc(shpTipiEtiket(p))}</div>${p?.__POLIGON_TIPI ? `<div><b>Eşleşen Yapı:</b> ${esc(p.__POLIGON_TIPI)}</div>` : ""}<div><b>Trafo ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Lokasyon ID:</b> ${esc(prop(p, "LOKASYON_I"))}</div><div><b>Güç:</b> ${esc(prop(p, "GUC"))}${prop(p, "GUC") ? " kVA" : ""}</div><div><b>Primer Gerilim:</b> ${esc(prop(p, "PRIMER_GER"))}</div><div><b>Marka:</b> ${esc(prop(p, "MARKA"))}</div><div><b>Seri No:</b> ${esc(prop(p, "SERI_NO"))}</div><div><b>İmal Yılı:</b> ${esc(prop(p, "IMAL_YILI"))}</div><div><b>Cinsi:</b> ${esc(prop(p, "CINSI"))}</div></div>${uyari}${durum}</div>`;
+  const row=(label:string,value:any)=>`<div class="map-detail-row"><b>${esc(label)}:</b><span>${esc(value||"—")}</span></div>`;
+  return `<div class="map-detail-title">${esc(prop(p,"ADI")||"Trafo")}</div><div class="map-detail-fields">${row("İlçe",prop(p,"ILCE"))}${row("Mahalle",prop(p,"MAHALLE"))}${row("Montaj Tipi",haritaSinifiEtiket(p))}${row("Lokasyon ID",prop(p,"LOKASYON_I"))}${row("Trafo ID",prop(p,"ID"))}${row("Güç",prop(p,"GUC")?`${prop(p,"GUC")} kVA`:"")}</div>${durum}<details class="map-technical-details"><summary>Teknik bilgiler</summary><div class="map-detail-fields">${row("Mülkiyet",mulkiyetEtiket(p))}${row("SHP TIPI",shpTipiEtiket(p))}${row("Eşleşen Yapı",p.__POLIGON_TIPI)}${row("Primer Gerilim",prop(p,"PRIMER_GER"))}${row("Marka",prop(p,"MARKA"))}${row("Seri No",prop(p,"SERI_NO"))}${row("İmal Yılı",prop(p,"IMAL_YILI"))}${row("Cinsi",prop(p,"CINSI"))}</div>${uyari}</details>`;
 }
 function binaPopup(p: any) {
   return `<div style="min-width:235px;font-family:Arial,sans-serif"><div style="font-weight:800;font-size:14px;margin-bottom:8px;color:#0f172a">🏢 ${esc(prop(p, "ADI") || "Trafo Binası")}</div><div style="display:grid;gap:4px;font-size:12px;color:#334155"><div><b>İlçe:</b> ${esc(prop(p, "ILCE"))}</div><div><b>Mahalle:</b> ${esc(prop(p, "MAHALLE"))}</div><div><b>Bina ID:</b> ${esc(prop(p, "ID"))}</div><div><b>Kodu:</b> ${esc(prop(p, "KODU"))}</div><div><b>Tipi:</b> ${esc(prop(p, "TIPI"))}</div><div><b>Mülkiyet:</b> ${esc(mulkiyetEtiket(p))}</div><div><b>Alt Tip:</b> ${esc(prop(p, "ALTTIP"))}</div><div><b>Gerilim:</b> ${esc(prop(p, "ISLETME_GE"))}</div></div></div>`;
 }
 
 export default function TrafoHarita() {
+  const [secili, setSecili] = useState<{feature: GeoFeature; kayitlar: DegisimKaydi[]} | null>(null);
+  const [listeAcik, setListeAcik] = useState(false), [listeSayfa, setListeSayfa] = useState(1);
+  const [sonuclar, setSonuclar] = useState<GeoFeature[]>([]);
+  const [tamEkran, setTamEkran] = useState(false), [konumDurumu, setKonumDurumu] = useState("");
+  const panelRef = useRef<HTMLDivElement>(null), controlsRef = useRef<HTMLDivElement>(null), konumKatmani = useRef<any>(null);
   const mapEl = useRef<HTMLDivElement | null>(null), mapRef = useRef<any>(null), pointLayer = useRef<any>(null), buildingLayer = useRef<any>(null), tileLayer = useRef<any>(null), labelLayers = useRef<any[]>([]), pointData = useRef<GeoJSON | null>(null), buildingData = useRef<GeoJSON | null>(null);
   const [hazir, setHazir] = useState(false), [veriHazir, setVeriHazir] = useState(false), [hata, setHata] = useState(""), [durum, setDurum] = useState("Merkezi envanter kontrol ediliyor..."), [dosyaAdi, setDosyaAdi] = useState("");
   const [ilce, setIlce] = useState(""), [arama, setArama] = useState(""), [tipFiltre, setTipFiltre] = useState<"" | "DIREK" | "BINA">(""), [mulkiyetFiltre, setMulkiyetFiltre] = useState<"" | "EDAS" | "DEVIRLI">(""), [degisimFiltre, setDegisimFiltre] = useState<DegisimFiltre>("TUMU"), [noktaAcik, setNoktaAcik] = useState(true), [binaAcik, setBinaAcik] = useState(true), [noktaSayisi, setNoktaSayisi] = useState(0), [binaSayisi, setBinaSayisi] = useState(0), [direkTipiSayisi, setDirekTipiSayisi] = useState(0), [binaTipiSayisi, setBinaTipiSayisi] = useState(0), [uyumsuzSayisi, setUyumsuzSayisi] = useState(0), [haritaTipi, setHaritaTipi] = useState<"standart" | "uydu">("standart");
@@ -534,6 +540,7 @@ export default function TrafoHarita() {
       if (degisimFiltre === "DEGISMEYEN" && n > 0) return false;
       return true;
     }) } as GeoJSON;
+    setSonuclar(pts.features); setListeSayfa(1); setSecili(null);
     let eslesenToplam=0,tek=0,cok=0;
     for(const f of pts.features){const n=eslesen(f.properties||{}).length;if(n>0){eslesenToplam++;if(n===1)tek++;else cok++;}}
     setEslesenSayisi(eslesenToplam);setTekDegisimSayisi(tek);setCokDegisimSayisi(cok);
@@ -557,11 +564,11 @@ export default function TrafoHarita() {
         const html = sinif === "DIREK"
           ? `<div style="position:relative;width:30px;height:30px;filter:drop-shadow(0 2px 3px rgba(15,23,42,.55))"><div style="position:absolute;left:1px;top:0;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:28px solid #ffffff"></div><div style="position:absolute;left:5px;top:5px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid ${fill}"></div></div>`
           : `<div style="width:24px;height:24px;border:4px solid #ffffff;border-radius:2px;background:${fill};box-shadow:0 2px 4px rgba(15,23,42,.55)"></div>`;
-        return L.marker(ll, { icon: L.divIcon({ className: "", html, iconSize: [30, 30], iconAnchor: [15, 15] }), interactive: true, riseOnHover: true });
+        return L.marker(ll, { title: norm(prop(p, "ADI")) || "Trafo", alt: norm(prop(p, "ADI")) || "Trafo", icon: L.divIcon({ className: "", html, iconSize: [30, 30], iconAnchor: [15, 15] }), interactive: true, riseOnHover: true });
       },
       onEachFeature: (f: any, l: any) => {
         const kayitlar = eslesen(f.properties || {});
-        l.bindPopup(noktaPopup(f.properties || {}, kayitlar), { maxWidth: 350 });
+        l.on("click", () => { map.closePopup(); setListeAcik(false); setSecili({feature:f,kayitlar}); });
       }
     }).addTo(map);
 
@@ -594,6 +601,47 @@ export default function TrafoHarita() {
     finally { setEnvanterIslem(false); }
   };
   const tumunuGoster = () => { setIlce(""); setArama(""); setTipFiltre(""); setMulkiyetFiltre(""); setDegisimFiltre("TUMU"); setNedenFiltre(""); mapRef.current?.closePopup(); mapRef.current?.setView([39.65, 27.9], 9); };
+  const sigdir = () => {
+    const layers = [pointLayer.current, buildingLayer.current].filter(Boolean);
+    if (!layers.length || !window.L || !mapRef.current) return;
+    const bounds = window.L.featureGroup(layers).getBounds();
+    if (bounds.isValid()) mapRef.current.fitBounds(bounds.pad(.08), {maxZoom:16,paddingBottomRight:[20,(legendRef.current?.offsetHeight||60)+30]});
+  };
+  const trafoSec = (feature: GeoFeature) => {
+    const pt = noktaKoordinati(feature); if (!pt || !mapRef.current) return;
+    mapRef.current.setView([pt[1],pt[0]], Math.max(15,mapRef.current.getZoom()), {animate:false});
+    mapRef.current.closePopup(); setListeAcik(false); setSecili({feature,kayitlar:eslesen(feature.properties||{})});
+  };
+  const tamEkraniDegistir = async () => {
+    try { if(document.fullscreenElement===mapEl.current)await document.exitFullscreen();else await mapEl.current?.requestFullscreen(); }
+    catch { setKonumDurumu("Tam ekran bu tarayıcıda açılamadı."); }
+  };
+  const konumumuGoster = () => {
+    if(!navigator.geolocation){setKonumDurumu("Konum desteklenmiyor.");return;}
+    setKonumDurumu("Konum alınıyor…");
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const map=mapRef.current,L=window.L;if(!map||!L)return;
+      if(konumKatmani.current)map.removeLayer(konumKatmani.current);
+      const ll=[pos.coords.latitude,pos.coords.longitude];
+      konumKatmani.current=L.layerGroup([
+        L.circle(ll,{radius:Math.max(pos.coords.accuracy,20),color:"#2563eb",weight:1,fillOpacity:.1}),
+        L.circleMarker(ll,{radius:8,color:"#fff",weight:3,fillColor:"#2563eb",fillOpacity:1})
+      ]).addTo(map);
+      map.setView(ll,17);setKonumDurumu("");
+    },()=>setKonumDurumu("Konum alınamadı. Tarayıcının konum iznini kontrol edin."),{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+  };
+  useEffect(()=>{
+    const change=()=>{setTamEkran(document.fullscreenElement===mapEl.current);requestAnimationFrame(()=>mapRef.current?.invalidateSize({pan:false}));};
+    document.addEventListener("fullscreenchange",change);return()=>document.removeEventListener("fullscreenchange",change);
+  },[]);
+  useEffect(()=>{
+    if(!hazir||!window.L)return;
+    for(const el of [panelRef.current,controlsRef.current])if(el){window.L.DomEvent.disableClickPropagation(el);window.L.DomEvent.disableScrollPropagation(el);}
+  },[hazir,secili,listeAcik]);
+  useEffect(()=>{
+    const escape=(e:KeyboardEvent)=>{if(e.key==="Escape"){setSecili(null);setListeAcik(false)}};
+    document.addEventListener("keydown",escape);return()=>document.removeEventListener("keydown",escape);
+  },[]);
   const optionsRef=useRef<HTMLDetailsElement>(null),legendRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     const outside=(event:PointerEvent)=>{if(optionsRef.current&&!optionsRef.current.contains(event.target as Node))optionsRef.current.open=false};
@@ -628,8 +676,12 @@ export default function TrafoHarita() {
     </section>
     {hata&&<div className="map-error" role="alert">{hata}</div>}
     <section className="map-canvas-card" aria-label="Balıkesir trafo haritası">
-      <div className="map-canvas-heading"><span><strong>Balıkesir</strong> · {toplam} görünür öğe</span><span className="map-ready" data-ready={hazir&&veriHazir}>{hazir&&veriHazir?"Harita hazır":"Envanter yükleniyor…"}</span></div>
-      <div ref={mapEl} className="map-canvas"/>{hazir&&mapEl.current&&createPortal(legend,mapEl.current)}
+      <div className="map-canvas-heading"><span><strong>Balıkesir</strong> · {toplam} görünür öğe</span><div className="map-heading-actions"><button type="button" aria-pressed={listeAcik} onClick={()=>{setListeAcik(v=>!v);setSecili(null)}}>Trafo listesi ({sonuclar.length})</button><button type="button" onClick={sigdir} disabled={!veriHazir}>Ekrana sığdır</button><span className="map-ready" data-ready={hazir&&veriHazir}>{hazir&&veriHazir?"Harita hazır":"Envanter yükleniyor…"}</span></div></div>
+      <div ref={mapEl} className="map-canvas" data-native-map-controls="true"/>{hazir&&mapEl.current&&createPortal(<>{legend}<div ref={controlsRef} className="map-native-controls"><button type="button" data-harita-full="1" onClick={tamEkraniDegistir}>{tamEkran?"✕ Tam Ekrandan Çık":"⛶ Tam Ekran"}</button><button type="button" data-harita-konum="1" onClick={konumumuGoster}>📍 Konumum</button></div>{konumDurumu&&<div className="map-location-notice" role="status">{konumDurumu}</div>}
+        {(secili||listeAcik)&&<div ref={panelRef} className="map-side-panel" role="region" aria-label={secili?"Seçili trafo bilgileri":"Trafo sonuçları"}>
+          <div className="map-panel-heading"><b>{secili?"Trafo bilgileri":`${sonuclar.length} trafo bulundu`}</b><button type="button" aria-label="Trafo panelini kapat" onClick={()=>{setSecili(null);setListeAcik(false)}}>×</button></div>
+          {secili?<div className="map-panel-body leaflet-popup-content map-selection-content"><div dangerouslySetInnerHTML={{__html:noktaPopup(secili.feature.properties||{},secili.kayitlar)}}/>{(()=>{const pt=noktaKoordinati(secili.feature);return pt?<a className="map-directions" data-harita-yol="1" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${pt[1]},${pt[0]}`}>Yol tarifi al ↗</a>:null})()}</div>:<><div className="map-result-list">{sonuclar.slice((listeSayfa-1)*50,listeSayfa*50).map((feature,i)=>{const p=feature.properties||{},last=eslesen(p)[0];return <button type="button" key={`${prop(p,"ID")}-${i}`} onClick={()=>trafoSec(feature)}><i style={{background:last?nedenRengi(last.degisim_nedeni):"#94a3b8"}}/><span><b>{norm(prop(p,"ADI"))||"Trafo"}</b><small>{norm(prop(p,"ILCE"))} · {norm(prop(p,"MAHALLE"))||norm(prop(p,"LOKASYON_I"))}</small></span><em>›</em></button>})}{!sonuclar.length&&<p>Bu filtrelerle eşleşen trafo yok. Filtreleri temizleyerek tekrar deneyin.</p>}</div><div className="map-result-pagination"><button disabled={listeSayfa===1} onClick={()=>setListeSayfa(v=>v-1)}>Önceki</button><span>{listeSayfa} / {Math.max(1,Math.ceil(sonuclar.length/50))}</span><button disabled={listeSayfa>=Math.ceil(sonuclar.length/50)} onClick={()=>setListeSayfa(v=>v+1)}>Sonraki</button></div></>}
+        </div>}</>,mapEl.current)}
       <div className="map-canvas-footer"><span>▲ Direk · ■ Bina · Renkler son değişim nedenini gösterir.</span><span>Bir trafoya tıklayarak detaylarını açın.</span></div>
     </section>
   </div>;

@@ -9,6 +9,7 @@ import "./reference-ui.css";
 import "./new-record-target.css";
 import "./trafo-dashboard-premium.css";
 import "leaflet/dist/leaflet.css";
+import "./map-workspace.css";
 import HaritaEntegrasyon from "./HaritaEntegrasyon";
 import HaritaCikisFix from "./HaritaCikisFix";
 import HaritaNedenFiltresi from "./HaritaNedenFiltresi";
