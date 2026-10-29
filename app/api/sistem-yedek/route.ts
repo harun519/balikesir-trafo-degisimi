@@ -1,158 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-export const dynamic = "force-dynamic";
-export const maxDuration = 60;
-
-const BUCKET = "trafo-yedekler";
-const KEEP = 1;
-
-function adminClient(){
-  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if(!url||!key)throw new Error("Supabase sunucu ayarları eksik.");
-  return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+import {NextRequest,NextResponse} from 'next/server';
+import {createClient} from '@supabase/supabase-js';
+import {createHash} from 'crypto';
+export const dynamic='force-dynamic';export const maxDuration=60;
+const BUCKET='trafo-yedekler',KEEP=3,MAX_BYTES=20*1024*1024;
+function client(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!url||!key)throw Error('Sunucu ayarları eksik');return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}
+async function admin(req:NextRequest){const sb=client(),token=(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token)throw Object.assign(Error('Oturum gerekli'),{status:401});const {data,error}=await sb.auth.getUser(token);if(error||!data.user)throw Object.assign(Error('Geçersiz oturum'),{status:401});const {data:p}=await sb.from('app_users').select('role').eq('id',data.user.id).maybeSingle();if(p?.role!=='admin')throw Object.assign(Error('Yönetici yetkisi gerekli'),{status:403});return sb}
+const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store'}});
+async function list(sb:ReturnType<typeof client>){
+ const out:any[]=[];const scan=async(prefix:string)=>{const {data,error}=await sb.storage.from(BUCKET).list(prefix,{limit:1000,sortBy:{column:'created_at',order:'desc'}});if(error)throw error;return data||[]};
+ for(const f of await scan('sistem'))if(f.id&&f.name.endsWith('.json'))out.push({...f,path:'sistem/'+f.name});
+ for(const y of await scan('otomatik'))if(!y.id)for(const m of await scan('otomatik/'+y.name))if(!m.id)for(const f of await scan(`otomatik/${y.name}/${m.name}`))if(f.id&&f.name.endsWith('.json'))out.push({...f,path:`otomatik/${y.name}/${m.name}/${f.name}`});
+ return out.sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
 }
-
-async function bucketHazirla(sb:ReturnType<typeof adminClient>){
-  const {data,error}=await sb.storage.getBucket(BUCKET);
-  if(data&&!error)return;
-  const {error:createError}=await sb.storage.createBucket(BUCKET,{public:false,fileSizeLimit:52428800});
-  if(createError&&!String(createError.message||"").toLowerCase().includes("already"))throw createError;
+async function read(sb:ReturnType<typeof client>,path:string){if(!/^(sistem\/|otomatik\/)/.test(path)||path.includes('..')||!path.endsWith('.json'))throw Error('Geçersiz yedek yolu');const {data,error}=await sb.storage.from(BUCKET).download(path);if(error||!data)throw Error('Yedek okunamadı');const j=JSON.parse(await data.text());const rows=j.tables?.trafo_degisim||j.trafo_degisim;if(!Array.isArray(rows)||!rows.length)throw Error('Geçersiz veya boş yedek');if(j.table_errors&&Object.values(j.table_errors).some(Boolean))throw Error('Eksik tablo içeren yedek geri yüklenemez');if(j.checksum&&j.checksum!==createHash('sha256').update(JSON.stringify(j.tables)).digest('hex'))throw Error('Yedek içerik doğrulaması başarısız');return j}
+async function backup(sb:ReturnType<typeof client>,source:string){
+ const {data:tables,error}=await sb.rpc('trafo_snapshot2026');if(error||!tables||!Array.isArray(tables.trafo_degisim))throw Error('Yedek kaynağı okunamadı; eski yedekler korundu.');
+ const now=new Date(),name=`SISTEM_YEDEGI_${now.toISOString().replace(/[:.]/g,'-')}_${source}.json`,path='sistem/'+name,checksum=createHash('sha256').update(JSON.stringify(tables)).digest('hex');
+ const body=JSON.stringify({backup_version:4,created_at:now.toISOString(),kaynak:source,tables,checksum,table_errors:{},summary:{trafo:tables.trafo_degisim.length,markalar:tables.trafo_markalari.length,audit:tables.trafo_audit_log.length}});
+ if(Buffer.byteLength(body)>MAX_BYTES)throw Error('Yedek 20 MB güvenlik sınırını aşıyor; eski kopyalar korundu.');
+ const {error:uploadError}=await sb.storage.from(BUCKET).upload(path,body,{contentType:'application/json',upsert:false});if(uploadError)throw uploadError;
+ await read(sb,path);
+ const stale=(await list(sb)).filter(f=>f.path.startsWith('sistem/')).slice(KEEP);if(stale.length){const {error:e}=await sb.storage.from(BUCKET).remove(stale.map(f=>f.path));if(e)throw e}
+ return {ok:true,name,path,created_at:now.toISOString(),retention:KEEP,size:Buffer.byteLength(body)};
 }
-
-async function adminDogrula(req:NextRequest){
-  const token=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"").trim();
-  if(!token)return {ok:false as const,error:"Oturum bilgisi bulunamadı."};
-  const sb=adminClient();
-  const {data:{user},error}=await sb.auth.getUser(token);
-  if(error||!user)return {ok:false as const,error:"Oturum doğrulanamadı."};
-  const {data:profil}=await sb.from("app_users").select("role,email").eq("id",user.id).maybeSingle();
-  if(profil?.role!=="admin")return {ok:false as const,error:"Bu işlem yalnızca Admin içindir."};
-  return {ok:true as const,sb,user,email:profil?.email||user.email||""};
-}
-
-async function tabloGetir(sb:ReturnType<typeof adminClient>,table:string){
-  const {data,error}=await sb.from(table).select("*");
-  return {data:data||[],error:error?error.message:null};
-}
-
-async function sistemYedekDosyalari(sb:ReturnType<typeof adminClient>){
-  const {data,error}=await sb.storage.from(BUCKET).list("sistem",{limit:100,sortBy:{column:"created_at",order:"desc"}});
-  if(error)throw error;
-  return (data||[]).filter(x=>x.name?.endsWith(".json"));
-}
-
-async function sistemYedekleriniTemizle(sb:ReturnType<typeof adminClient>){
-  const files=await sistemYedekDosyalari(sb);
-  const stale=files.slice(KEEP);
-  if(stale.length){
-    const {error}=await sb.storage.from(BUCKET).remove(stale.map(x=>`sistem/${x.name}`));
-    if(error)throw error;
-  }
-  return files.slice(0,KEEP);
-}
-
-async function eskiOtomatikYedekleriTemizle(sb:ReturnType<typeof adminClient>){
-  const {data:years}=await sb.storage.from(BUCKET).list("otomatik",{limit:100});
-  const paths:string[]=[];
-  for(const y of years||[]){
-    if(!/^\d{4}$/.test(y.name||""))continue;
-    const {data:months}=await sb.storage.from(BUCKET).list(`otomatik/${y.name}`,{limit:24});
-    for(const m of months||[]){
-      if(!/^\d{2}$/.test(m.name||""))continue;
-      const {data:files}=await sb.storage.from(BUCKET).list(`otomatik/${y.name}/${m.name}`,{limit:1000});
-      for(const x of files||[])if(x.name?.endsWith(".json"))paths.push(`otomatik/${y.name}/${m.name}/${x.name}`);
-    }
-  }
-  if(paths.length){
-    const {error}=await sb.storage.from(BUCKET).remove(paths);
-    if(error)throw error;
-  }
-}
-
-async function yedekOlustur(kaynak:"manuel"|"otomatik",email=""){
-  const sb=adminClient();
-  await bucketHazirla(sb);
-
-  const [trafo,markalar,audit]=await Promise.all([
-    tabloGetir(sb,"trafo_degisim"),
-    tabloGetir(sb,"trafo_markalari"),
-    tabloGetir(sb,"trafo_audit_log"),
-  ]);
-
-  const now=new Date();
-  const damga=now.toISOString().replace(/[:.]/g,"-");
-  const name=`SISTEM_YEDEGI_${damga}_${kaynak}.json`;
-  const path=`sistem/${name}`;
-  const payload={
-    backup_version:3,
-    created_at:now.toISOString(),
-    kaynak,
-    kullanici_email:email||null,
-    tables:{
-      trafo_degisim:trafo.data,
-      trafo_markalari:markalar.data,
-      trafo_audit_log:audit.data,
-    },
-    table_errors:{
-      trafo_degisim:trafo.error,
-      trafo_markalari:markalar.error,
-      trafo_audit_log:audit.error,
-    }
-  };
-
-  const body=JSON.stringify(payload,null,2);
-  const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:"application/json",upsert:false});
-  if(error)throw error;
-  await sistemYedekleriniTemizle(sb);
-  await eskiOtomatikYedekleriTemizle(sb);
-  return {name,path,size:new TextEncoder().encode(body).length,created_at:now.toISOString(),kaynak,retention:KEEP};
-}
-
-async function yedekleriListele(){
-  const sb=adminClient();
-  await bucketHazirla(sb);
-  const files=await sistemYedekleriniTemizle(sb);
-  const yedekler=await Promise.all(files.map(async x=>{
-    const path=`sistem/${x.name}`;
-    const {data:signed}=await sb.storage.from(BUCKET).createSignedUrl(path,60*60);
-    return {
-      name:x.name,
-      created_at:x.created_at||null,
-      updated_at:x.updated_at||null,
-      size:Number(x.metadata?.size||0),
-      url:signed?.signedUrl||""
-    };
-  }));
-  return yedekler;
-}
-
-export async function GET(req:NextRequest){
-  try{
-    const auth=req.headers.get("authorization")||"";
-    const cronSecret=process.env.CRON_SECRET||"";
-    if(cronSecret&&auth===`Bearer ${cronSecret}`){
-      const sonuc=await yedekOlustur("otomatik");
-      return NextResponse.json({ok:true,...sonuc});
-    }
-
-    const user=await adminDogrula(req);
-    if(!user.ok)return NextResponse.json({error:user.error},{status:401});
-    const yedekler=await yedekleriListele();
-    return NextResponse.json({ok:true,yedekler});
-  }catch(e:any){
-    return NextResponse.json({error:e?.message||"Yedek işlemi başarısız."},{status:500});
-  }
-}
-
-export async function POST(req:NextRequest){
-  try{
-    const user=await adminDogrula(req);
-    if(!user.ok)return NextResponse.json({error:user.error},{status:401});
-    const sonuc=await yedekOlustur("manuel",user.email);
-    return NextResponse.json({ok:true,...sonuc});
-  }catch(e:any){
-    return NextResponse.json({error:e?.message||"Yedek oluşturulamadı."},{status:500});
-  }
-}
+export async function GET(req:NextRequest){try{const cron=process.env.CRON_SECRET;if(cron&&req.headers.get('authorization')===`Bearer ${cron}`)return json(await backup(client(),'otomatik'));const sb=await admin(req),files=await list(sb);const backups=await Promise.all(files.map(async f=>{const {data}=await sb.storage.from(BUCKET).createSignedUrl(f.path,300);return{name:f.name,path:f.path,created_at:f.created_at,updated_at:f.updated_at,size:Number(f.metadata?.size||0),url:data?.signedUrl||''}}));return json({ok:true,count:files.length,retention:KEEP,backups,yedekler:backups,last:backups[0]||null})}catch(e:any){return json({error:e.message},e.status||500)}}
+export async function POST(req:NextRequest){try{const sb=await admin(req),body=await req.json().catch(()=>({}));if(body.action==='restore'){if(body.confirm!=='GERI YUKLE')return json({error:'Geri yükleme onayı gerekli'},400);const j=await read(sb,String(body.path||'')),safety=await backup(sb,'guvenlik');const {data:summary,error}=await sb.rpc('trafo_restore2026',{incoming:j});if(error)throw error;return json({ok:true,restored:body.path,safetyBackup:safety.path,restoredAt:new Date().toISOString(),summary})}return json(await backup(sb,'manuel'))}catch(e:any){return json({error:e.message},e.status||500)}}

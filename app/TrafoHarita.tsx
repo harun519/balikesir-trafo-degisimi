@@ -394,7 +394,9 @@ export default function TrafoHarita() {
         let merkeziVar=false;
         try {
           // Yalnızca küçük Storage metadata isteği: büyük JSON/ZIP burada indirilmez.
-          const metaCevap=await fetch("/api/harita-envanter?meta=1",{cache:"no-store"});
+          const token=(await supabase?.auth.getSession())?.data.session?.access_token;if(!token)throw Error("Harita için giriş yapın.");
+          const inventoryHeaders={Authorization:`Bearer ${token}`};
+          const metaCevap=await fetch("/api/harita-envanter?meta=1",{cache:"no-store",headers:inventoryHeaders});
           if(metaCevap.ok){
             const uzak=(await metaCevap.json()) as EnvanterMeta;
             merkeziVar=true;
@@ -406,7 +408,7 @@ export default function TrafoHarita() {
             if(!guncel&&!kapandi){
               setDurum(yerelBlob?"Yeni/ilk doğrulanan envanter indiriliyor...":"Merkezi envanter indiriliyor...");
               const surum=encodeURIComponent(uzak.updated_at||uzak.etag||String(uzak.size||"current"));
-              const dosyaCevap=await fetch(`/api/harita-envanter?v=${surum}`);
+              const dosyaCevap=await fetch(`/api/harita-envanter?v=${surum}`,{headers:inventoryHeaders});
               if(!dosyaCevap.ok){
                 const j=await dosyaCevap.json().catch(()=>({}));
                 throw new Error(j?.error||"Merkezi envanter indirilemedi.");
@@ -686,3 +688,4 @@ export default function TrafoHarita() {
     </section>
   </div>;
 }
+

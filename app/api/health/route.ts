@@ -26,7 +26,7 @@ export async function GET(){
   try{
     const sb=client();
     const [{data:row,error},backup]=await Promise.all([
-      sb.from("trafo_degisim").select("id,tarih").order("id",{ascending:false}).limit(1).maybeSingle(),
+      sb.from("trafo_degisim").select("id,updated_at").order("updated_at",{ascending:false}).limit(1).maybeSingle(),
       latestBackup(sb)
     ]);
     if(error)throw error;
@@ -34,7 +34,7 @@ export async function GET(){
       ok:true,
       service:"trafo",
       database:true,
-      lastDataAt:row?.tarih||null,
+      lastDataAt:row?.updated_at||null,
       lastBackupAt:backup?.created_at||null,
       lastBackupName:backup?.name||null,
       latencyMs:Date.now()-started,
@@ -45,3 +45,4 @@ export async function GET(){
     return NextResponse.json({ok:false,service:"trafo",database:false,error:e?.message||"health check failed",latencyMs:Date.now()-started,checkedAt:new Date().toISOString()},{status:503,headers:{"Cache-Control":"no-store"}});
   }
 }
+

@@ -11,8 +11,8 @@ const MAX_SIZE=30*1024*1024;
 
 // Büyük envanter yalnızca sürüm değiştiğinde çağrılır. URL'deki ?v= değeri
 // değiştiği için her sürüm CDN'de ayrı ve uzun ömürlü tutulabilir.
-const MAP_CACHE="public, max-age=31536000, immutable";
-const MAP_CDN_CACHE="public, s-maxage=31536000, immutable";
+const MAP_CACHE="private, max-age=3600";
+const MAP_CDN_CACHE="no-store";
 
 function adminClient(){
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,6 +73,12 @@ async function adminDogrula(req:NextRequest){
 
 export async function GET(req:NextRequest){
   try{
+    const token=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"").trim();
+    if(!token)return NextResponse.json({error:"Oturum gerekli."},{status:401,headers:{"Cache-Control":"no-store"}});
+    const sb=adminClient();const {data:{user},error}=await sb.auth.getUser(token);
+    if(error||!user)return NextResponse.json({error:"Geçersiz oturum."},{status:401,headers:{"Cache-Control":"no-store"}});
+    const {data:profile}=await sb.from("app_users").select("role").eq("id",user.id).maybeSingle();
+    if(!profile)return NextResponse.json({error:"Trafo erişim yetkisi gerekli."},{status:403,headers:{"Cache-Control":"no-store"}});
     if(req.nextUrl.searchParams.get("meta")==="1"){
       // KRİTİK: Bu çağrı büyük Storage nesnesini İNDİRMEZ.
       // Sadece Storage metadata bilgisini okur; böylece Cached Egress şişmez.
@@ -84,8 +90,8 @@ export async function GET(req:NextRequest){
       return NextResponse.json(
         {ok:true,updated_at:meta.updated_at,size:meta.size,etag:meta.etag},
         {headers:{
-          "Cache-Control":"public, max-age=30",
-          "Vercel-CDN-Cache-Control":"public, s-maxage=60, stale-while-revalidate=300"
+          "Cache-Control":"private, max-age=30","Vary":"Authorization",
+          "Vercel-CDN-Cache-Control":"no-store"
         }}
       );
     }
@@ -98,6 +104,7 @@ export async function GET(req:NextRequest){
 
     const bytes=Buffer.from(paket.base64,"base64");
     const headers:Record<string,string>={
+      "Vary":"Authorization",
       "Content-Type":"application/zip",
       "Content-Disposition":"inline; filename=trafo-envanteri.zip",
       "Cache-Control":MAP_CACHE,
@@ -172,3 +179,4 @@ export async function POST(req:NextRequest){
     );
   }
 }
+

@@ -1096,3 +1096,10 @@ main[data-page="veri-kalite"] .dataQualityTable th{white-space:normal!important}
 #trafo-backups :is(button,a):focus-visible{outline:2px solid #3b82f6;outline-offset:3px}
 @media(max-width:1050px){#trafo-backups .backup-main-grid{grid-template-columns:minmax(0,1fr)}#trafo-backups .backup-history-row{flex-direction:row;align-items:center;justify-content:space-between}#trafo-backups .backup-history-row>a{align-self:center}#trafo-backups .backup-summary>div{padding:13px!important}#trafo-backups .backup-summary>div>div:nth-child(2){font-size:17px!important}}
 @media(max-width:600px){#trafo-backups .backup-summary,#trafo-backups .backup-export-grid{grid-template-columns:minmax(0,1fr)}#trafo-backups .backup-header{padding:15px}#trafo-backups .backup-history-row{flex-direction:column;align-items:flex-start}#trafo-backups .backup-history-row>a{align-self:flex-start}}
+
+
+/* Shared readable surfaces; record data and calculations stay unchanged. */
+main>section h1{overflow-wrap:anywhere}
+main>section label{line-height:1.45}
+.recordTransferTools{gap:8px!important}
+@media(max-width:640px){.recordTransferTools{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.recordTransferAction{min-height:44px!important;font-size:12px!important}input,select,textarea{font-size:16px!important}}
