@@ -30,10 +30,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/transformer-icon.svg?v=20261102", type: "image/svg+xml" },
       { url: "/favicon.ico", type: "image/x-icon" },
     ],
-    apple: "/icon-192.png",
+    apple: "/apple-touch-icon.png?v=20261102",
   },
   appleWebApp: { capable: true, statusBarStyle: "black", title: "Trafo Değişimi" },
 };
