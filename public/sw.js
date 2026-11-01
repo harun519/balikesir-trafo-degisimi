@@ -1,5 +1,5 @@
-const CACHE_VERSION = "trafo-app-v11-distinct-icon";
-const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png"];
+const CACHE_VERSION = "trafo-app-v12-transformer-icon";
+const SHELL = ["/", "/manifest.webmanifest", "/transformer-icon.svg", "/transformer-icon-192.png", "/transformer-icon-512.png", "/favicon.ico", "/apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
