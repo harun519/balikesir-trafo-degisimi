@@ -1,0 +1,168 @@
+/* Visual-only release. All selectors are scoped to the transformer workspace. */
+main[data-visual-release]{--tv-ink:#172e46;--tv-muted:#52657a;--tv-line:#d6e0ea;--tv-accent:#e66a12;--tv-surface:#fff;--tv-radius:12px;color:var(--tv-ink)!important;background:#eef3f7!important}
+.tv-icon{width:19px;height:19px;display:inline-block;flex-shrink:0;vertical-align:middle}
+main[data-visual-release] :is(button,summary,a,input,select,textarea):focus-visible,.tv-detail-overlay :is(button,a):focus-visible{outline:3px solid #269bde!important;outline-offset:3px}
+main[data-visual-release] button:disabled,.tv-detail-overlay button:disabled{cursor:not-allowed!important;opacity:.45!important}
+main[data-visual-release] :is(input,select,textarea)::placeholder{color:#74859a!important}
+main[data-visual-release] :is(h1,h2,h3){color:#172e46!important;letter-spacing:-.02em}
+main[data-visual-release] button{transition:background-color .15s,border-color .15s,box-shadow .15s!important}
+main[data-visual-release] :is(.tv-primary,.records-hero>button),main[data-visual-release] #new-record-actions button.tv-primary,.tv-detail-overlay button.tv-primary{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:40px!important;padding:9px 16px!important;border:1px solid #dc6010!important;background:#e96c13!important;background-image:none!important;color:white!important;font-size:13px!important;font-weight:650!important;border-radius:9px!important;box-shadow:0 3px 7px #b952141a!important;line-height:20px!important}
+main[data-visual-release] :is(.tv-primary,.records-hero>button):hover,main[data-visual-release] #new-record-actions button.tv-primary:hover,.tv-detail-overlay button.tv-primary:hover{background:#cc5607!important;border-color:#b94e07!important}
+main[data-visual-release] :is(#dashboard-hero,#new-record-actions) button:not(.tv-primary),.tv-detail-overlay button:not(.tv-primary){min-height:40px!important;border-radius:9px!important;padding:9px 13px!important;font-size:13px!important;line-height:20px!important;font-weight:600!important;box-shadow:none!important}
+.tv-detail-overlay button.tv-secondary{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;background:#fff!important;border:1px solid #cbd7e4!important;color:#314c68!important}
+/* Navigation: one icon family and a high-contrast active state. */
+main[data-visual-release] .tv-navigation{padding:14px 12px!important;display:flex!important;flex-direction:column!important;gap:3px!important}
+main[data-visual-release] .tv-navigation .tv-nav-group{margin:10px 0 0!important;border-top:1px solid #ffffff1c!important;padding-top:11px!important}
+main[data-visual-release] .tv-navigation .tv-nav-heading{padding:0 12px 7px!important;font-size:10px!important;letter-spacing:.12em;color:#94abc2!important;font-weight:650!important}
+main[data-visual-release] .tv-navigation button,body:has(#trafo-map-screen[aria-hidden="false"]) main[data-visual-release] .tv-navigation button:not([data-trafo-harita-menu="1"]){display:flex!important;align-items:center!important;gap:11px!important;min-height:43px!important;width:100%!important;margin:2px 0!important;padding:10px 12px!important;border-radius:9px!important;border:1px solid transparent!important;background:transparent!important;color:#d5e2ef!important;box-shadow:none!important;font-size:13px!important;font-weight:550!important;line-height:20px!important;text-align:left!important}
+main[data-visual-release] .tv-navigation button .tv-icon{color:#9fb8d0!important;width:18px!important;height:18px!important}
+main[data-visual-release] .tv-navigation button:hover{background:#ffffff0c!important;color:#fff!important}
+main[data-visual-release] .tv-navigation button[aria-current="page"],body:has(#trafo-map-screen[aria-hidden="false"]) main[data-visual-release] .tv-navigation button[data-trafo-harita-menu="1"]{background:#244460!important;border-color:#446480!important;color:#fff!important;box-shadow:inset 3px 0 #ff984b!important}
+main[data-visual-release] .tv-navigation button[aria-current="page"] .tv-icon{color:#ffb47c!important}
+main[data-visual-release] .tv-navigation .tv-icon+span{min-width:0;white-space:normal}
+/* Headers and page-wide typography */
+main[data-visual-release]>div>section>header{min-height:64px!important;box-shadow:none!important;border-bottom:1px solid #dbe4ed!important}
+main[data-visual-release] #dashboard-hero{margin-bottom:14px!important}
+main[data-visual-release] #dashboard-hero h1{font-size:23px!important;line-height:30px!important}
+main[data-visual-release] .tv-section-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:15px 0 8px;font-size:13px;font-weight:700;color:#29445e}
+main[data-visual-release] .tv-section-caption span{font-size:12px;font-weight:450;color:#5d7084}
+main[data-visual-release] #dashboard-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin-bottom:16px!important}
+main[data-visual-release] #dashboard-kpis>div{min-height:92px!important;padding:14px!important;border-radius:12px!important;box-shadow:none!important}
+main[data-visual-release] #dashboard-kpis :is(.text-slate-400,.text-slate-500){color:#52657a!important}
+main[data-visual-release] #dashboard-scope-kpis{gap:0!important;border:1px solid var(--tv-line)!important;border-radius:12px!important;background:#fff!important;overflow:hidden!important}
+main[data-visual-release] #dashboard-scope-kpis>*{min-height:76px!important;border:0!important;border-right:1px solid #e1e8ef!important;border-radius:0!important;box-shadow:none!important;padding:12px 16px!important;background:transparent!important}
+main[data-visual-release] #dashboard-scope-kpis>button>div:first-child{display:none!important}
+main[data-visual-release] #dashboard-scope-kpis>button>div:last-child{padding:0!important}
+main[data-visual-release] #dashboard-scope-kpis .text-slate-400{color:#5f7184!important}
+/* Same filter behavior, fewer tiny controls. */
+main[data-visual-release] #dashboard-filters{padding:14px 16px!important;border-radius:12px!important;border:1px solid #d6e0ea!important;box-shadow:none!important;margin-bottom:12px!important}
+main[data-visual-release] #dashboard-filters>div:first-child{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr)) auto auto!important;gap:10px!important;align-items:end!important}
+main[data-visual-release] #dashboard-filters>div:first-child label>span{font-size:11px!important;font-weight:650!important;color:#485e74!important;margin-bottom:5px!important;letter-spacing:0!important}
+main[data-visual-release] #dashboard-filters>div:first-child :is(input,select,button){min-height:40px!important;height:40px!important;padding:8px 10px!important;font-size:12px!important;border-radius:8px!important;line-height:22px!important}
+main[data-visual-release] #dashboard-filters>div:nth-child(2){display:none!important}
+main[data-visual-release] #dashboard-filters .tv-quick-filters{display:flex!important;flex-wrap:wrap!important;align-items:flex-end!important;gap:12px!important;margin:14px 0 0!important;padding:13px 0 0!important;border-top:1px solid #e4ebf2!important}
+main[data-visual-release] #dashboard-filters .tv-quick-filters :is(label,.tv-filter-period){display:flex!important;flex-direction:column!important;gap:5px!important;margin:0!important;min-width:145px}
+main[data-visual-release] #dashboard-filters .tv-quick-filters :is(label,.tv-filter-period)>span{display:block;font-size:11px!important;font-weight:650!important;color:#52667c!important}
+main[data-visual-release] #dashboard-filters .tv-filter-period>div{display:flex!important;gap:2px;background:#edf2f7;border:1px solid #d8e2eb;border-radius:9px;padding:3px}
+main[data-visual-release] #dashboard-filters .tv-filter-period button{height:32px!important;min-height:32px!important;border:0!important;border-radius:6px!important;padding:5px 10px!important;font-size:12px!important;white-space:nowrap;color:#3d5369!important;background:transparent!important;line-height:22px!important}
+main[data-visual-release] #dashboard-filters .tv-filter-period button[aria-pressed="true"]{background:#fff!important;box-shadow:0 1px 4px #1d3e5724!important;color:#a84308!important}
+main[data-visual-release] #dashboard-filters .tv-quick-filters select{height:40px!important;min-height:40px!important;max-width:100%;border:1px solid #cbd8e4!important;border-radius:8px!important;padding:8px 28px 8px 10px!important;font-size:12px!important;background:#fff!important;color:#28435e!important}
+main[data-visual-release] #dashboard-filters .tv-date-filter{min-height:40px!important;padding:8px 12px!important;border:1px solid #cbd8e4!important;border-radius:8px!important;background:#fff!important;color:#3d5369!important;font-size:12px!important}
+main[data-visual-release] #dashboard-filters .tv-date-filter[aria-pressed="true"]{color:#a94308!important;border-color:#ed9b60!important;background:#fff2e8!important}
+main[data-visual-release] #dashboard-filters .tv-filter-note{margin-left:auto!important;align-self:center!important;font-size:12px!important;color:#53687b!important;max-width:220px}
+/* Form summary is a disclosure, allowing full-width paired transformer fields. */
+main[data-visual-release][data-page="yeni"] #new-record-main{display:flex!important;flex-direction:column!important;gap:14px!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary{order:-1!important;position:static!important;display:block!important;top:auto!important;width:100%!important;padding:0!important;min-height:0!important;background:#fff!important;border:1px solid #d6e0ea!important;border-radius:11px!important;box-shadow:none!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary>summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-height:52px;padding:11px 16px;cursor:pointer;list-style:none;color:#2a4660;font-size:13px}
+main[data-visual-release][data-page="yeni"] #new-record-summary>summary::-webkit-details-marker{display:none}
+.tv-summary-label{display:flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap}.tv-summary-value{flex:1;min-width:120px}.tv-summary-power{font-variant-numeric:tabular-nums;font-weight:650;color:#3c596c}.tv-summary-toggle{font-size:12px;color:#a84d0e}.tv-summary-toggle:after{content:' ＋'}details[open] .tv-summary-toggle:after{content:' −'}
+main[data-visual-release][data-page="yeni"] #new-record-summary>.tv-summary-body{display:none!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary[open]>.tv-summary-body{display:grid!important;grid-template-columns:1fr 2fr 1fr!important;gap:16px!important;padding:16px!important;border-top:1px solid #e1e8ef!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary .tv-summary-body>div:first-child{display:none!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary .tv-summary-body>div{margin:0!important;padding:10px!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary .tv-summary-body .space-y-3{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+main[data-visual-release][data-page="yeni"] #new-record-summary .tv-summary-body .space-y-3>div{grid-template-columns:18px minmax(70px,1fr) minmax(0,1fr)!important}
+main[data-visual-release][data-page="yeni"] #new-record-stepper{gap:10px!important;margin-bottom:14px!important}
+main[data-visual-release][data-page="yeni"] #new-record-stepper button{min-height:58px!important;padding:10px 14px!important;border-radius:10px!important}
+main[data-visual-release][data-page="yeni"] #new-record-main :is(input,select,textarea){font-size:14px!important;min-height:43px!important;color:#263e55!important;border-color:#cedae6!important;background:#fff!important}
+main[data-visual-release][data-page="yeni"] #new-record-main label>span{font-size:12px!important;color:#4c6278!important;font-weight:650!important}
+main[data-visual-release][data-page="yeni"] .nr-transformer-pair{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:18px!important}
+main[data-visual-release][data-page="yeni"] .nr-transformer{padding:0!important;overflow:visible!important;border-radius:12px!important;box-shadow:none!important}
+main[data-visual-release][data-page="yeni"] .nr-transformer>div:last-child{padding:16px!important;gap:15px!important}
+main[data-visual-release][data-page="yeni"] #new-record-actions{position:sticky!important;bottom:8px!important;border-radius:11px!important;padding:10px 14px!important;margin-top:14px!important;box-shadow:0 3px 12px #203e5710!important}
+/* Record list and compact dialogs. */
+main[data-visual-release] #trafo-records .records-filter-grid :is(input,select){min-height:42px!important;font-size:13px!important}
+main[data-visual-release] #trafo-records .records-table :is(th,td){font-size:12px!important}
+main[data-visual-release] #trafo-records .record-value{font-size:12px!important;color:#314b64!important}
+main[data-visual-release] #trafo-records small.record-value{font-size:11px!important;color:#5c7084!important}
+main[data-visual-release] #trafo-records .recordActions :is(button,summary){min-height:36px!important;font-size:12px!important;padding:7px 10px!important}
+.tv-detail-overlay{background:#0b1c30a8!important;backdrop-filter:blur(3px)!important}
+.tv-detail-overlay .tv-detail-dialog{height:auto!important;max-height:92dvh!important;width:min(1100px,calc(100vw - 32px))!important;border-radius:16px!important;background:#f3f6f9!important;color:#233b51!important}
+.tv-detail-overlay .tv-detail-header{padding:16px 22px!important}
+.tv-detail-overlay .tv-detail-header h2{font-size:21px!important;line-height:28px!important;color:#20394f!important}
+.tv-detail-overlay .tv-detail-header h2>span{color:#526a7e!important}
+.tv-detail-overlay .tv-detail-header h2+div{margin-top:8px!important}
+.tv-detail-overlay .tv-detail-body{padding:16px 20px!important}
+.tv-detail-overlay .tv-detail-body>section:first-child>div:last-child{padding:10px 14px!important}
+.tv-detail-overlay .tv-detail-grid{gap:0 16px!important}
+.tv-detail-overlay .tv-detail-field{padding:9px 0!important;background:transparent!important;border:0!important;border-bottom:1px solid #e6edf3!important;border-radius:0!important;box-shadow:none!important}
+.tv-detail-overlay .tv-detail-field>div:first-child{font-size:10px!important;color:#587086!important}
+.tv-detail-overlay .tv-detail-field>div:last-child{font-size:13px!important;color:#233c53!important}
+.tv-detail-overlay .tv-detail-comparison{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;gap:12px!important}
+.tv-detail-overlay .tv-detail-comparison>div:nth-child(2){display:flex!important;font-size:24px!important}
+.tv-detail-overlay .tv-transformer-card{border-radius:11px!important;padding:14px!important;box-shadow:none!important}
+.tv-detail-overlay .tv-transformer-card>div:nth-child(2){margin-top:8px!important}
+.tv-detail-overlay .tv-transformer-card>div:last-child{margin-top:12px!important;gap:7px!important}
+.tv-detail-overlay .tv-transformer-card>div:last-child>div{padding:7px 9px!important;border-radius:6px!important}
+.tv-detail-overlay .tv-transformer-card>div:last-child>div>div:first-child{font-size:10px!important;color:#53697b!important}
+.tv-detail-overlay .tv-transformer-card>div:last-child>div>div:last-child{font-size:12px!important;white-space:normal!important;overflow-wrap:anywhere}
+.tv-detail-overlay .tv-detail-footer{padding:11px 20px!important}
+.tv-detail-overlay .tv-detail-footer>div>div:last-child{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}
+/* Analysis tables use page scrolling, not a small vertical viewport. */
+main[data-visual-release] :is(.ng-viewport,.district-viewport){height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important}
+main[data-visual-release] .ng-analysis-grid{height:auto!important;min-height:0!important;grid-template-columns:minmax(0,2.7fr) minmax(240px,1fr)!important;align-items:start!important;flex:none!important}
+main[data-visual-release] .ng-card{min-height:0!important;height:auto!important;max-height:none!important}
+main[data-visual-release] .ng-table-scroll{height:auto!important;max-height:none!important;min-height:0!important;overflow-x:auto!important;overflow-y:visible!important;flex:none!important}
+main[data-visual-release] .ng-table{min-width:0!important;width:100%!important;font-size:12px!important}
+main[data-visual-release] .ng-table :is(th,td){padding:11px 9px!important;font-size:12px!important}
+main[data-visual-release] .ng-table thead th{font-size:10px!important;white-space:normal!important;color:#4b6278!important}
+main[data-visual-release] .ng-transition-list{height:auto!important;max-height:none!important;overflow:visible!important}
+main[data-visual-release] .ng-transition{min-height:44px!important;gap:6px!important}
+main[data-visual-release] .ng-transition .ng-reason{font-size:11px!important;white-space:normal!important}
+main[data-visual-release] .ng-analysis-grid.power-panels{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+/* Compact management cards and explanations. */
+main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters>button{min-height:88px!important;padding:13px 14px!important;border-radius:10px!important;box-shadow:none!important}
+main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters>button strong{font-size:24px!important}
+main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters>button :is(p,small){font-size:11px!important;line-height:16px!important;color:#536a7e!important}
+main[data-visual-release][data-page="veri-kalite"] .dataQualityHeader{padding:17px 20px!important;margin-bottom:12px!important}
+main[data-visual-release][data-page="veri-kalite"] .dq-overview{padding:14px 18px!important;margin-bottom:12px!important}
+main[data-visual-release] #trafo-backups .backup-main-grid{align-items:start!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)!important;gap:16px!important}
+main[data-visual-release] #trafo-backups .backup-create-action{padding:16px!important}
+main[data-visual-release] #trafo-backups .backup-policy{padding:13px 16px!important;min-height:0!important}
+main[data-visual-release] #trafo-backups .backup-policy summary{font-size:13px!important;font-weight:650!important;cursor:pointer;color:#355972!important}
+main[data-visual-release] #trafo-backups .backup-policy>div:first-of-type{display:none!important}
+main[data-visual-release] #trafo-backups .backup-history-row{display:flex!important;align-items:center!important;gap:12px!important;padding:14px!important}
+main[data-visual-release] #trafo-backups .backup-history-row>div{flex:1!important;min-width:0!important}
+main[data-visual-release] #trafo-backups .backup-file-title{font-size:13px!important;font-weight:650!important;line-height:20px!important;color:#29465f!important;word-break:normal!important}
+main[data-visual-release] #trafo-backups .backup-export-grid>button{padding:16px!important;border-radius:10px!important}
+main[data-visual-release] #trafo-backups .backup-export-grid>button>div:first-child{font-size:23px!important}
+/* Map tools share one strip. Native controls remain inside the fullscreen map. */
+#trafo-map-screen .map-canvas-heading{padding:9px 12px!important;gap:12px!important;flex-wrap:wrap!important;overflow:visible!important}
+#trafo-map-screen .map-heading-actions{display:flex!important;gap:6px!important;align-items:center!important;flex-wrap:wrap!important}
+#trafo-map-screen .map-heading-actions :is(button,summary){display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:38px!important;font-size:12px!important;line-height:20px!important;padding:8px 10px!important;border:1px solid #cdd9e5!important;border-radius:8px!important;color:#304f6b!important;background:#fff!important;cursor:pointer!important;font-weight:550!important}
+#trafo-map-screen .map-filter-bottom{margin-top:8px!important;justify-content:flex-start!important}
+#trafo-map-screen .map-status-tabs button{font-size:12px!important;min-height:36px!important;padding:7px 11px!important}
+#trafo-map-screen .map-options{position:relative!important;margin-left:0!important}
+#trafo-map-screen .map-options-content{right:0!important;left:auto!important;top:calc(100% + 8px)!important;z-index:1300!important;width:min(480px,calc(100vw - 48px))!important}
+#trafo-map-screen .map-canvas-card{overflow:visible!important;isolation:isolate;position:relative;z-index:1100}
+#trafo-map-screen .map-filters{z-index:1101!important}
+#trafo-map-screen .map-heading-actions .map-ready{display:none!important}
+#trafo-map-screen .map-canvas .map-native-controls{display:none!important}
+#trafo-map-screen .map-canvas:fullscreen .map-native-controls{display:flex!important}
+#trafo-map-screen .map-summary{padding:8px 12px!important}
+#trafo-map-screen .map-summary strong{font-size:17px!important}
+#trafo-map-screen .map-filter-grid :is(input,select){min-height:40px!important;font-size:13px!important}
+#trafo-map-screen .tv-map-legend{position:absolute;bottom:12px;left:12px;z-index:1000;max-width:calc(100% - 24px);background:#fff;border:1px solid #cedbe7;border-radius:9px;box-shadow:0 2px 10px #20394b14}
+#trafo-map-screen .tv-map-legend>summary{font-size:12px;font-weight:650;color:#35516b;padding:10px 12px;cursor:pointer}
+#trafo-map-screen .tv-map-legend .map-legend{position:static!important;left:auto!important;bottom:auto!important;width:235px!important;height:auto!important;max-height:290px!important;border:0!important;box-shadow:none!important;padding:6px 10px 10px!important;overflow:auto!important;border-radius:0!important}
+#trafo-map-screen .tv-map-legend .map-legend button{font-size:11px!important;min-height:34px!important;white-space:normal!important}
+main[data-visual-login] section:first-child h1{color:#fff!important}
+main[data-visual-login] section:first-child h1>span{color:#ff9a3e!important}
+/* Tablet and phone layouts keep controls usable without squeezing fields. */
+@media(max-width:1200px){main[data-visual-release] #dashboard-filters>div:first-child{grid-template-columns:repeat(4,minmax(0,1fr))!important}main[data-visual-release] #dashboard-filters>div:first-child>button{width:auto!important}main[data-visual-release] .ng-analysis-grid{grid-template-columns:minmax(0,1fr)!important}main[data-visual-release] .ng-analysis-grid .ng-transitions{display:block!important}main[data-visual-release] .ng-analysis-grid .ng-transitions:focus-within{display:block!important}main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:1023px){main[data-visual-release] .ng-analysis-grid .ng-transitions{display:block!important}main[data-visual-release] #dashboard-filters>div:first-child{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-visual-release] #dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-visual-release][data-page="yeni"] #new-record-summary[open]>.tv-summary-body{grid-template-columns:1fr!important}main[data-visual-release] #trafo-backups .backup-main-grid{grid-template-columns:minmax(0,1fr)!important}.tv-detail-overlay .tv-detail-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:700px){main[data-visual-release] #dashboard-filters .tv-quick-filters{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}main[data-visual-release] #dashboard-filters .tv-filter-period{grid-column:1/-1}main[data-visual-release] #dashboard-filters .tv-quick-filters label{min-width:0!important}main[data-visual-release] #dashboard-filters .tv-date-filter{justify-self:start}main[data-visual-release] #dashboard-filters .tv-filter-note{max-width:none;margin-left:0!important}main[data-visual-release][data-page="yeni"] .nr-transformer-pair{grid-template-columns:minmax(0,1fr)!important}main[data-visual-release][data-page="yeni"] #new-record-summary>summary{gap:8px!important;padding:11px!important}.tv-summary-value{font-size:12px}.tv-summary-power{font-size:12px}.tv-detail-overlay .tv-detail-dialog{width:100vw!important;max-height:100dvh!important;border-radius:0!important}.tv-detail-overlay .tv-detail-header{padding:13px 15px!important}.tv-detail-overlay .tv-detail-body{padding:12px!important}.tv-detail-overlay .tv-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.tv-detail-overlay .tv-detail-comparison{grid-template-columns:minmax(0,1fr)!important}.tv-detail-overlay .tv-detail-comparison>div:nth-child(2){display:none!important}.tv-detail-overlay .tv-detail-footer{padding:10px 12px!important}.tv-detail-overlay .tv-detail-footer>div>div:last-child{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-visual-release][data-page="veri-kalite"] .dataQualityFilters{grid-template-columns:repeat(2,minmax(0,1fr))!important}main[data-visual-release] .ng-analysis-grid.power-panels{grid-template-columns:minmax(0,1fr)!important}main[data-visual-release] .tv-navigation button{min-height:46px!important}#trafo-map-screen .map-heading-actions{width:100%;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}#trafo-map-screen .map-heading-actions :is(button,summary){font-size:11px!important;padding:7px 6px!important;min-height:40px!important}#trafo-map-screen .map-options-content{position:fixed!important;top:20vh!important;left:16px!important;right:16px!important;width:auto!important;max-height:70vh;overflow:auto}#trafo-map-screen .map-status-tabs button{padding:7px 8px!important;font-size:11px!important}}
+@media(prefers-reduced-motion:reduce){main[data-visual-release] *, .tv-detail-overlay *{transition:none!important;scroll-behavior:auto!important}}
+/* Natural section sizing overrides the earlier viewport-fit chart rules. */
+main[data-visual-release] .ng-viewport>section{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+main[data-visual-release] .ng-table{height:auto!important}
+main[data-visual-release] .ng-transitions{min-width:0!important}
+main[data-visual-release] .ng-transitions .ng-transition{grid-template-columns:minmax(0,1fr) auto 28px!important}
+main[data-visual-release] .ng-table col{width:auto!important}
+main[data-visual-release] #new-record-main .nr-transformer>div:first-child{padding:15px 16px!important}
+main[data-visual-release] aside>div:last-child>button{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;min-height:40px!important;font-size:12px!important}
+#trafo-map-screen .map-panel-body [data-harita-yeni="1"]{background:#e96c13!important;color:#fff!important;border:1px solid #dc6010!important;border-radius:8px!important;font-weight:650!important}
+#trafo-map-screen .map-panel-body [data-harita-gecmis="1"]{background:#f3f7fa!important;color:#31516d!important;border:1px solid #cddae5!important;box-shadow:none!important;border-radius:8px!important;font-weight:600!important}
+#trafo-map-screen .map-native-controls [data-harita-full],#trafo-map-screen .map-native-controls [data-harita-konum]{font-size:13px!important;min-height:42px!important;background:white!important;color:#29475f!important;border:1px solid #c8d7e3!important}
+@media(pointer:coarse){main[data-visual-release] :is(.tv-primary,.records-hero>button),main[data-visual-release] #dashboard-filters :is(button,select,input),#trafo-map-screen .map-heading-actions :is(button,summary),.tv-detail-overlay button{min-height:44px!important}}

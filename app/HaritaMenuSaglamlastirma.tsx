@@ -14,7 +14,7 @@ export default function HaritaMenuSaglamlastirma(){
         const button=document.createElement("button");
         button.type="button";
         button.dataset.trafoHaritaMenu="1";
-        button.textContent="🗺️ Trafo Haritası";
+        button.innerHTML='<svg class="tv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15M15 6v15"/></svg><span>Trafo Haritası</span>';
         button.className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition text-slate-600 hover:bg-blue-50 hover:text-blue-700";
         button.onclick=()=>{
           window.dispatchEvent(new Event("trafo-harita-ac"));

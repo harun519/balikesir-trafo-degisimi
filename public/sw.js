@@ -1,4 +1,4 @@
-const CACHE_VERSION = "trafo-app-v12-transformer-icon";
+const CACHE_VERSION = "trafo-app-v13-visual-polish-20261104";
 const SHELL = ["/", "/manifest.webmanifest", "/transformer-icon.svg", "/transformer-icon-192.png", "/transformer-icon-512.png", "/favicon.ico", "/apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {

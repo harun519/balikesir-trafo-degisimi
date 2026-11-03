@@ -1,4 +1,5 @@
 "use client";
+import VisualIcon from "./VisualIcon";
 
 import {FormEvent,useEffect,useState,type CSSProperties} from "react";
 
@@ -38,7 +39,7 @@ export default function CentralPasswordChange(){
   }catch(err:any){setError(err?.message||"Şifre değiştirilemedi.")}finally{setBusy(false)}
  }
  return <>
-  <button onClick={()=>setOpen(true)} style={s.launch}>🔐 <span>Şifremi Değiştir</span></button>
+  <button onClick={()=>setOpen(true)} style={s.launch}><VisualIcon name="lock"/> <span>Şifremi Değiştir</span></button>
   {open&&<div style={s.overlay} onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}>
    <form onSubmit={submit} style={s.card}>
     <div style={s.head}><div><small style={s.kicker}>HESAP GÜVENLİĞİ</small><h2 style={s.title}>Şifremi Değiştir</h2><p style={s.sub}>Yeni şifreniz yetkiniz bulunan tüm uygulamalarda aynı olur.</p></div><button type="button" onClick={()=>setOpen(false)} style={s.close}>×</button></div>
