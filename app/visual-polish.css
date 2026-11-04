@@ -145,3 +145,38 @@ main[data-visual-release] aside>div:last-child>button{display:flex!important;ali
 #trafo-map-screen .map-panel-body [data-harita-gecmis="1"]{background:#f3f7fa!important;color:#31516d!important;border:1px solid #cddae5!important;box-shadow:none!important;border-radius:8px!important;font-weight:600!important}
 #trafo-map-screen .map-native-controls [data-harita-full],#trafo-map-screen .map-native-controls [data-harita-konum]{font-size:13px!important;min-height:42px!important;background:white!important;color:#29475f!important;border:1px solid #c8d7e3!important}
 @media(pointer:coarse){main[data-visual-release] :is(.tv-primary,.records-hero>button),main[data-visual-release] #dashboard-filters :is(button,select,input),#trafo-map-screen .map-heading-actions :is(button,summary),.tv-detail-overlay button{min-height:44px!important}}
+
+/* Balanced dashboard filter controls; scoped away from record forms. */
+main[data-visual-release] #dashboard-filters#dashboard-filters{padding:18px!important;background:#fff!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child{grid-template-columns:repeat(4,minmax(0,1fr)) auto auto!important;gap:12px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child label{min-width:0!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child label>span{font-size:12px!important;line-height:18px!important;color:#425b73!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child :is(input,select,button){width:100%!important;height:44px!important;min-height:44px!important;font-size:13px!important;line-height:20px!important;padding:11px 12px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child>button{white-space:nowrap!important;background:#f5f8fb!important;border-color:#d2dfea!important;color:#35516d!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters{display:grid!important;grid-template-columns:minmax(250px,1.2fr) repeat(2,minmax(160px,1fr)) auto minmax(145px,.8fr)!important;gap:14px!important;align-items:end!important;margin-top:16px!important;padding-top:16px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters :is(label,.tv-filter-period){min-width:0!important;width:100%!important;gap:6px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters :is(label,.tv-filter-period)>span{font-size:12px!important;line-height:18px!important;color:#425b73!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-period>div{height:44px!important;padding:3px!important;gap:3px!important;border:1px solid #d2dfea!important;background:#edf3f8!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-period button{flex:1!important;width:auto!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:6px 10px!important;font-size:13px!important;line-height:22px!important;font-weight:650!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-period button[aria-pressed="true"]{background:#193b5c!important;color:#fff!important;box-shadow:0 1px 3px #132f4926!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters select{width:100%!important;height:44px!important;min-height:44px!important;font-size:13px!important;padding:10px 30px 10px 12px!important;border-color:#d2dfea!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-date-filter{align-self:end!important;height:44px!important;min-height:44px!important;width:auto!important;padding:10px 14px!important;font-size:13px!important;line-height:22px!important;white-space:nowrap!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-note{margin:0!important;max-width:none!important;align-self:end!important;min-height:44px!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;font-size:13px!important;line-height:20px!important;color:#4b6379!important;text-align:right!important}
+@media(max-width:1250px){
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child>button{width:auto!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters{grid-template-columns:minmax(230px,1.2fr) repeat(2,minmax(140px,1fr))!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-period{grid-column:auto!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-date-filter{justify-self:start!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-note{grid-column:2/-1!important}
+}
+@media(max-width:760px){
+main[data-visual-release] #dashboard-filters#dashboard-filters{padding:14px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child,main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-period{grid-column:1/-1!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-filter-note{grid-column:auto!important;font-size:12px!important}
+}
+@media(max-width:420px){
+main[data-visual-release] #dashboard-filters#dashboard-filters>div:first-child{grid-template-columns:minmax(0,1fr)!important}
+main[data-visual-release] #dashboard-filters#dashboard-filters .tv-quick-filters select{font-size:12px!important}
+}
