@@ -1112,3 +1112,8 @@ main>section label{line-height:1.45}
  main[data-page="dashboard"] #zaman-analizi .trafo-chart-shell{flex:1 0 240px;min-height:240px}
  main[data-page="dashboard"] #dashboard-monthly{position:relative;clear:both;margin-top:12px!important}
 }
+
+/* Give monthly columns room while retaining their proportional scale. */
+main[data-page="dashboard"] #dashboard-monthly .trafo-compact-chart.monthly{height:190px!important}
+main[data-page="dashboard"] #dashboard-monthly .trafo-compact-bars{height:140px!important;min-height:140px!important}
+main[data-page="dashboard"] #dashboard-monthly .trafo-chart-shell{height:auto!important}
