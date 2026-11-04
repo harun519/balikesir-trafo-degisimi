@@ -1554,7 +1554,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                     </div>
                   </div>
 
-                  <div className="nr-transformer-pair grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-4 lg:grid-cols-2">
                     <section className="nr-transformer nr-removed rounded-2xl border border-red-100 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.06)]">
                       <div className="flex items-start gap-3 border-b border-red-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-lg" aria-hidden="true">−</div><div><h3 className="text-base font-black text-slate-900">Sökülen Trafo</h3><p className="mt-1 text-[10px] text-slate-500">Sahadan sökülen mevcut trafo.</p></div></div>
                       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -1610,7 +1610,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 </div>}
               </div>
 
-              <details id="new-record-summary" className="tv-record-summary"><summary><span className="tv-summary-label"><VisualIcon name="records"/>Kayıt Özeti</span><span className="tv-summary-value">{form.ilce||"Konum seçilmedi"}{form.mahalle?` / ${form.mahalle}`:""}</span><span className="tv-summary-power">{form.sokulen_gucu||"—"} → {form.takilan_gucu||"—"} kVA</span><span className="tv-summary-toggle">Ayrıntılar</span></summary><div className="tv-summary-body">
+              <aside id="new-record-summary" className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_32px_rgba(15,23,42,.07)] xl:sticky xl:top-[96px]">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-lg">🗂️</div><div><div className="text-base font-black text-slate-900">Kayıt Özeti</div><div className="mt-0.5 text-[10px] text-slate-400">Girdiğiniz bilgiler anlık görünür.</div></div></div>
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><span className="text-xs font-bold text-slate-600">Kayıt Durumu</span><span className="flex items-center gap-2 text-xs font-black text-amber-700"><span className="h-2 w-2 rounded-full bg-amber-400"/> {duzenlenenId?"Düzenleniyor":"Taslak"}</span></div>
                 <div className="mt-5 space-y-3 text-xs">
@@ -1628,7 +1628,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                   <div className="text-[10px] font-black uppercase tracking-wider text-slate-600">⚡ Otomatik Güç Karşılaştırması</div>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-center"><div><div className="text-[9px] text-slate-400">Eski Güç</div><div className="mt-1 text-sm font-black">{form.sokulen_gucu||"-"}</div></div><div><div className="text-[9px] text-slate-400">Yeni Güç</div><div className="mt-1 text-sm font-black">{form.takilan_gucu||"-"}</div></div><div><div className="text-[9px] text-slate-400">Durum</div><div className="mt-1 text-[10px] font-black">{gucDurumu||"Güç girin"}</div></div></div>
                 </div>
-              </div></details>
+              </aside>
             </div>
 
             {veriKaliteUyarilari.length>0&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><div className="text-sm font-black text-amber-800">🛡️ Veri Kalite Kontrolü</div><div className="mt-2 grid gap-2 sm:grid-cols-2">{veriKaliteUyarilari.map(x=><div key={x} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700">⚠ {x}</div>)}</div></div>}
@@ -1636,7 +1636,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
             <div id="new-record-actions" className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_12px_40px_rgba(15,23,42,.12)] backdrop-blur">
               <button type="button" disabled={formAdim===1} onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.max(1,x-1));}} className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-30">← Geri</button>
               <div className="hidden text-[10px] font-bold text-slate-400 sm:block">Adım {formAdim} / 3</div>
-              {formAdim<3?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(3,x+1));}} className="tv-primary rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===1?"Trafo Değişimine Geç →":"Değişim & Onay →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="tv-primary rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
+              {formAdim<3?<button type="button" onClick={()=>{setKontrolOnayi(false);setFormAdim(x=>Math.min(3,x+1));}} className="rounded-xl bg-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700">{formAdim===1?"Trafo Değişimine Geç →":"Değişim & Onay →"}</button>:<button type="submit" disabled={kaydediliyor||!kontrolOnayi} className="rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">{kaydediliyor?"Kaydediliyor...":duzenlenenId?"Değişiklikleri Kaydet":"Kaydı Tamamla ✓"}</button>}
             </div>
           </form>}
 
