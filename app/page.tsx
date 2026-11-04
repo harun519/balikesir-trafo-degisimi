@@ -2007,15 +2007,14 @@ function YearlyReasonsChart({items,expanded,onToggle,onBarClick}:{items:ReasonCh
   const visible=items.map(item=>reason?{...item,total:item.values[reason]||0,values:{[reason]:item.values[reason]||0}}:item);
   const max=Math.max(1,...visible.flatMap(item=>Object.values(item.values)));
   const content=(large=false)=><>
-    <div className="mt-4 flex flex-wrap gap-2" aria-label="Değişim nedeni filtresi">
+    <div className="yearly-reason-filter mt-4 flex flex-wrap gap-2" aria-label="Değişim nedeni filtresi">
       {[{ad:"Tümü",renk:"#64748b"},...NEDENLER].map(n=>{const value=n.ad==="Tümü"?"":n.ad;return <button type="button" key={n.ad} aria-pressed={reason===value} onClick={()=>setReason(value)} className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${reason===value?"border-blue-500 bg-blue-50 text-blue-800":"border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}><span className="h-2.5 w-2.5 rounded-full" style={{background:n.renk}}/>{n.ad}</button>})}
     </div>
     <BarChart items={visible} max={max} compact={!large} onBarClick={(label,neden)=>{setPresenting(false);onBarClick(label,neden)}}/>
   </>;
   return <>
-    <div className="h-full">
       <Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Nedene göre filtreleyin · Sunum için başlığa tıklayın" className="h-full" daraltilabilir acik={expanded} onToggle={onToggle} onTitleClick={()=>setPresenting(true)}>{content()}</Panel>
-    </div>
+    <style>{`.yearly-reason-filter{gap:4px!important;flex-shrink:0}.yearly-reason-filter>button{min-height:24px!important;height:24px!important;padding:3px 6px!important;font-size:9px!important;line-height:16px!important;gap:5px!important;white-space:nowrap;box-shadow:none!important;border-radius:6px!important}.yearly-reason-filter>button>span{width:9px!important;height:9px!important;flex-shrink:0}#zaman-analizi .trafo-compact-chart.yearly{min-height:185px!important}`}</style>
     {presenting&&typeof document!=="undefined"&&createPortal(<dialog ref={dialog} onCancel={()=>setPresenting(false)} onClick={event=>{if(event.target===event.currentTarget)setPresenting(false)}} className="m-auto w-[96vw] max-w-[1500px] max-h-[92dvh] overflow-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl backdrop:bg-slate-950/60 backdrop:backdrop-blur-sm" aria-labelledby="yearly-presentation-title">
       <div className="flex items-center justify-between gap-4"><h2 id="yearly-presentation-title" className="text-xl font-black text-slate-900">Yıllara Göre Değişim Nedenleri</h2><button type="button" autoFocus onClick={()=>setPresenting(false)} aria-label="Sunum görünümünü kapat" className="rounded-lg border border-slate-200 px-3 py-2 text-lg">×</button></div>
       {content(true)}
