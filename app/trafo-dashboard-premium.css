@@ -1103,3 +1103,12 @@ main>section h1{overflow-wrap:anywhere}
 main>section label{line-height:1.45}
 .recordTransferTools{gap:8px!important}
 @media(max-width:640px){.recordTransferTools{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.recordTransferAction{min-height:44px!important;font-size:12px!important}input,select,textarea{font-size:16px!important}}
+
+/* Let the chart row grow with its contents when the monthly chart opens. */
+@media(min-width:768px){
+ main[data-page="dashboard"] #dashboard-chart-row{height:auto!important;min-height:var(--dashboard-chart-height,340px);grid-auto-rows:auto}
+ main[data-page="dashboard"] #dashboard-chart-row :is(#degisim-nedenleri>section,#zaman-analizi>section){height:auto!important;min-height:340px}
+ main[data-page="dashboard"] #dashboard-chart-row .trafo-reason-layout{min-height:0!important;flex:1 0 auto}
+ main[data-page="dashboard"] #zaman-analizi .trafo-chart-shell{flex:1 0 240px;min-height:240px}
+ main[data-page="dashboard"] #dashboard-monthly{position:relative;clear:both;margin-top:12px!important}
+}
