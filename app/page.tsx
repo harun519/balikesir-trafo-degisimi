@@ -805,7 +805,6 @@ async function kayitlariGetir(){
     const t=dashboardKayitlari.length;if(!t)return"#1e293b 0% 100%";let b=0;const p:string[]=[];
     NEDENLER.forEach(n=>{const o=(nedenSayilari[n.ad]||0)/t*100;if(o>0){p.push(`${n.renk} ${b}% ${b+o}%`);b+=o;}});return p.join(", ");
   },[dashboardKayitlari,nedenSayilari]);
-  const maxYillik=Math.max(1,...yillikNedenler.map(x=>Math.max(...NEDENLER.map(n=>x.nedenler[n.ad]||0))));
   const maxAylik=Math.max(1,...aylikNedenler.map(x=>Math.max(...NEDENLER.map(n=>x.nedenler[n.ad]||0))));
 
   const ilceAnalizi=useMemo(()=>{
@@ -1361,7 +1360,7 @@ const filtrelenmisKayitlar=useMemo(()=>{
                 </div>
               </Panel>
             </div>
-<div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Tüm yıllar için grafiği sağa-sola kaydırın" className="h-full" daraltilabilir acik={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")}><GrafikLegend/><BarChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} max={maxYillik} compact onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></Panel></div>
+<div id="zaman-analizi" className="min-w-0 max-w-full overflow-hidden scroll-mt-24"><YearlyReasonsChart items={yillikNedenler.map(x=>({label:String(x.yil),total:x.toplam,values:x.nedenler}))} expanded={acikAnalizler["zaman-analizi"]} onToggle={()=>analizAcKapa("zaman-analizi")} onBarClick={(label,neden)=>kayitListesineGit({yil:label,ilce:dashboardIlce,neden})}/></div>
 
             </DashboardChartRow>
             <div id="dashboard-monthly" data-has-year={!!dashboardYil} className="mt-5 min-w-0 max-w-full overflow-hidden"><Panel baslik="Aylara Göre Değişim Nedenleri" altBaslik={dashboardYil?`${dashboardYil} yılı aylık dağılımı`:"Aylık dağılım için yukarıdan bir yıl seçin"}>{dashboardYil?<BarChart items={aylikNedenler.map(x=>({label:x.ay.substring(0,3),total:x.toplam,values:x.nedenler}))} max={maxAylik} aylik compact onBarClick={(label,neden)=>kayitListesineGit({yil:dashboardYil,ilce:dashboardIlce,ay:AYLAR.find(a=>a.substring(0,3)===label)||"",neden})}/>:<BosAlan>Aylık grafiği görüntülemek için yıl seçiniz.</BosAlan>}</Panel></div>
@@ -1878,7 +1877,7 @@ function MenuButonu({aktif,onClick,children}:{aktif:boolean;onClick:()=>void;chi
 function Etiket({children}:{children:ReactNode}){return <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-bold text-slate-600 shadow-sm">{children}</span>}
 function KpiKart({baslik,sayi,renk,onClick}:{baslik:string;sayi:number;renk:string;onClick?:()=>void}){const icerik=<><div className="h-1.5" style={{backgroundColor:renk}}/><div className="p-4"><div className="min-h-7 text-[10px] font-black uppercase tracking-wider text-slate-500">{baslik}</div><div className="mt-1 flex items-end justify-between"><div className="text-2xl font-black text-slate-900 sm:text-3xl">{sayi}</div><span className="mb-1 h-3 w-3 rounded-full shadow-sm" style={{backgroundColor:renk}}/></div></div></>;const cls="group w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-[0_10px_30px_rgba(15,23,42,.08)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)]";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
 function OzetKart({ikon,baslik,deger,alt,onClick}:{ikon:string;baslik:string;deger:string;alt:string;onClick?:()=>void}){const icerik=<div className="flex items-center gap-2 sm:gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 text-xl shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl sm:text-2xl">{ikon}</div><div className="min-w-0"><div className="text-[9px] font-black uppercase tracking-wider text-slate-500 sm:text-[10px]">{baslik}</div><div className="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">{deger}</div><div className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">{alt}</div></div></div>;const cls="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,.07)] ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_40px_rgba(15,23,42,.12)] sm:rounded-2xl sm:p-4";return onClick?<button type="button" onClick={onClick} className={cls}>{icerik}</button>:<div className={cls}>{icerik}</div>}
-function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div><h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
+function Panel({baslik,altBaslik,children,className="",sagIcerik,daraltilabilir=false,acik=true,onToggle,onTitleClick}:{baslik:string;altBaslik?:string;children:ReactNode;className?:string;sagIcerik?:ReactNode;daraltilabilir?:boolean;acik?:boolean;onToggle?:()=>void;onTitleClick?:()=>void}){return <section className={`w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,.07)] ring-1 ring-slate-100 sm:p-5 lg:p-6 ${className}`}><div className="flex items-start justify-between gap-4"><div className={onTitleClick?"relative flex-1 cursor-zoom-in rounded-lg focus-within:ring-2 focus-within:ring-blue-400":""}>{onTitleClick&&<button type="button" onClick={onTitleClick} aria-label={`${baslik} sunum görünümünü aç`} className="absolute inset-0 z-10 cursor-zoom-in rounded-lg outline-none"/>}<h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">{baslik}</h2>{altBaslik&&<p className="mt-1 text-xs font-medium text-slate-400 sm:text-sm">{altBaslik}</p>}</div><div className="flex items-center gap-2">{sagIcerik}{daraltilabilir&&<button type="button" onClick={onToggle} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-500 shadow-sm hover:border-blue-200 hover:text-blue-600" title={acik?"Bölümü daralt":"Bölümü aç"}>{acik?"−":"+"}</button>}</div></div>{(!daraltilabilir||acik)&&children}</section>}
 function GrafikLegend(){return <div className="mt-4 flex flex-wrap gap-2">{NEDENLER.map(n=><div key={n.ad} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{backgroundColor:n.renk}}/><span className="text-[9px] font-black uppercase text-slate-400">{n.ad}</span></div>)}</div>}
 function DistrictRecordsDialog({district,records,onClose}:{district:string;records:TrafoKaydi[];onClose:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null);
@@ -1993,6 +1992,37 @@ function DashboardChartRow({year,children}:{year:string;children:ReactNode}){
   },[year]);
   return <div ref={row} id="dashboard-chart-row">{children}</div>;
 }
+type ReasonChartItem={label:string;total:number;values:Record<string,number>};
+function YearlyReasonsChart({items,expanded,onToggle,onBarClick}:{items:ReasonChartItem[];expanded:boolean;onToggle:()=>void;onBarClick:(label:string,neden:string)=>void}){
+  const [reason,setReason]=useState("");
+  const [presenting,setPresenting]=useState(false);
+  const dialog=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{
+    if(!presenting)return;
+    const element=dialog.current;if(!element)return;
+    const previous=document.body.style.overflow;
+    element.showModal();document.body.style.overflow="hidden";
+    return()=>{element.close();document.body.style.overflow=previous};
+  },[presenting]);
+  const visible=items.map(item=>reason?{...item,total:item.values[reason]||0,values:{[reason]:item.values[reason]||0}}:item);
+  const max=Math.max(1,...visible.flatMap(item=>Object.values(item.values)));
+  const content=(large=false)=><>
+    <div className="mt-4 flex flex-wrap gap-2" aria-label="Değişim nedeni filtresi">
+      {[{ad:"Tümü",renk:"#64748b"},...NEDENLER].map(n=>{const value=n.ad==="Tümü"?"":n.ad;return <button type="button" key={n.ad} aria-pressed={reason===value} onClick={()=>setReason(value)} className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${reason===value?"border-blue-500 bg-blue-50 text-blue-800":"border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}><span className="h-2.5 w-2.5 rounded-full" style={{background:n.renk}}/>{n.ad}</button>})}
+    </div>
+    <BarChart items={visible} max={max} compact={!large} onBarClick={(label,neden)=>{setPresenting(false);onBarClick(label,neden)}}/>
+  </>;
+  return <>
+    <div className="h-full">
+      <Panel baslik="Yıllara Göre Değişim Nedenleri" altBaslik="Nedene göre filtreleyin · Sunum için başlığa tıklayın" className="h-full" daraltilabilir acik={expanded} onToggle={onToggle} onTitleClick={()=>setPresenting(true)}>{content()}</Panel>
+    </div>
+    {presenting&&typeof document!=="undefined"&&createPortal(<dialog ref={dialog} onCancel={()=>setPresenting(false)} onClick={event=>{if(event.target===event.currentTarget)setPresenting(false)}} className="m-auto w-[96vw] max-w-[1500px] max-h-[92dvh] overflow-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl backdrop:bg-slate-950/60 backdrop:backdrop-blur-sm" aria-labelledby="yearly-presentation-title">
+      <div className="flex items-center justify-between gap-4"><h2 id="yearly-presentation-title" className="text-xl font-black text-slate-900">Yıllara Göre Değişim Nedenleri</h2><button type="button" autoFocus onClick={()=>setPresenting(false)} aria-label="Sunum görünümünü kapat" className="rounded-lg border border-slate-200 px-3 py-2 text-lg">×</button></div>
+      {content(true)}
+    </dialog>,document.body)}
+  </>;
+}
+
 function BarChart({items,max,aylik=false,compact=false,onBarClick}:{items:{label:string;total:number;values:Record<string,number>}[];max:number;aylik?:boolean;compact?:boolean;onBarClick?:(label:string,neden:string)=>void}){
   const kaydirma=useRef<HTMLDivElement>(null);
   const [scrollState,setScrollState]=useState({left:false,right:false});
