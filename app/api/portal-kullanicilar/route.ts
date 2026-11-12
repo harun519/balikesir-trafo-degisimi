@@ -94,6 +94,21 @@ export async function POST(req:NextRequest){
     const body=await req.json().catch(()=>({})) as any;
     const action=String(body.action||"save");
 
+    if(action==="change-password"){
+      const id=typeof body.id==="string"?body.id.trim():"";
+      const email=typeof body.email==="string"?body.email.trim().toLowerCase():"";
+      const password=typeof body.password==="string"?body.password:"";
+      if(!id||!email||!email.includes("@"))return fail("Kullanıcı kimliği ve e-postası gerekli.");
+      if(password.length<8)return fail("Yeni şifre en az 8 karakter olmalı.");
+      const {data:found,error:findError}=await client.auth.admin.getUserById(id);
+      if(findError){if(findError.status===404)return fail("Kullanıcı bulunamadı.",404);throw findError}
+      if(!found.user)return fail("Kullanıcı bulunamadı.",404);
+      if(String(found.user.email||"").toLowerCase()!==email)return fail("Kullanıcı bilgisi değişmiş. Listeyi yenileyip tekrar deneyin.",409);
+      const {error}=await client.auth.admin.updateUserById(id,{password});
+      if(error)throw error;
+      return NextResponse.json({ok:true,user:{id,email},message:"Şifre değiştirildi."},{headers:{"Cache-Control":"no-store"}});
+    }
+
     if(action==="remove-app"){
       const id=String(body.id||"");const app=validApp(body.app);
       if(!id||!app)return fail("Kullanıcı kimliği ve uygulama gerekli.");
@@ -164,3 +179,4 @@ export async function POST(req:NextRequest){
     return NextResponse.json({ok:true,user:{id:user.id,email,trafoRole:trafoManaged?trafoRole:null,scadaRole:scadaManaged?scadaRole:null,trafoManaged,scadaManaged},users:await combined(client)},{headers:{"Cache-Control":"no-store"}});
   }catch(e:any){return fail(e?.message||"Kullanıcı kaydedilemedi.",Number(e?.status)||500)}
 }
+
