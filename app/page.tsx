@@ -1845,8 +1845,8 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
   },[acik,aktifIndex,position]);
   return <div className="block nr-select">
     <label htmlFor={`combo-${listeId}`} className="nr-field-label mb-2 block text-sm font-semibold text-slate-600">{baslik}</label>
-    <div ref={kutuRef} className="nr-select-control" data-open={acik} data-filled={!!deger}>
-      <input ref={anaInputRef} id={`combo-${listeId}`} role="combobox" aria-expanded={acik} aria-haspopup="listbox" aria-controls={acik?`options-${listeId}`:undefined} aria-required={gerekli} readOnly value={deger} placeholder="Seçim yapın" onClick={()=>acik?kapat():ac()} onKeyDown={event=>{if(["Enter"," ","ArrowDown","ArrowUp"].includes(event.key)){event.preventDefault();ac();return}if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();setArama(event.key);setAktifIndex(-1);setAcik(true);return}if(event.key==="Escape")kapat(true)}}/>
+    <div ref={kutuRef} className="nr-select-control" data-open={acik} data-filled={!!deger} onClick={()=>{anaInputRef.current?.focus({preventScroll:true});acik?kapat():ac()}}>
+      <input ref={anaInputRef} id={`combo-${listeId}`} role="combobox" aria-expanded={acik} aria-haspopup="listbox" aria-controls={acik?`options-${listeId}`:undefined} aria-required={gerekli} readOnly value={deger} placeholder="Seçim yapın" onKeyDown={event=>{if(["Enter"," ","ArrowDown","ArrowUp"].includes(event.key)){event.preventDefault();ac();return}if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();setArama(event.key);setAktifIndex(-1);setAcik(true);return}if(event.key==="Escape")kapat(true)}}/>
       <span className="nr-select-chevron" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
     </div>
     {acik&&position&&createPortal(<div ref={popupRef} className="nr-select-popup" style={{top:position.top,left:position.left,width:position.width,height:position.height}}>
