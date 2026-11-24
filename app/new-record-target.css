@@ -337,3 +337,55 @@ main:has(.trafo-new-record) section>header input{font-size:13px!important}
 }
 
 #new-record-main input::placeholder{font-weight:400!important;color:#64748b!important}
+
+/* Clearer input boxes and keyboard focus for the transformer replacement form. */
+#new-record-main .nr-transformer.nr-removed{border:1.5px solid #f3a0ab!important;background:linear-gradient(145deg,#fff8f8,#fff)!important;box-shadow:0 8px 24px rgba(190,24,93,.07)!important}
+#new-record-main .nr-transformer.nr-installed{border:1.5px solid #80d9ab!important;background:linear-gradient(145deg,#f5fff9,#fff)!important;box-shadow:0 8px 24px rgba(5,150,105,.07)!important}
+#new-record-main .nr-transformer>div:first-child{border-bottom-color:#d8e1ec!important}
+#new-record-main .nr-field-label{color:#243b59!important;font-weight:700!important}
+#new-record-main input:not([type=checkbox]):not([type=radio]),#new-record-main select,#new-record-main textarea{
+ border:1.5px solid #a8b8cc!important;
+ background:#fff!important;
+ color:#10243d!important;
+ box-shadow:0 1px 2px rgba(15,23,42,.06),inset 0 1px 0 #fff!important;
+}
+#new-record-main input:not([type=checkbox]):not([type=radio]):hover,#new-record-main select:hover,#new-record-main textarea:hover{border-color:#7189a6!important;background:#fff!important}
+#new-record-main input:not([type=checkbox]):not([type=radio]):focus,#new-record-main select:focus,#new-record-main textarea:focus{
+ border-color:#2563eb!important;
+ outline:3px solid rgba(37,99,235,.18)!important;
+ outline-offset:1px!important;
+ box-shadow:0 0 0 1px #2563eb!important;
+}
+#new-record-main .nr-select-control{
+ min-height:44px!important;
+ border:1.5px solid #9fb1c7!important;
+ border-radius:11px!important;
+ background:#fff!important;
+ box-shadow:0 1px 3px rgba(15,23,42,.07)!important;
+ transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease;
+}
+#new-record-main .nr-select-control:hover{border-color:#7189a6!important}
+#new-record-main .nr-select-control:focus-within,#new-record-main .nr-select-control[data-open=true]{
+ border-color:#2563eb!important;
+ background:#fff!important;
+ outline:3px solid rgba(37,99,235,.16)!important;
+ outline-offset:1px!important;
+ box-shadow:0 0 0 1px #2563eb!important;
+}
+#new-record-main .nr-select-control input[role=combobox]{
+ min-height:41px!important;
+ border:0!important;
+ outline:0!important;
+ background:transparent!important;
+ box-shadow:none!important;
+}
+#new-record-main .nr-select-control input[role=combobox]:focus{
+ border:0!important;outline:0!important;box-shadow:none!important
+}
+#new-record-main .nr-select-chevron{color:#526b87!important}
+#new-record-main .nr-select-popup{border:1px solid #91a8c2!important;box-shadow:0 18px 44px rgba(15,35,60,.24)!important}
+#new-record-main .nr-select-search input{border:1.5px solid #9fb1c7!important;background:#fff!important}
+#new-record-main .nr-select-options [role=option][data-active=true]{background:#dbeafe!important;color:#123e78!important;box-shadow:inset 3px 0 #2563eb!important}
+#new-record-main .nr-select-options [role=option]:focus-visible{outline:3px solid rgba(37,99,235,.28)!important;outline-offset:-3px}
+#new-record-main :is(button,a,[tabindex]:not([tabindex="-1"])):focus-visible{outline:3px solid rgba(37,99,235,.5)!important;outline-offset:2px!important}
+@media(prefers-reduced-motion:reduce){#new-record-main .nr-select-control{transition:none!important}}
