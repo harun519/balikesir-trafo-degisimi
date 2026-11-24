@@ -1858,8 +1858,13 @@ function ComboAlani({baslik,deger,degistir,secenekler,listeId,gerekli=false}:{ba
         if(event.key==="Escape"){event.preventDefault();event.stopPropagation();kapat(true)}
         if(event.key==="Tab"){
           event.preventDefault();
-          const controls=Array.from(anaInputRef.current?.form?.querySelectorAll<HTMLElement>("input:not([type=hidden]),select,textarea,button")||[]).filter(element=>element.tabIndex>=0&&!element.hasAttribute("disabled")&&element.getClientRects().length>0);
-          const index=controls.indexOf(anaInputRef.current!);kapat();(controls[index+(event.shiftKey?-1:1)]||anaInputRef.current)?.focus();
+          const controls=Array.from(anaInputRef.current?.form?.querySelectorAll<HTMLElement>("input:not([type=hidden]),select,textarea,button,a[href],[tabindex]:not([tabindex='-1'])")||[]).filter(element=>element.tabIndex>=0&&!element.hasAttribute("disabled")&&element.getClientRects().length>0);
+          const index=controls.indexOf(anaInputRef.current!);
+          const next=controls[index+(event.shiftKey?-1:1)];
+          const value=filtreli[aktifIndex]||yeniDeger;
+          if(value)degistir(value);
+          setAcik(false);setArama("");
+          requestAnimationFrame(()=>next?.focus({preventScroll:true}));
         }
       }}/></div>
       <div ref={listeRef} id={`options-${listeId}`} className="nr-select-options" role="listbox" aria-label={baslik}>
